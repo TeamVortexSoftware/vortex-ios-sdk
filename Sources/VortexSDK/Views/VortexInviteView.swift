@@ -78,6 +78,7 @@ public struct VortexInviteView: View {
                 .background(Color(UIColor.systemBackground))
                 .cornerRadius(20, corners: [.topLeft, .topRight])
             }
+            .ignoresSafeArea(.keyboard, edges: .bottom)
         }
         .task {
             await viewModel.loadConfiguration()
@@ -248,7 +249,9 @@ public struct VortexInviteView: View {
                 TextField("Enter email addresses", text: $viewModel.emailInput)
                     .textFieldStyle(.roundedBorder)
                     .keyboardType(.emailAddress)
+                    .textContentType(.emailAddress)
                     .autocapitalization(.none)
+                    .disableAutocorrection(true)
                     .onSubmit {
                         viewModel.addEmailFromInput()
                     }
@@ -259,9 +262,13 @@ public struct VortexInviteView: View {
             }
             .padding(.horizontal)
             
-            // Send button
+            // Send button - enabled when there are emails in the list OR current input is a valid email
             Button(action: {
                 Task {
+                    // If there's a valid email in the input, add it first before sending
+                    if viewModel.hasValidEmailInput {
+                        viewModel.addEmailFromInput()
+                    }
                     await viewModel.sendInvitation()
                 }
             }) {
@@ -270,16 +277,16 @@ public struct VortexInviteView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     } else {
-                        Text("Send Invitation\(viewModel.emails.count > 1 ? "s" : "")")
+                        Text("Send Invitation\(viewModel.emails.count > 1 || (viewModel.emails.count == 1 && !viewModel.hasValidEmailInput) ? "s" : "")")
                     }
                 }
                 .frame(maxWidth: .infinity)
                 .padding()
-                .background(viewModel.emails.isEmpty ? Color.gray : Color.blue)
+                .background(viewModel.canSendInvitation ? Color.blue : Color.gray)
                 .foregroundColor(.white)
                 .cornerRadius(10)
             }
-            .disabled(viewModel.isSending || viewModel.emails.isEmpty)
+            .disabled(viewModel.isSending || !viewModel.canSendInvitation)
             .padding(.horizontal)
         }
     }
@@ -1469,6 +1476,18 @@ class VortexInviteViewModel: ObservableObject {
         let emailRegex = "[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,64}"
         let emailPredicate = NSPredicate(format: "SELF MATCHES %@", emailRegex)
         return emailPredicate.evaluate(with: email)
+    }
+    
+    /// Whether the current email input contains a valid email address
+    var hasValidEmailInput: Bool {
+        let trimmed = emailInput.trimmingCharacters(in: .whitespacesAndNewlines)
+        return !trimmed.isEmpty && isValidEmail(trimmed) && !emails.contains(trimmed)
+    }
+    
+    /// Whether the send invitation button should be enabled
+    /// True if there are emails in the list OR the current input is a valid email
+    var canSendInvitation: Bool {
+        !emails.isEmpty || hasValidEmailInput
     }
     
     // MARK: - Send Invitation
