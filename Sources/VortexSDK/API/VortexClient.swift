@@ -25,9 +25,18 @@ public struct RendererInfo: Codable {
 
 /// Response from create invitation endpoint
 public struct CreateInvitationResponse: Codable {
-    public let success: Bool
-    public let invitationId: String?
-    public let message: String?
+    public let data: CreateInvitationData
+}
+
+/// Data wrapper for create invitation response
+public struct CreateInvitationData: Codable {
+    public let invitationEntries: [InvitationEntry]?
+}
+
+/// Individual invitation entry in the response
+public struct InvitationEntry: Codable {
+    public let id: String?
+    public let status: String?
 }
 
 /// Response from shareable link endpoint (matches ShareableLinkResponseDto from RN SDK)
@@ -153,7 +162,7 @@ public class VortexClient {
     ///   - jwt: JWT authentication token
     ///   - widgetConfigurationId: ID of the widget configuration
     ///   - payload: Invitation payload (content tokens, etc.)
-    ///   - source: Source of the invitation (e.g., "ios-sdk")
+    ///   - source: Source of the invitation (e.g., "email")
     ///   - groups: Associated groups
     ///   - templateVariables: Optional template variables
     ///   - metadata: Optional metadata
@@ -162,7 +171,7 @@ public class VortexClient {
         jwt: String,
         widgetConfigurationId: String,
         payload: [String: Any],
-        source: String = "ios-sdk",
+        source: String = "email",
         groups: [GroupDTO]? = nil,
         templateVariables: [String: String]? = nil,
         metadata: [String: Any]? = nil

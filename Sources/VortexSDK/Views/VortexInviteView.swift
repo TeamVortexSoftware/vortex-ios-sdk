@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import Contacts
 
 /// Main invitation form view component
 /// This is the primary entry point for integrating Vortex invitations into your iOS app
@@ -287,8 +288,143 @@ public struct VortexInviteView: View {
     
     private var contactsPickerView: some View {
         VStack(spacing: 16) {
-            Text("Contacts picker coming soon")
-                .foregroundColor(.secondary)
+            // Title (matching RN SDK)
+            Text("Add from Contacts")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(Color(UIColor.label))
+                .padding(.top, 16)
+            
+            // Search field
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField("Search contacts...", text: $viewModel.contactsSearchQuery)
+                    .textFieldStyle(.plain)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                if !viewModel.contactsSearchQuery.isEmpty {
+                    Button(action: { viewModel.contactsSearchQuery = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding(12)
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(10)
+            .padding(.horizontal)
+            
+            // Content: Loading, Error, or Contacts List
+            if viewModel.loadingContacts {
+                // Loading state
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                    Text("Loading contacts...")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.vertical, 40)
+            } else if let error = viewModel.contactsError {
+                // Error state
+                VStack(spacing: 16) {
+                    Image(systemName: "person.crop.circle.badge.exclamationmark")
+                        .font(.system(size: 50))
+                        .foregroundColor(.red)
+                    
+                    Text("Unable to Access Contacts")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text(error.localizedDescription)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    // Show settings hint if access denied
+                    if error.localizedDescription.contains("Settings") {
+                        Text("To grant access: Open Settings → Privacy & Security → Contacts → Enable for this app")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
+                            .padding()
+                            .background(Color.blue.opacity(0.1))
+                            .cornerRadius(8)
+                            .padding(.horizontal)
+                        
+                        HStack(spacing: 12) {
+                            Button(action: { viewModel.openSettings() }) {
+                                Text("Open Settings")
+                                    .fontWeight(.medium)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color(UIColor.secondarySystemBackground))
+                                    .cornerRadius(10)
+                            }
+                            
+                            Button(action: {
+                                Task { await viewModel.retryFetchContacts() }
+                            }) {
+                                Text("Retry")
+                                    .fontWeight(.medium)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(Color(UIColor.secondarySystemBackground))
+                                    .cornerRadius(10)
+                            }
+                        }
+                        .padding(.horizontal)
+                    } else {
+                        Button(action: {
+                            Task { await viewModel.retryFetchContacts() }
+                        }) {
+                            Text("Try Again")
+                                .fontWeight(.medium)
+                                .padding()
+                                .background(Color(UIColor.secondarySystemBackground))
+                                .cornerRadius(10)
+                        }
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+            } else if viewModel.filteredContacts.isEmpty {
+                // Empty state
+                VStack(spacing: 12) {
+                    Image(systemName: "person.crop.circle.badge.questionmark")
+                        .font(.system(size: 40))
+                        .foregroundColor(.secondary)
+                    Text(viewModel.contactsSearchQuery.isEmpty 
+                         ? "No contacts with email addresses found" 
+                         : "No contacts match your search")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
+                // Contacts list
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(viewModel.filteredContacts) { contact in
+                            ContactRowView(
+                                contact: contact,
+                                isInvited: viewModel.invitedContactIds.contains(contact.id),
+                                isLoading: viewModel.loadingContactIds.contains(contact.id),
+                                errorMessage: viewModel.failedContactIds[contact.id],
+                                onInvite: {
+                                    Task { await viewModel.inviteContact(contact) }
+                                }
+                            )
+                            Divider()
+                                .padding(.leading, 16)
+                        }
+                    }
+                }
+            }
         }
     }
     
@@ -587,6 +723,119 @@ struct EmailPillView: View {
     }
 }
 
+// MARK: - Contact Row View
+
+/// A row displaying a contact with an Invite button (matching RN SDK)
+struct ContactRowView: View {
+    let contact: VortexContact
+    let isInvited: Bool
+    let isLoading: Bool
+    let errorMessage: String?
+    let onInvite: () -> Void
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            // Contact info
+            VStack(alignment: .leading, spacing: 2) {
+                Text(contact.name)
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+                Text(contact.email)
+                    .font(.system(size: 13))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                // Show error message if present
+                if let error = errorMessage {
+                    Text(error)
+                        .font(.system(size: 11))
+                        .foregroundColor(.red)
+                        .lineLimit(1)
+                }
+            }
+            
+            Spacer()
+            
+            // Invite button, Invited status, or Error with Retry
+            if isInvited {
+                Text("✓ Invited!")
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(.secondary)
+            } else if errorMessage != nil {
+                // Show Retry button on error
+                Button(action: onInvite) {
+                    if isLoading {
+                        ProgressView()
+                            .frame(width: 60)
+                    } else {
+                        Text("Retry")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.red)
+                    }
+                }
+                .frame(minWidth: 80)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+                .background(Color.red.opacity(0.1))
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color.red.opacity(0.3), lineWidth: 1)
+                )
+                .disabled(isLoading)
+            } else {
+                Button(action: onInvite) {
+                    if isLoading {
+                        ProgressView()
+                            .frame(width: 60)
+                    } else {
+                        Text("Invite")
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(.primary)
+                    }
+                }
+                .frame(minWidth: 80)
+                .padding(.vertical, 8)
+                .padding(.horizontal, 16)
+                .background(Color(UIColor.tertiarySystemBackground))
+                .cornerRadius(6)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 6)
+                        .stroke(Color(UIColor.separator), lineWidth: 1)
+                )
+                .disabled(isLoading)
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+    }
+}
+
+// MARK: - Contact Model
+
+/// Represents a contact with email for invitation
+struct VortexContact: Identifiable {
+    let id: String
+    let name: String
+    let email: String
+}
+
+/// Errors that can occur when accessing contacts
+enum ContactsError: LocalizedError {
+    case accessDenied
+    case fetchFailed(Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .accessDenied:
+            return "Contacts access was denied. Please enable Contacts access in your device Settings to import contacts."
+        case .fetchFailed(let error):
+            return "Failed to fetch contacts: \(error.localizedDescription)"
+        }
+    }
+}
+
 // MARK: - View State Enum
 
 enum InviteViewState {
@@ -618,6 +867,27 @@ class VortexInviteViewModel: ObservableObject {
     @Published var copySuccess = false
     @Published var shareSuccess = false
     @Published var shareableLink: String?
+    
+    // Contacts state
+    @Published var contacts: [VortexContact] = []
+    @Published var loadingContacts = false
+    @Published var contactsError: Error?
+    @Published var contactsSearchQuery = ""
+    @Published var invitedContactIds: Set<String> = []
+    @Published var loadingContactIds: Set<String> = []
+    @Published var failedContactIds: [String: String] = [:] // contactId -> error message
+    
+    /// Filtered contacts based on search query
+    var filteredContacts: [VortexContact] {
+        if contactsSearchQuery.isEmpty {
+            return contacts
+        }
+        let query = contactsSearchQuery.lowercased()
+        return contacts.filter { contact in
+            contact.name.lowercased().contains(query) ||
+            contact.email.lowercased().contains(query)
+        }
+    }
     
     // MARK: - Private Properties
     
@@ -1000,12 +1270,184 @@ class VortexInviteViewModel: ObservableObject {
     
     func selectFromContacts() {
         currentView = .contactsPicker
-        // TODO: Implement native contacts picker
+        contactsSearchQuery = ""
+        
+        // Fetch contacts if not already loaded
+        if contacts.isEmpty && !loadingContacts {
+            Task {
+                await fetchContacts()
+            }
+        }
     }
     
     func selectFromGoogleContacts() {
         // TODO: Implement Google contacts integration
         print("[VortexSDK] Google contacts integration not yet implemented")
+    }
+    
+    /// Fetch contacts from the device using iOS Contacts framework
+    func fetchContacts() async {
+        loadingContacts = true
+        contactsError = nil
+        
+        do {
+            let store = CNContactStore()
+            
+            // Request permission
+            let status = CNContactStore.authorizationStatus(for: .contacts)
+            
+            switch status {
+            case .notDetermined:
+                // Request access
+                let granted = try await store.requestAccess(for: .contacts)
+                if !granted {
+                    throw ContactsError.accessDenied
+                }
+            case .denied, .restricted:
+                throw ContactsError.accessDenied
+            case .authorized:
+                break
+            @unknown default:
+                throw ContactsError.accessDenied
+            }
+            
+            // Fetch contacts with email addresses
+            let keysToFetch: [CNKeyDescriptor] = [
+                CNContactGivenNameKey as CNKeyDescriptor,
+                CNContactFamilyNameKey as CNKeyDescriptor,
+                CNContactEmailAddressesKey as CNKeyDescriptor,
+                CNContactIdentifierKey as CNKeyDescriptor
+            ]
+            
+            let request = CNContactFetchRequest(keysToFetch: keysToFetch)
+            request.sortOrder = .givenName
+            
+            var fetchedContacts: [VortexContact] = []
+            
+            try store.enumerateContacts(with: request) { contact, _ in
+                // Only include contacts with email addresses
+                for email in contact.emailAddresses {
+                    let emailString = email.value as String
+                    let name = [contact.givenName, contact.familyName]
+                        .filter { !$0.isEmpty }
+                        .joined(separator: " ")
+                    let displayName = name.isEmpty ? self.inferNameFromEmail(emailString) : name
+                    
+                    // Create unique ID combining contact ID and email
+                    let uniqueId = "\(contact.identifier)-\(emailString)"
+                    
+                    fetchedContacts.append(VortexContact(
+                        id: uniqueId,
+                        name: displayName,
+                        email: emailString
+                    ))
+                }
+            }
+            
+            contacts = fetchedContacts
+            print("[VortexSDK] Fetched \(fetchedContacts.count) contacts with email addresses")
+            
+        } catch let error as ContactsError {
+            contactsError = error
+            print("[VortexSDK] Contacts error: \(error.localizedDescription)")
+        } catch {
+            contactsError = error
+            print("[VortexSDK] Failed to fetch contacts: \(error)")
+        }
+        
+        loadingContacts = false
+    }
+    
+    /// Infer a display name from an email address
+    private func inferNameFromEmail(_ email: String) -> String {
+        guard let localPart = email.split(separator: "@").first else {
+            return email
+        }
+        
+        // Replace common separators with spaces and capitalize
+        let name = String(localPart)
+            .replacingOccurrences(of: ".", with: " ")
+            .replacingOccurrences(of: "_", with: " ")
+            .replacingOccurrences(of: "-", with: " ")
+            .split(separator: " ")
+            .map { $0.capitalized }
+            .joined(separator: " ")
+        
+        return name.isEmpty ? email : name
+    }
+    
+    /// Invite a contact by sending an invitation to their email
+    func inviteContact(_ contact: VortexContact) async {
+        guard let jwt = jwt,
+              let config = configuration else {
+            let errorMsg = "Cannot invite contact: missing JWT or configuration"
+            print("[VortexSDK] \(errorMsg)")
+            failedContactIds[contact.id] = errorMsg
+            return
+        }
+        
+        // Clear any previous error for this contact
+        failedContactIds.removeValue(forKey: contact.id)
+        
+        // Add to loading set
+        loadingContactIds.insert(contact.id)
+        
+        do {
+            // Build payload matching RN SDK format
+            let payload: [String: Any] = [
+                "invitee_email": ["value": contact.email, "type": "email"],
+                "invitee_name": ["value": contact.name, "type": "string"]
+            ]
+            
+            var groups: [GroupDTO]? = nil
+            if let group = group {
+                groups = [group]
+            }
+            
+            _ = try await client.createInvitation(
+                jwt: jwt,
+                widgetConfigurationId: config.id,
+                payload: payload,
+                groups: groups
+            )
+            
+            // Mark as invited
+            invitedContactIds.insert(contact.id)
+            print("[VortexSDK] Successfully invited contact: \(contact.email)")
+            
+        } catch {
+            // Extract meaningful error message
+            let errorMessage: String
+            if let vortexError = error as? VortexError {
+                errorMessage = vortexError.localizedDescription
+            } else {
+                errorMessage = error.localizedDescription
+            }
+            
+            // Log detailed error to console
+            print("[VortexSDK] ❌ Failed to invite contact \(contact.email): \(error)")
+            print("[VortexSDK] Error details: \(errorMessage)")
+            
+            // Store error for UI display
+            failedContactIds[contact.id] = "Failed to send invitation"
+        }
+        
+        // Remove from loading set
+        loadingContactIds.remove(contact.id)
+    }
+    
+    /// Retry fetching contacts (e.g., after user grants permission in Settings)
+    func retryFetchContacts() async {
+        contacts = []
+        contactsError = nil
+        await fetchContacts()
+    }
+    
+    /// Open iOS Settings app for the user to grant contacts permission
+    func openSettings() {
+        if let url = URL(string: UIApplication.openSettingsURLString) {
+            UIApplication.shared.open(url)
+        }
     }
     
     // MARK: - Email Actions
