@@ -130,34 +130,37 @@ public struct VortexInviteView: View {
                 let _ = print("[VortexSDK] currentView: \(viewModel.currentView)")
                 #endif
                 
-                // Dynamic form rendering based on configuration
-                if let formRoot = viewModel.formStructure {
-                    #if DEBUG
-                    let _ = print("[VortexSDK] formRoot.children count: \(formRoot.children?.count ?? 0)")
-                    #endif
-                    ForEach(formRoot.children ?? [], id: \.id) { row in
+                // Show different content based on currentView
+                switch viewModel.currentView {
+                case .main:
+                    // Dynamic form rendering based on configuration
+                    if let formRoot = viewModel.formStructure {
                         #if DEBUG
-                        let _ = print("[VortexSDK] Rendering row: \(row.id), type: \(row.type), hidden: \(row.hidden ?? false)")
+                        let _ = print("[VortexSDK] formRoot.children count: \(formRoot.children?.count ?? 0)")
                         #endif
-                        renderRow(row)
+                        ForEach(formRoot.children ?? [], id: \.id) { row in
+                            #if DEBUG
+                            let _ = print("[VortexSDK] Rendering row: \(row.id), type: \(row.type), hidden: \(row.hidden ?? false)")
+                            #endif
+                            renderRow(row)
+                        }
+                    } else {
+                        #if DEBUG
+                        let _ = print("[VortexSDK] formStructure is nil!")
+                        #endif
                     }
-                } else {
-                    #if DEBUG
-                    let _ = print("[VortexSDK] formStructure is nil!")
-                    #endif
-                }
-                
-                // Email invitations view (shown when in email entry mode)
-                if viewModel.currentView == .emailEntry {
+                    
+                case .emailEntry:
                     emailEntryView
-                }
-                
-                // Contacts picker view
-                if viewModel.currentView == .contactsPicker {
+                    
+                case .contactsPicker:
                     contactsPickerView
+                    
+                case .qrCode:
+                    qrCodeView
                 }
                 
-                // Success message
+                // Success message (can show in any view)
                 if viewModel.showSuccess {
                     successMessageView
                 }
@@ -287,6 +290,89 @@ public struct VortexInviteView: View {
             Text("Contacts picker coming soon")
                 .foregroundColor(.secondary)
         }
+    }
+    
+    // MARK: - QR Code View
+    
+    private var qrCodeView: some View {
+        VStack(spacing: 20) {
+            // Title (matching RN SDK)
+            Text("Scan QR Code to Join")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(Color(UIColor.label))
+                .padding(.top, 16)
+            
+            // QR Code container
+            VStack(spacing: 20) {
+                if viewModel.loadingQrCode {
+                    // Loading state
+                    VStack(spacing: 12) {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                        Text("Generating QR Code...")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(width: 250, height: 250)
+                } else if let link = viewModel.shareableLink, let qrImage = generateQRCode(from: link) {
+                    // QR Code image
+                    Image(uiImage: qrImage)
+                        .interpolation(.none)
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 250, height: 250)
+                    
+                    // Helper text (matching RN SDK)
+                    Text("Have someone scan this code with their phone camera to receive the invitation link")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineSpacing(4)
+                        .padding(.horizontal, 20)
+                } else {
+                    // Error state
+                    VStack(spacing: 12) {
+                        Image(systemName: "qrcode")
+                            .font(.system(size: 50))
+                            .foregroundColor(.secondary)
+                        Text("QR Code not available")
+                            .font(.system(size: 14))
+                            .foregroundColor(.secondary)
+                    }
+                    .frame(width: 250, height: 250)
+                }
+            }
+            .padding(20)
+            .background(Color(UIColor.systemBackground))
+            .cornerRadius(10)
+        }
+        .padding(.horizontal)
+        .task {
+            // Fetch shareable link when QR code view appears
+            await viewModel.fetchShareableLinkForQrCode()
+        }
+    }
+    
+    /// Generate a QR code image from a string using CoreImage
+    private func generateQRCode(from string: String) -> UIImage? {
+        guard let data = string.data(using: .utf8) else { return nil }
+        
+        guard let filter = CIFilter(name: "CIQRCodeGenerator") else { return nil }
+        filter.setValue(data, forKey: "inputMessage")
+        filter.setValue("H", forKey: "inputCorrectionLevel") // High error correction
+        
+        guard let outputImage = filter.outputImage else { return nil }
+        
+        // Scale up the QR code for better quality
+        let scale = 10.0
+        let transform = CGAffineTransform(scaleX: scale, y: scale)
+        let scaledImage = outputImage.transformed(by: transform)
+        
+        // Convert to UIImage with black QR code on white background
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) else { return nil }
+        
+        return UIImage(cgImage: cgImage)
     }
     
     // MARK: - Success Message View
@@ -528,6 +614,7 @@ class VortexInviteViewModel: ObservableObject {
     // Share state
     @Published var loadingCopy = false
     @Published var loadingShare = false
+    @Published var loadingQrCode = false
     @Published var copySuccess = false
     @Published var shareSuccess = false
     @Published var shareableLink: String?
@@ -895,6 +982,18 @@ class VortexInviteViewModel: ObservableObject {
     
     func showQrCode() {
         currentView = .qrCode
+    }
+    
+    /// Fetch shareable link specifically for QR code display
+    func fetchShareableLinkForQrCode() async {
+        // If we already have a link, no need to fetch again
+        if shareableLink != nil {
+            return
+        }
+        
+        loadingQrCode = true
+        await fetchShareableLink()
+        loadingQrCode = false
     }
     
     // MARK: - Contact Actions
