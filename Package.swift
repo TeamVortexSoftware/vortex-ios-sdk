@@ -24,7 +24,12 @@ let package = Package(
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
                 .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession")
             ],
-            path: "Sources/VortexSDK"
+            path: "Sources/VortexSDK",
+            resources: [
+                .process("Resources/fa-solid-900.ttf"),
+                .process("Resources/fa-brands-400.ttf"),
+                .process("Resources/fa-regular-400.ttf")
+            ]
         ),
         .testTarget(
             name: "VortexSDKTests",

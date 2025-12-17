@@ -30,10 +30,22 @@ public struct CreateInvitationResponse: Codable {
     public let message: String?
 }
 
-/// Response from shareable link endpoint
+/// Response from shareable link endpoint (matches ShareableLinkResponseDto from RN SDK)
 public struct ShareableLinkResponse: Codable {
-    public let link: String
-    public let expiresAt: String?
+    public let data: ShareableLinkData
+}
+
+/// Data wrapper for shareable link response
+public struct ShareableLinkData: Codable {
+    public let invitation: ShareableLinkInvitation
+}
+
+/// Invitation details in shareable link response
+public struct ShareableLinkInvitation: Codable {
+    public let id: String
+    public let shortLink: String
+    public let source: String?
+    public let attributes: [String: String]?
 }
 
 /// Group information for invitations
@@ -225,7 +237,7 @@ public class VortexClient {
         groups: [GroupDTO]? = nil,
         templateVariables: [String: String]? = nil
     ) async throws -> ShareableLinkResponse {
-        let url = baseURL.appendingPathComponent("/api/v1/invitations/shareable-link")
+        let url = baseURL.appendingPathComponent("/api/v1/invitations/generate-shareable-link-invite")
         
         var request = URLRequest(url: url)
         request.httpMethod = "POST"

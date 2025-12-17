@@ -52,10 +52,12 @@ public struct VortexInviteView: View {
                                 viewModel.currentView = .main
                             }
                         }) {
-                            Image(systemName: viewModel.currentView == .main ? "xmark" : "chevron.left")
-                                .foregroundColor(.primary)
-                                .font(.system(size: 20, weight: .medium))
-                                .frame(width: 44, height: 44)
+                            VortexIcon(
+                                name: viewModel.currentView == .main ? .close : .arrowBack,
+                                size: 20,
+                                color: .primary
+                            )
+                            .frame(width: 44, height: 44)
                         }
                         Spacer()
                     }
@@ -326,7 +328,7 @@ struct ShareOptionsView: View {
             // Copy Link button
             if viewModel.isCopyLinkEnabled {
                 ShareButton(
-                    icon: "link",
+                    icon: .link,
                     title: viewModel.copySuccess ? "✓ Copied!" : "Copy Link",
                     isLoading: viewModel.loadingCopy
                 ) {
@@ -337,7 +339,7 @@ struct ShareOptionsView: View {
             // Native Share button
             if viewModel.isNativeShareEnabled {
                 ShareButton(
-                    icon: "square.and.arrow.up",
+                    icon: .share,
                     title: viewModel.shareSuccess ? "✓ Shared!" : "Share Invitation",
                     isLoading: viewModel.loadingShare
                 ) {
@@ -348,7 +350,7 @@ struct ShareOptionsView: View {
             // SMS button
             if viewModel.isSmsEnabled {
                 ShareButton(
-                    icon: "message",
+                    icon: .sms,
                     title: "Share via SMS"
                 ) {
                     viewModel.shareViaSms()
@@ -358,7 +360,7 @@ struct ShareOptionsView: View {
             // QR Code button
             if viewModel.isQrCodeEnabled {
                 ShareButton(
-                    icon: "qrcode",
+                    icon: .qrCode,
                     title: "Show QR Code"
                 ) {
                     viewModel.showQrCode()
@@ -368,7 +370,7 @@ struct ShareOptionsView: View {
             // LINE button
             if viewModel.isLineEnabled {
                 ShareButton(
-                    icon: "paperplane",
+                    icon: .line,
                     title: "Share via LINE"
                 ) {
                     viewModel.shareViaLine()
@@ -402,7 +404,7 @@ struct ContactsImportView: View {
             // Import from Contacts button
             if viewModel.isNativeContactsEnabled {
                 ShareButton(
-                    icon: "person.crop.circle",
+                    icon: .importContacts,
                     title: "Add from Contacts"
                 ) {
                     viewModel.selectFromContacts()
@@ -412,7 +414,7 @@ struct ContactsImportView: View {
             // Import from Google Contacts button
             if viewModel.isGoogleContactsEnabled {
                 ShareButton(
-                    icon: "envelope",
+                    icon: .google,
                     title: "Add from Google Contacts"
                 ) {
                     viewModel.selectFromGoogleContacts()
@@ -421,7 +423,7 @@ struct ContactsImportView: View {
             
             // Add by Email button (navigates to email entry view)
             ShareButton(
-                icon: "envelope",
+                icon: .email,
                 title: "Add by Email"
             ) {
                 viewModel.currentView = .emailEntry
@@ -448,7 +450,7 @@ struct HeadingView: View {
 // MARK: - Share Button Component
 
 struct ShareButton: View {
-    let icon: String
+    let icon: VortexIconName
     let title: String
     var isLoading: Bool = false
     let action: () -> Void
@@ -458,10 +460,12 @@ struct ShareButton: View {
             HStack(spacing: 12) {
                 if isLoading {
                     ProgressView()
-                        .frame(width: 20, height: 20)
+                        .frame(width: 24, height: 18)
                 } else {
-                    Image(systemName: icon)
-                        .frame(width: 20, height: 20)
+                    // Use width: 24, height: 18 to match RN SDK's buttonIconContainer
+                    // This prevents the link icon (which is wider than tall) from being clipped
+                    VortexIcon(name: icon, size: 18, color: .primary)
+                        .frame(width: 24, height: 18)
                 }
                 Text(title)
                     .fontWeight(.medium)
@@ -487,8 +491,7 @@ struct EmailPillView: View {
             Text(email)
                 .font(.subheadline)
             Button(action: onRemove) {
-                Image(systemName: "xmark.circle.fill")
-                    .foregroundColor(.gray)
+                VortexIcon(name: .close, size: 14, color: .gray)
             }
         }
         .padding(.horizontal, 12)
@@ -709,7 +712,8 @@ class VortexInviteViewModel: ObservableObject {
                 widgetConfigurationId: config.id,
                 groups: groups
             )
-            shareableLink = response.link
+            shareableLink = response.data.invitation.shortLink
+            print("[VortexSDK] Fetched shareable link: \(response.data.invitation.shortLink)")
         } catch {
             print("[VortexSDK] Failed to fetch shareable link: \(error)")
         }
@@ -718,19 +722,27 @@ class VortexInviteViewModel: ObservableObject {
     // MARK: - Share Actions
     
     func copyLink() async {
-        guard let link = shareableLink else {
+        loadingCopy = true
+        
+        // Fetch shareable link if not already cached
+        if shareableLink == nil {
             await fetchShareableLink()
-            guard let link = shareableLink else { return }
-            UIPasteboard.general.string = link
+        }
+        
+        guard let link = shareableLink else {
+            loadingCopy = false
+            print("[VortexSDK] Failed to get shareable link for copy")
             return
         }
         
-        loadingCopy = true
+        // Copy to clipboard
         UIPasteboard.general.string = link
+        print("[VortexSDK] Link copied to clipboard: \(link)")
+        
         loadingCopy = false
         copySuccess = true
         
-        // Reset success state after delay
+        // Reset success state after delay (2 seconds, matching RN SDK)
         try? await Task.sleep(nanoseconds: 2_000_000_000)
         copySuccess = false
     }
