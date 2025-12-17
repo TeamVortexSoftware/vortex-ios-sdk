@@ -748,56 +748,140 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func shareInvitation() async {
-        guard let link = shareableLink else {
+        loadingShare = true
+        
+        // Fetch shareable link if not already cached
+        if shareableLink == nil {
             await fetchShareableLink()
+        }
+        
+        guard let link = shareableLink else {
+            loadingShare = false
+            print("[VortexSDK] Failed to get shareable link for share")
             return
         }
         
-        loadingShare = true
-        
-        // Get the share template from configuration
+        // Get the share template from configuration (matching RN SDK behavior)
         var shareText = link
         if let config = configuration,
            let templateProp = config.configuration.props["vortex.components.share.template.body"],
            case .string(let template) = templateProp.value {
-            shareText = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+            // Replace placeholder with actual link
+            if template.contains("{{vortex_share_link}}") {
+                shareText = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+            } else {
+                // If no placeholder, append link to template
+                shareText = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+            }
         }
         
-        // Present share sheet
+        // Get optional subject from configuration
+        var shareSubject: String? = nil
+        if let config = configuration,
+           let subjectProp = config.configuration.props["vortex.components.share.template.subject"],
+           case .string(let subject) = subjectProp.value,
+           !subject.trimmingCharacters(in: .whitespaces).isEmpty {
+            shareSubject = subject.trimmingCharacters(in: .whitespaces)
+        }
+        
+        print("[VortexSDK] Sharing invitation with text: \(shareText)")
+        
+        // Build activity items - include both text and URL for rich sharing
+        var activityItems: [Any] = [shareText]
+        if let url = URL(string: link) {
+            activityItems.append(url)
+        }
+        
+        // Create the activity view controller
+        let activityVC = UIActivityViewController(
+            activityItems: activityItems,
+            applicationActivities: nil
+        )
+        
+        // Set subject for email sharing
+        if let subject = shareSubject {
+            activityVC.setValue(subject, forKey: "subject")
+        }
+        
+        // Find the topmost view controller to present from
         guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
               let window = windowScene.windows.first,
               let rootVC = window.rootViewController else {
             loadingShare = false
+            print("[VortexSDK] Failed to get root view controller for share sheet")
             return
         }
         
-        let activityVC = UIActivityViewController(
-            activityItems: [shareText],
-            applicationActivities: nil
-        )
+        // Find the topmost presented view controller
+        var topVC = rootVC
+        while let presented = topVC.presentedViewController {
+            topVC = presented
+        }
         
-        // For iPad
+        // For iPad - configure popover presentation
         if let popover = activityVC.popoverPresentationController {
-            popover.sourceView = window
-            popover.sourceRect = CGRect(x: window.bounds.midX, y: window.bounds.midY, width: 0, height: 0)
+            popover.sourceView = topVC.view
+            popover.sourceRect = CGRect(x: topVC.view.bounds.midX, y: topVC.view.bounds.midY, width: 0, height: 0)
             popover.permittedArrowDirections = []
         }
         
-        rootVC.present(activityVC, animated: true)
+        // Set loading to false before presenting (UI will update)
         loadingShare = false
+        
+        print("[VortexSDK] Presenting share sheet from topVC: \(type(of: topVC))")
+        
+        // Present the share sheet from the topmost view controller
+        topVC.present(activityVC, animated: true) {
+            print("[VortexSDK] Share sheet presented successfully")
+        }
+        
+        // Set success state after a brief delay to allow the sheet to appear
+        try? await Task.sleep(nanoseconds: 500_000_000) // 0.5 seconds
         shareSuccess = true
         
-        // Reset success state after delay
+        // Reset success state after delay (2 seconds, matching RN SDK)
         try? await Task.sleep(nanoseconds: 2_000_000_000)
         shareSuccess = false
     }
     
     func shareViaSms() {
-        guard let link = shareableLink,
-              let url = URL(string: "sms:&body=\(link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? link)") else {
-            return
+        Task {
+            // Fetch shareable link if not already cached
+            if shareableLink == nil {
+                await fetchShareableLink()
+            }
+            
+            guard let link = shareableLink else {
+                print("[VortexSDK] Failed to get shareable link for SMS")
+                return
+            }
+            
+            // Get the share template from configuration (matching RN SDK behavior)
+            var smsBody = link
+            if let config = configuration,
+               let templateProp = config.configuration.props["vortex.components.share.template.body"],
+               case .string(let template) = templateProp.value {
+                // Replace placeholder with actual link
+                if template.contains("{{vortex_share_link}}") {
+                    smsBody = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                } else {
+                    // If no placeholder, append link to template
+                    smsBody = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                }
+            }
+            
+            // URL encode the body
+            guard let encodedBody = smsBody.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                  let url = URL(string: "sms:?body=\(encodedBody)") else {
+                print("[VortexSDK] Failed to create SMS URL")
+                return
+            }
+            
+            print("[VortexSDK] Opening SMS with body: \(smsBody)")
+            await MainActor.run {
+                UIApplication.shared.open(url)
+            }
         }
-        UIApplication.shared.open(url)
     }
     
     func shareViaLine() {
