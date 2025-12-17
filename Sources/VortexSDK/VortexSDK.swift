@@ -1,16 +1,7 @@
 import Foundation
 
-// MARK: - Public API Exports
-
-// Re-export all public types for convenient importing
-@_exported import struct VortexSDK.WidgetConfiguration
-@_exported import struct VortexSDK.VortexInviteView
-@_exported import class VortexSDK.VortexClient
-@_exported import enum VortexSDK.VortexError
-@_exported import struct VortexSDK.GroupDTO
-
-/// VortexSDK version information
-public enum VortexSDK {
+/// VortexSDK version information and namespace
+public enum VortexSDKInfo {
     /// Current version of the SDK
     public static let version = "1.0.0"
     

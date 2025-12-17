@@ -5,15 +5,20 @@ import Foundation
 /// Root configuration object returned from the Vortex API
 public struct WidgetConfiguration: Codable, Sendable {
     public let id: String
-    public let projectId: String
-    public let widgetId: String
-    public let slug: String
-    public let version: Int
+    public let name: String?
+    public let slug: String?
+    public let version: String?
     public let configuration: WidgetConfigurationConfiguration
     public let createdAt: String?
     public let updatedAt: String?
     public let createdBy: String?
     public let status: String?
+    
+    // Optional fields that may or may not be present
+    public let projectId: String?
+    public let widgetId: String?
+    public let deploymentId: String?
+    public let widgetType: String?
 }
 
 /// Configuration container with metadata and props
@@ -46,13 +51,14 @@ public struct ConfigurationProperty: Codable, Sendable {
     public init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.valueType = try container.decode(String.self, forKey: .valueType)
-        self.value = try ConfigurationValue(from: decoder)
+        // Decode value from the "value" key using superDecoder
+        self.value = try container.decode(ConfigurationValue.self, forKey: .value)
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(valueType, forKey: .valueType)
-        try value.encode(to: encoder)
+        try container.encode(value, forKey: .value)
     }
 }
 

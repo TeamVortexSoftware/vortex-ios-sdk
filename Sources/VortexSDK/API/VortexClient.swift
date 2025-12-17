@@ -4,8 +4,23 @@ import Foundation
 
 /// Response from widget configuration endpoint
 public struct WidgetConfigurationResponse: Codable {
-    public let data: WidgetConfiguration
+    public let data: WidgetConfigurationData
+}
+
+/// Data wrapper containing widget configuration and metadata
+public struct WidgetConfigurationData: Codable {
+    public let widgetConfiguration: WidgetConfiguration
+    public let deploymentId: String?
+    public let widgetType: String?
+    public let environmentRole: String?
+    public let environmentName: String?
+    public let renderer: RendererInfo?
     public let sessionAttestation: String?
+}
+
+/// Renderer information
+public struct RendererInfo: Codable {
+    public let url: String?
 }
 
 /// Response from create invitation endpoint
@@ -100,15 +115,23 @@ public class VortexClient {
             throw VortexError.httpError(statusCode: httpResponse.statusCode)
         }
         
+        // Debug: Log raw JSON response
+        #if DEBUG
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("[VortexSDK] Raw widget configuration response:")
+            print(jsonString)
+        }
+        #endif
+        
         let decoder = JSONDecoder()
         let configResponse = try decoder.decode(WidgetConfigurationResponse.self, from: data)
         
         // Store session attestation for future requests
-        if let attestation = configResponse.sessionAttestation {
+        if let attestation = configResponse.data.sessionAttestation {
             self.sessionAttestation = attestation
         }
         
-        return configResponse.data
+        return configResponse.data.widgetConfiguration
     }
     
     // MARK: - Invitations
