@@ -15,14 +15,17 @@ let package = Package(
     dependencies: [
         // OpenAPI runtime for generated API client
         .package(url: "https://github.com/apple/swift-openapi-runtime.git", from: "1.0.0"),
-        .package(url: "https://github.com/apple/swift-openapi-urlsession.git", from: "1.0.0")
+        .package(url: "https://github.com/apple/swift-openapi-urlsession.git", from: "1.0.0"),
+        // Google Sign-In for Google Contacts integration
+        .package(url: "https://github.com/google/GoogleSignIn-iOS.git", from: "7.0.0")
     ],
     targets: [
         .target(
             name: "VortexSDK",
             dependencies: [
                 .product(name: "OpenAPIRuntime", package: "swift-openapi-runtime"),
-                .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession")
+                .product(name: "OpenAPIURLSession", package: "swift-openapi-urlsession"),
+                .product(name: "GoogleSignIn", package: "GoogleSignIn-iOS")
             ],
             path: "Sources/VortexSDK",
             resources: [

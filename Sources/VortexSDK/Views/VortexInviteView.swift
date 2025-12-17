@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import Contacts
+import GoogleSignIn
 
 /// Main invitation form view component
 /// This is the primary entry point for integrating Vortex invitations into your iOS app
@@ -13,12 +14,14 @@ public struct VortexInviteView: View {
     ///   - jwt: JWT authentication token (required for API access)
     ///   - apiBaseURL: Base URL of the Vortex API (default: production)
     ///   - group: Optional group information for scoping invitations
+    ///   - googleIosClientId: Google iOS Client ID for Google Contacts integration (optional)
     ///   - onDismiss: Callback when the view is dismissed
     public init(
         componentId: String,
         jwt: String?,
         apiBaseURL: URL = URL(string: "https://client-api.vortexsoftware.com")!,
         group: GroupDTO? = nil,
+        googleIosClientId: String? = nil,
         onDismiss: (() -> Void)? = nil
     ) {
         _viewModel = StateObject(wrappedValue: VortexInviteViewModel(
@@ -26,6 +29,7 @@ public struct VortexInviteView: View {
             jwt: jwt,
             apiBaseURL: apiBaseURL,
             group: group,
+            googleIosClientId: googleIosClientId,
             onDismiss: onDismiss
         ))
     }
@@ -157,6 +161,9 @@ public struct VortexInviteView: View {
                     
                 case .contactsPicker:
                     contactsPickerView
+                    
+                case .googleContactsPicker:
+                    googleContactsPickerView
                     
                 case .qrCode:
                     qrCodeView
@@ -424,6 +431,115 @@ public struct VortexInviteView: View {
                                 errorMessage: viewModel.failedContactIds[contact.id],
                                 onInvite: {
                                     Task { await viewModel.inviteContact(contact) }
+                                }
+                            )
+                            Divider()
+                                .padding(.leading, 16)
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    // MARK: - Google Contacts Picker View
+    
+    private var googleContactsPickerView: some View {
+        VStack(spacing: 16) {
+            // Title (matching RN SDK)
+            Text("Add from Google Contacts")
+                .font(.system(size: 18, weight: .bold))
+                .foregroundColor(Color(UIColor.label))
+                .padding(.top, 16)
+            
+            // Search field
+            HStack {
+                Image(systemName: "magnifyingglass")
+                    .foregroundColor(.secondary)
+                TextField("Search contacts...", text: $viewModel.googleContactsSearchQuery)
+                    .textFieldStyle(.plain)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                if !viewModel.googleContactsSearchQuery.isEmpty {
+                    Button(action: { viewModel.googleContactsSearchQuery = "" }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .foregroundColor(.secondary)
+                    }
+                }
+            }
+            .padding(12)
+            .background(Color(UIColor.secondarySystemBackground))
+            .cornerRadius(10)
+            .padding(.horizontal)
+            
+            // Content: Loading, Error, or Contacts List
+            if viewModel.loadingGoogleContacts {
+                // Loading state
+                VStack(spacing: 12) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                    Text("Loading Google contacts...")
+                        .font(.system(size: 14))
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.vertical, 40)
+            } else if let error = viewModel.googleContactsError {
+                // Error state
+                VStack(spacing: 16) {
+                    Image(systemName: "person.crop.circle.badge.exclamationmark")
+                        .font(.system(size: 50))
+                        .foregroundColor(.red)
+                    
+                    Text("Unable to Access Google Contacts")
+                        .font(.headline)
+                        .foregroundColor(.primary)
+                    
+                    Text(error.localizedDescription)
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal)
+                    
+                    Button(action: {
+                        Task { await viewModel.retryFetchGoogleContacts() }
+                    }) {
+                        Text("Try Again")
+                            .fontWeight(.medium)
+                            .padding()
+                            .background(Color(UIColor.secondarySystemBackground))
+                            .cornerRadius(10)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+            } else if viewModel.filteredGoogleContacts.isEmpty {
+                // Empty state
+                VStack(spacing: 12) {
+                    Image(systemName: "person.crop.circle.badge.questionmark")
+                        .font(.system(size: 40))
+                        .foregroundColor(.secondary)
+                    Text(viewModel.googleContactsSearchQuery.isEmpty 
+                         ? "No Google contacts with email addresses found" 
+                         : "No contacts match your search")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
+                // Contacts list
+                ScrollView {
+                    LazyVStack(spacing: 0) {
+                        ForEach(viewModel.filteredGoogleContacts) { contact in
+                            ContactRowView(
+                                contact: contact,
+                                isInvited: viewModel.invitedGoogleContactIds.contains(contact.id),
+                                isLoading: viewModel.loadingGoogleContactIds.contains(contact.id),
+                                errorMessage: viewModel.failedGoogleContactIds[contact.id],
+                                onInvite: {
+                                    Task { await viewModel.inviteGoogleContact(contact) }
                                 }
                             )
                             Divider()
@@ -843,12 +959,52 @@ enum ContactsError: LocalizedError {
     }
 }
 
+/// Errors that can occur when accessing Google Contacts
+enum GoogleContactsError: LocalizedError {
+    case missingClientId
+    case signInUnavailable
+    case signInCancelled
+    case signInFailed(Error)
+    case noAccessToken
+    case noPresentingViewController
+    case invalidURL
+    case invalidResponse
+    case apiError(statusCode: Int)
+    case fetchFailed(Error)
+    
+    var errorDescription: String? {
+        switch self {
+        case .missingClientId:
+            return "Google iOS Client ID not configured. Please provide googleIosClientId parameter."
+        case .signInUnavailable:
+            return "Google Sign-In is not available. Please ensure GoogleSignIn SDK is properly configured."
+        case .signInCancelled:
+            return "Google Sign-In was cancelled."
+        case .signInFailed(let error):
+            return "Google Sign-In failed: \(error.localizedDescription)"
+        case .noAccessToken:
+            return "Failed to get access token from Google Sign-In."
+        case .noPresentingViewController:
+            return "Unable to present Google Sign-In. No view controller available."
+        case .invalidURL:
+            return "Invalid Google People API URL."
+        case .invalidResponse:
+            return "Invalid response from Google People API."
+        case .apiError(let statusCode):
+            return "Google People API error: HTTP \(statusCode)"
+        case .fetchFailed(let error):
+            return "Failed to fetch Google contacts: \(error.localizedDescription)"
+        }
+    }
+}
+
 // MARK: - View State Enum
 
 enum InviteViewState {
     case main
     case emailEntry
     case contactsPicker
+    case googleContactsPicker
     case qrCode
 }
 
@@ -875,7 +1031,7 @@ class VortexInviteViewModel: ObservableObject {
     @Published var shareSuccess = false
     @Published var shareableLink: String?
     
-    // Contacts state
+    // Contacts state (native)
     @Published var contacts: [VortexContact] = []
     @Published var loadingContacts = false
     @Published var contactsError: Error?
@@ -883,6 +1039,15 @@ class VortexInviteViewModel: ObservableObject {
     @Published var invitedContactIds: Set<String> = []
     @Published var loadingContactIds: Set<String> = []
     @Published var failedContactIds: [String: String] = [:] // contactId -> error message
+    
+    // Google Contacts state
+    @Published var googleContacts: [VortexContact] = []
+    @Published var loadingGoogleContacts = false
+    @Published var googleContactsError: Error?
+    @Published var googleContactsSearchQuery = ""
+    @Published var invitedGoogleContactIds: Set<String> = []
+    @Published var loadingGoogleContactIds: Set<String> = []
+    @Published var failedGoogleContactIds: [String: String] = [:] // contactId -> error message
     
     /// Filtered contacts based on search query
     var filteredContacts: [VortexContact] {
@@ -896,12 +1061,25 @@ class VortexInviteViewModel: ObservableObject {
         }
     }
     
+    /// Filtered Google contacts based on search query
+    var filteredGoogleContacts: [VortexContact] {
+        if googleContactsSearchQuery.isEmpty {
+            return googleContacts
+        }
+        let query = googleContactsSearchQuery.lowercased()
+        return googleContacts.filter { contact in
+            contact.name.lowercased().contains(query) ||
+            contact.email.lowercased().contains(query)
+        }
+    }
+    
     // MARK: - Private Properties
     
     private let componentId: String
     private let jwt: String?
     private let client: VortexClient
     private let group: GroupDTO?
+    private let googleIosClientId: String?
     private let onDismiss: (() -> Void)?
     
     // MARK: - Computed Properties
@@ -990,11 +1168,13 @@ class VortexInviteViewModel: ObservableObject {
         jwt: String?,
         apiBaseURL: URL,
         group: GroupDTO?,
+        googleIosClientId: String? = nil,
         onDismiss: (() -> Void)?
     ) {
         self.componentId = componentId
         self.jwt = jwt
         self.group = group
+        self.googleIosClientId = googleIosClientId
         self.onDismiss = onDismiss
         self.client = VortexClient(baseURL: apiBaseURL)
     }
@@ -1288,8 +1468,289 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func selectFromGoogleContacts() {
-        // TODO: Implement Google contacts integration
-        print("[VortexSDK] Google contacts integration not yet implemented")
+        currentView = .googleContactsPicker
+        googleContactsSearchQuery = ""
+        
+        // Fetch Google contacts if not already loaded
+        if googleContacts.isEmpty && !loadingGoogleContacts {
+            Task {
+                await fetchGoogleContacts()
+            }
+        }
+    }
+    
+    /// Fetch contacts from Google using Google Sign-In and People API
+    func fetchGoogleContacts() async {
+        guard let clientId = googleIosClientId, !clientId.isEmpty else {
+            googleContactsError = GoogleContactsError.missingClientId
+            print("[VortexSDK] Google iOS Client ID not provided")
+            return
+        }
+        
+        loadingGoogleContacts = true
+        googleContactsError = nil
+        
+        do {
+            // Import GoogleSignIn dynamically to avoid hard dependency issues
+            let accessToken = try await performGoogleSignIn(clientId: clientId)
+            
+            // Fetch contacts from Google People API
+            let contacts = try await fetchContactsFromPeopleAPI(accessToken: accessToken)
+            googleContacts = contacts
+            print("[VortexSDK] Fetched \(contacts.count) Google contacts with email addresses")
+            
+        } catch let error as GoogleContactsError {
+            googleContactsError = error
+            print("[VortexSDK] Google Contacts error: \(error.localizedDescription)")
+        } catch {
+            googleContactsError = error
+            print("[VortexSDK] Failed to fetch Google contacts: \(error)")
+        }
+        
+        loadingGoogleContacts = false
+    }
+    
+    /// Perform Google Sign-In and return access token
+    private func performGoogleSignIn(clientId: String) async throws -> String {
+        // Use GoogleSignIn SDK
+        return try await withCheckedThrowingContinuation { continuation in
+            Task { @MainActor in
+                do {
+                    // Dynamic import of GoogleSignIn
+                    guard let GIDSignIn = NSClassFromString("GIDSignIn") as? NSObject.Type,
+                          let sharedInstance = GIDSignIn.value(forKey: "sharedInstance") as? NSObject else {
+                        // Fallback: try direct import
+                        try await self.performGoogleSignInDirect(clientId: clientId, continuation: continuation)
+                        return
+                    }
+                    
+                    try await self.performGoogleSignInDirect(clientId: clientId, continuation: continuation)
+                } catch {
+                    continuation.resume(throwing: error)
+                }
+            }
+        }
+    }
+    
+    /// Direct Google Sign-In implementation
+    @MainActor
+    private func performGoogleSignInDirect(clientId: String, continuation: CheckedContinuation<String, Error>) async throws {
+        // Import GoogleSignIn
+        guard let googleSignInModule = NSClassFromString("GIDSignIn") else {
+            continuation.resume(throwing: GoogleContactsError.signInUnavailable)
+            return
+        }
+        
+        // Get the presenting view controller
+        guard let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+              let window = windowScene.windows.first,
+              let rootVC = window.rootViewController else {
+            continuation.resume(throwing: GoogleContactsError.noPresentingViewController)
+            return
+        }
+        
+        // Find topmost view controller
+        var topVC = rootVC
+        while let presented = topVC.presentedViewController {
+            topVC = presented
+        }
+        
+        // Use GoogleSignIn directly via the imported module
+        performGoogleSignInWithSDK(clientId: clientId, presentingVC: topVC, continuation: continuation)
+    }
+    
+    /// Perform sign-in using GoogleSignIn SDK
+    @MainActor
+    private func performGoogleSignInWithSDK(clientId: String, presentingVC: UIViewController, continuation: CheckedContinuation<String, Error>) {
+        // Import and use GoogleSignIn
+        Task {
+            do {
+                let accessToken = try await signInWithGoogle(clientId: clientId, presentingVC: presentingVC)
+                continuation.resume(returning: accessToken)
+            } catch {
+                continuation.resume(throwing: error)
+            }
+        }
+    }
+    
+    /// Sign in with Google and get access token
+    @MainActor
+    private func signInWithGoogle(clientId: String, presentingVC: UIViewController) async throws -> String {
+        // Configure GoogleSignIn with the client ID
+        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientId)
+        
+        // Define the contacts scope
+        let contactsScope = "https://www.googleapis.com/auth/contacts.readonly"
+        
+        // Try silent sign-in first (uses cached credentials)
+        do {
+            if GIDSignIn.sharedInstance.hasPreviousSignIn() {
+                let user = try await GIDSignIn.sharedInstance.restorePreviousSignIn()
+                
+                // Check if we have the contacts scope
+                let grantedScopes = user.grantedScopes ?? []
+                if grantedScopes.contains(contactsScope) {
+                    // Refresh tokens if needed
+                    try await user.refreshTokensIfNeeded()
+                    guard let accessToken = user.accessToken.tokenString as String? else {
+                        throw GoogleContactsError.noAccessToken
+                    }
+                    print("[VortexSDK] Google silent sign-in success")
+                    return accessToken
+                } else {
+                    // Need to request additional scope - addScopes is on GIDGoogleUser in v7.x
+                    let result = try await user.addScopes([contactsScope], presenting: presentingVC)
+                    guard let accessToken = result.user.accessToken.tokenString as String? else {
+                        throw GoogleContactsError.noAccessToken
+                    }
+                    print("[VortexSDK] Google scope added successfully")
+                    return accessToken
+                }
+            }
+        } catch {
+            print("[VortexSDK] Silent sign-in failed, trying interactive: \(error)")
+        }
+        
+        // Interactive sign-in
+        do {
+            let result = try await GIDSignIn.sharedInstance.signIn(
+                withPresenting: presentingVC,
+                hint: nil,
+                additionalScopes: [contactsScope]
+            )
+            
+            guard let accessToken = result.user.accessToken.tokenString as String? else {
+                throw GoogleContactsError.noAccessToken
+            }
+            
+            print("[VortexSDK] Google interactive sign-in success")
+            return accessToken
+            
+        } catch let error as GIDSignInError {
+            switch error.code {
+            case .canceled:
+                throw GoogleContactsError.signInCancelled
+            case .hasNoAuthInKeychain:
+                throw GoogleContactsError.signInFailed(error)
+            default:
+                throw GoogleContactsError.signInFailed(error)
+            }
+        } catch {
+            throw GoogleContactsError.signInFailed(error)
+        }
+    }
+    
+    /// Fetch contacts from Google People API
+    private func fetchContactsFromPeopleAPI(accessToken: String) async throws -> [VortexContact] {
+        let urlString = "https://people.googleapis.com/v1/people/me/connections?personFields=names,emailAddresses&pageSize=1000"
+        guard let url = URL(string: urlString) else {
+            throw GoogleContactsError.invalidURL
+        }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw GoogleContactsError.invalidResponse
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw GoogleContactsError.apiError(statusCode: httpResponse.statusCode)
+        }
+        
+        // Parse the response
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let connections = json?["connections"] as? [[String: Any]] ?? []
+        
+        var contactMap: [String: VortexContact] = [:]
+        
+        for person in connections {
+            guard let emailAddresses = person["emailAddresses"] as? [[String: Any]] else { continue }
+            let resourceName = person["resourceName"] as? String ?? UUID().uuidString
+            let names = person["names"] as? [[String: Any]]
+            let displayName = names?.first?["displayName"] as? String
+            
+            for emailObj in emailAddresses {
+                guard let email = emailObj["value"] as? String else { continue }
+                let key = "\(resourceName)-\(email)"
+                
+                if contactMap[key] == nil {
+                    let name = displayName ?? inferNameFromEmail(email)
+                    contactMap[key] = VortexContact(id: key, name: name, email: email)
+                }
+            }
+        }
+        
+        return Array(contactMap.values).sorted { $0.name < $1.name }
+    }
+    
+    /// Invite a Google contact by sending an invitation to their email
+    func inviteGoogleContact(_ contact: VortexContact) async {
+        guard let jwt = jwt,
+              let config = configuration else {
+            let errorMsg = "Cannot invite contact: missing JWT or configuration"
+            print("[VortexSDK] \(errorMsg)")
+            failedGoogleContactIds[contact.id] = errorMsg
+            return
+        }
+        
+        // Clear any previous error for this contact
+        failedGoogleContactIds.removeValue(forKey: contact.id)
+        
+        // Add to loading set
+        loadingGoogleContactIds.insert(contact.id)
+        
+        do {
+            // Build payload matching RN SDK format
+            let payload: [String: Any] = [
+                "invitee_email": ["value": contact.email, "type": "email"],
+                "invitee_name": ["value": contact.name, "type": "string"]
+            ]
+            
+            var groups: [GroupDTO]? = nil
+            if let group = group {
+                groups = [group]
+            }
+            
+            _ = try await client.createInvitation(
+                jwt: jwt,
+                widgetConfigurationId: config.id,
+                payload: payload,
+                groups: groups
+            )
+            
+            // Mark as invited
+            invitedGoogleContactIds.insert(contact.id)
+            print("[VortexSDK] Successfully invited Google contact: \(contact.email)")
+            
+        } catch {
+            // Extract meaningful error message
+            let errorMessage: String
+            if let vortexError = error as? VortexError {
+                errorMessage = vortexError.localizedDescription
+            } else {
+                errorMessage = error.localizedDescription
+            }
+            
+            // Log detailed error to console
+            print("[VortexSDK] ❌ Failed to invite Google contact \(contact.email): \(error)")
+            print("[VortexSDK] Error details: \(errorMessage)")
+            
+            // Store error for UI display
+            failedGoogleContactIds[contact.id] = "Failed to send invitation"
+        }
+        
+        // Remove from loading set
+        loadingGoogleContactIds.remove(contact.id)
+    }
+    
+    /// Retry fetching Google contacts
+    func retryFetchGoogleContacts() async {
+        googleContacts = []
+        googleContactsError = nil
+        await fetchGoogleContacts()
     }
     
     /// Fetch contacts from the device using iOS Contacts framework
