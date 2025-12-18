@@ -35,7 +35,7 @@ public struct VortexInviteView: View {
     }
     
     public var body: some View {
-        ZStack {
+        ZStack(alignment: .bottom) {
             // Background overlay
             Color.black.opacity(0.3)
                 .ignoresSafeArea()
@@ -45,45 +45,44 @@ public struct VortexInviteView: View {
             
             // Main content sheet
             VStack(spacing: 0) {
-                Spacer()
-                
-                VStack(spacing: 0) {
-                    // Header with close/back button on the left (like RN SDK)
-                    HStack {
-                        Button(action: {
-                            if viewModel.currentView == .main {
-                                viewModel.dismiss()
-                            } else {
-                                viewModel.currentView = .main
-                            }
-                        }) {
-                            VortexIcon(
-                                name: viewModel.currentView == .main ? .close : .arrowBack,
-                                size: 20,
-                                color: .primary
-                            )
-                            .frame(width: 44, height: 44)
+                // Header with close/back button on the left (like RN SDK)
+                HStack {
+                    Button(action: {
+                        if viewModel.currentView == .main {
+                            viewModel.dismiss()
+                        } else {
+                            viewModel.currentView = .main
                         }
-                        Spacer()
+                    }) {
+                        VortexIcon(
+                            name: viewModel.currentView == .main ? .close : .arrowBack,
+                            size: 20,
+                            color: .primary
+                        )
+                        .frame(width: 44, height: 44)
                     }
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    
-                    // Content based on loading state
-                    if viewModel.isLoading {
-                        loadingView
-                    } else if let error = viewModel.error {
-                        errorView(error: error)
-                    } else if viewModel.configuration != nil {
-                        formView
-                    }
+                    Spacer()
                 }
-                .frame(height: UIScreen.main.bounds.height * 0.8)
-                .background(Color(UIColor.systemBackground))
-                .cornerRadius(20, corners: [.topLeft, .topRight])
+                .padding(.horizontal, 8)
+                .padding(.vertical, 4)
+                
+                // Content based on loading state
+                if viewModel.isLoading {
+                    loadingView
+                } else if let error = viewModel.error {
+                    errorView(error: error)
+                } else if viewModel.configuration != nil {
+                    formView
+                }
+                
+                Spacer(minLength: 0)
             }
-            .ignoresSafeArea(.keyboard, edges: .bottom)
+            .frame(height: UIScreen.main.bounds.height * 0.8)
+            .frame(maxWidth: .infinity)
+            .background(Color(UIColor.systemBackground))
+            .cornerRadius(20, corners: [.topLeft, .topRight])
         }
+        .ignoresSafeArea()
         .task {
             await viewModel.loadConfiguration()
         }
