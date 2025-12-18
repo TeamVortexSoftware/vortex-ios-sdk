@@ -221,6 +221,8 @@ public struct VortexInviteView: View {
                 EmptyView()
             case "vrtx-heading":
                 HeadingView(block: block)
+            case "vrtx-text":
+                TextView(block: block)
             case "vrtx-select":
                 // Select is currently not rendered (matches RN behavior)
                 EmptyView()
@@ -787,6 +789,22 @@ struct HeadingView: View {
         if let text = block.textContent {
             Text(text)
                 .font(.headline)
+                .padding(.horizontal)
+        }
+    }
+}
+
+// MARK: - Text View
+
+struct TextView: View {
+    let block: ElementNode
+    
+    var body: some View {
+        if let text = block.textContent {
+            Text(text)
+                .font(.system(size: 14))
+                .lineSpacing(6) // Approximates lineHeight: 20 with fontSize 14
+                .foregroundColor(Color(UIColor.label))
                 .padding(.horizontal)
         }
     }
