@@ -22,7 +22,8 @@ struct ContactsImportView: View {
             if viewModel.isNativeContactsEnabled {
                 ShareButton(
                     icon: .importContacts,
-                    title: "Add from Contacts"
+                    title: "Add from Contacts",
+                    theme: block.theme
                 ) {
                     viewModel.selectFromContacts()
                 }
@@ -32,7 +33,8 @@ struct ContactsImportView: View {
             if viewModel.isGoogleContactsEnabled {
                 ShareButton(
                     icon: .google,
-                    title: "Add from Google Contacts"
+                    title: "Add from Google Contacts",
+                    theme: block.theme
                 ) {
                     viewModel.selectFromGoogleContacts()
                 }
@@ -41,7 +43,8 @@ struct ContactsImportView: View {
             // Add by Email button (navigates to email entry view)
             ShareButton(
                 icon: .email,
-                title: "Add by Email"
+                title: "Add by Email",
+                theme: block.theme
             ) {
                 viewModel.currentView = .emailEntry
             }

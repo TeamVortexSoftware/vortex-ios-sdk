@@ -23,7 +23,8 @@ struct ShareOptionsView: View {
                 ShareButton(
                     icon: .link,
                     title: viewModel.copySuccess ? "✓ Copied!" : "Copy Link",
-                    isLoading: viewModel.loadingCopy
+                    isLoading: viewModel.loadingCopy,
+                    theme: block.theme
                 ) {
                     Task { await viewModel.copyLink() }
                 }
@@ -34,7 +35,8 @@ struct ShareOptionsView: View {
                 ShareButton(
                     icon: .share,
                     title: viewModel.shareSuccess ? "✓ Shared!" : "Share Invitation",
-                    isLoading: viewModel.loadingShare
+                    isLoading: viewModel.loadingShare,
+                    theme: block.theme
                 ) {
                     Task { await viewModel.shareInvitation() }
                 }
@@ -44,7 +46,8 @@ struct ShareOptionsView: View {
             if viewModel.isSmsEnabled {
                 ShareButton(
                     icon: .sms,
-                    title: "Share via SMS"
+                    title: "Share via SMS",
+                    theme: block.theme
                 ) {
                     viewModel.shareViaSms()
                 }
@@ -54,7 +57,8 @@ struct ShareOptionsView: View {
             if viewModel.isQrCodeEnabled {
                 ShareButton(
                     icon: .qrCode,
-                    title: "Show QR Code"
+                    title: "Show QR Code",
+                    theme: block.theme
                 ) {
                     viewModel.showQrCode()
                 }
@@ -64,7 +68,8 @@ struct ShareOptionsView: View {
             if viewModel.isLineEnabled {
                 ShareButton(
                     icon: .line,
-                    title: "Share via LINE"
+                    title: "Share via LINE",
+                    theme: block.theme
                 ) {
                     viewModel.shareViaLine()
                 }
@@ -80,27 +85,43 @@ struct ShareButton: View {
     let icon: VortexIconName
     let title: String
     var isLoading: Bool = false
+    var theme: Theme? = nil
     let action: () -> Void
+    
+    /// Computed background style from theme or default
+    private var backgroundStyle: BackgroundStyle {
+        theme?.buttonBackgroundStyle ?? .solid(Color(UIColor.secondarySystemBackground))
+    }
+    
+    /// Default dark color matching RN SDK's #333
+    private static let defaultDarkColor = Color(red: 0x33/255, green: 0x33/255, blue: 0x33/255)
+    
+    /// Computed foreground color from theme or default
+    /// Matches RN SDK behavior: defaults to #333 regardless of background type
+    private var foregroundColor: Color {
+        theme?.buttonTextColor ?? Self.defaultDarkColor
+    }
     
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
+            HStack(spacing: 8) {
                 if isLoading {
                     ProgressView()
+                        .tint(foregroundColor)
                         .frame(width: 24, height: 18)
                 } else {
                     // Use width: 24, height: 18 to match RN SDK's buttonIconContainer
                     // This prevents the link icon (which is wider than tall) from being clipped
-                    VortexIcon(name: icon, size: 18, color: .primary)
+                    VortexIcon(name: icon, size: 18, color: foregroundColor)
                         .frame(width: 24, height: 18)
                 }
                 Text(title)
                     .fontWeight(.medium)
-                Spacer()
             }
+            .frame(maxWidth: .infinity)
             .padding()
-            .background(Color(UIColor.secondarySystemBackground))
-            .foregroundColor(.primary)
+            .backgroundStyle(backgroundStyle)
+            .foregroundColor(foregroundColor)
             .cornerRadius(10)
         }
         .disabled(isLoading)
