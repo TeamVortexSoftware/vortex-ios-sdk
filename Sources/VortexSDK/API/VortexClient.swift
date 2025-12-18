@@ -1,77 +1,5 @@
 import Foundation
 
-// MARK: - API Response Types
-
-/// Response from widget configuration endpoint
-public struct WidgetConfigurationResponse: Codable {
-    public let data: WidgetConfigurationData
-}
-
-/// Data wrapper containing widget configuration and metadata
-public struct WidgetConfigurationData: Codable {
-    public let widgetConfiguration: WidgetConfiguration
-    public let deploymentId: String?
-    public let widgetType: String?
-    public let environmentRole: String?
-    public let environmentName: String?
-    public let renderer: RendererInfo?
-    public let sessionAttestation: String?
-}
-
-/// Renderer information
-public struct RendererInfo: Codable {
-    public let url: String?
-}
-
-/// Response from create invitation endpoint
-public struct CreateInvitationResponse: Codable {
-    public let data: CreateInvitationData
-}
-
-/// Data wrapper for create invitation response
-public struct CreateInvitationData: Codable {
-    public let invitationEntries: [InvitationEntry]?
-}
-
-/// Individual invitation entry in the response
-public struct InvitationEntry: Codable {
-    public let id: String?
-    public let status: String?
-}
-
-/// Response from shareable link endpoint (matches ShareableLinkResponseDto from RN SDK)
-public struct ShareableLinkResponse: Codable {
-    public let data: ShareableLinkData
-}
-
-/// Data wrapper for shareable link response
-public struct ShareableLinkData: Codable {
-    public let invitation: ShareableLinkInvitation
-}
-
-/// Invitation details in shareable link response
-public struct ShareableLinkInvitation: Codable {
-    public let id: String
-    public let shortLink: String
-    public let source: String?
-    public let attributes: [String: String]?
-}
-
-/// Group information for invitations
-public struct GroupDTO: Codable {
-    public let id: String?
-    public let groupId: String?
-    public let type: String
-    public let name: String
-    
-    public init(id: String?, groupId: String?, type: String, name: String) {
-        self.id = id
-        self.groupId = groupId
-        self.type = type
-        self.name = name
-    }
-}
-
 // MARK: - Vortex Client
 
 /// Main API client for communicating with Vortex backend
@@ -293,34 +221,5 @@ public class VortexClient {
         
         let decoder = JSONDecoder()
         return try decoder.decode(ShareableLinkResponse.self, from: data)
-    }
-}
-
-// MARK: - Error Types
-
-/// Errors that can occur during Vortex API operations
-public enum VortexError: LocalizedError {
-    case invalidResponse
-    case httpError(statusCode: Int)
-    case decodingError(Error)
-    case encodingError(Error)
-    case missingConfiguration
-    case missingJWT
-    
-    public var errorDescription: String? {
-        switch self {
-        case .invalidResponse:
-            return "Invalid response from server"
-        case .httpError(let statusCode):
-            return "HTTP error: \(statusCode)"
-        case .decodingError(let error):
-            return "Failed to decode response: \(error.localizedDescription)"
-        case .encodingError(let error):
-            return "Failed to encode request: \(error.localizedDescription)"
-        case .missingConfiguration:
-            return "Widget configuration not found"
-        case .missingJWT:
-            return "JWT token is required"
-        }
     }
 }

@@ -190,25 +190,26 @@ struct GroupDTO {
 }
 ```
 
-## Current Status
+## Features
 
-**✅ MVP Features Implemented:**
-- Widget configuration fetching
-- Basic invitation form UI
-- Email invitation sending
-- Error handling and loading states
-- JWT authentication
-- Group context support
-
-**⚠️ TODO (See TODO.md for details):**
-- Dynamic form rendering from configuration
-- Platform integrations (contacts, sharing, etc.)
-- Advanced UI components (role selection, bulk invites, etc.)
+**Invitation Methods:**
+- Email invitations with validation
+- Copy shareable link to clipboard
+- Native iOS share sheet integration
+- SMS sharing
 - QR code generation
-- Google Contacts integration
-- Native share sheet integration
+- LINE messaging integration
 
-This is a **Minimal Viable Product (MVP)**. The SDK currently provides a basic email invitation form. For the full feature set matching the React Native SDK, see `TODO.md`.
+**Contact Import:**
+- iOS Contacts integration
+- Google Contacts integration (requires GoogleSignIn SDK)
+
+**Core Capabilities:**
+- Dynamic form rendering from server configuration
+- JWT authentication
+- Group/team context support
+- Real-time loading states and error handling
+- Customizable UI based on widget configuration
 
 ## Examples
 
