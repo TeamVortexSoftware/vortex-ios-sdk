@@ -461,6 +461,8 @@ class VortexInviteViewModel: ObservableObject {
                 }
             }
             
+            // Use urlQueryAllowed character set for proper mailto URL encoding
+            // This is the standard approach matching JavaScript's encodeURIComponent
             guard let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
                   let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
                   let url = URL(string: "mailto:?subject=\(encodedSubject)&body=\(encodedBody)") else {
@@ -468,7 +470,10 @@ class VortexInviteViewModel: ObservableObject {
             }
             
             await MainActor.run {
-                UIApplication.shared.open(url)
+                // Check if mailto URL can be opened (Mail app must be configured)
+                if UIApplication.shared.canOpenURL(url) {
+                    UIApplication.shared.open(url)
+                }
             }
         }
     }
