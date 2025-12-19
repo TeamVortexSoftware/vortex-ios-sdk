@@ -92,8 +92,8 @@ class VortexInviteViewModel: ObservableObject {
         return nil
     }
     
-    /// Get share options from configuration
-    private var shareOptions: [String] {
+    /// Get share options from configuration (ordered array)
+    var shareOptions: [String] {
         guard let config = configuration,
               let prop = config.configuration.props["vortex.components.share.options"],
               case .array(let values) = prop.value else {

@@ -18,64 +18,62 @@ struct ShareOptionsView: View {
                 .padding(.horizontal)
             }
             
-            // Copy Link button
-            if viewModel.isCopyLinkEnabled {
-                ShareButton(
-                    icon: .link,
-                    title: viewModel.copySuccess ? "✓ Copied!" : "Copy Link",
-                    isLoading: viewModel.loadingCopy,
-                    theme: block.theme
-                ) {
-                    Task { await viewModel.copyLink() }
-                }
-            }
-            
-            // Native Share button
-            if viewModel.isNativeShareEnabled {
-                ShareButton(
-                    icon: .share,
-                    title: viewModel.shareSuccess ? "✓ Shared!" : "Share Invitation",
-                    isLoading: viewModel.loadingShare,
-                    theme: block.theme
-                ) {
-                    Task { await viewModel.shareInvitation() }
-                }
-            }
-            
-            // SMS button
-            if viewModel.isSmsEnabled {
-                ShareButton(
-                    icon: .sms,
-                    title: "Share via SMS",
-                    theme: block.theme
-                ) {
-                    viewModel.shareViaSms()
-                }
-            }
-            
-            // QR Code button
-            if viewModel.isQrCodeEnabled {
-                ShareButton(
-                    icon: .qrCode,
-                    title: "Show QR Code",
-                    theme: block.theme
-                ) {
-                    viewModel.showQrCode()
-                }
-            }
-            
-            // LINE button
-            if viewModel.isLineEnabled {
-                ShareButton(
-                    icon: .line,
-                    title: "Share via LINE",
-                    theme: block.theme
-                ) {
-                    viewModel.shareViaLine()
-                }
+            // Render buttons in configuration order
+            ForEach(viewModel.shareOptions, id: \.self) { option in
+                shareButton(for: option)
             }
         }
         .padding(.horizontal)
+    }
+    
+    @ViewBuilder
+    private func shareButton(for option: String) -> some View {
+        switch option {
+        case "copyLink":
+            ShareButton(
+                icon: .link,
+                title: viewModel.copySuccess ? "✓ Copied!" : "Copy Link",
+                isLoading: viewModel.loadingCopy,
+                theme: block.theme
+            ) {
+                Task { await viewModel.copyLink() }
+            }
+        case "nativeShareSheet":
+            ShareButton(
+                icon: .share,
+                title: viewModel.shareSuccess ? "✓ Shared!" : "Share Invitation",
+                isLoading: viewModel.loadingShare,
+                theme: block.theme
+            ) {
+                Task { await viewModel.shareInvitation() }
+            }
+        case "sms":
+            ShareButton(
+                icon: .sms,
+                title: "Share via SMS",
+                theme: block.theme
+            ) {
+                viewModel.shareViaSms()
+            }
+        case "qrCode":
+            ShareButton(
+                icon: .qrCode,
+                title: "Show QR Code",
+                theme: block.theme
+            ) {
+                viewModel.showQrCode()
+            }
+        case "line":
+            ShareButton(
+                icon: .line,
+                title: "Share via LINE",
+                theme: block.theme
+            ) {
+                viewModel.shareViaLine()
+            }
+        default:
+            EmptyView()
+        }
     }
 }
 
