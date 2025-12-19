@@ -8,13 +8,13 @@ The SDK fetches a `WidgetConfiguration` from the Vortex API, which contains a tr
 
 ## Related Projects
 
-| Project | Path | Description |
-|---------|------|-------------|
-| **iOS SDK** | `/Users/mfarias/Code/vortex-ios-sdk` | This repository - Swift/SwiftUI SDK |
-| **iOS Demo App** | `/Users/mfarias/Code/vortex-ios-demo` | Demo app called "Acme Tasks" |
-| **React Native SDK** | `/Users/mfarias/Code/vortex/packages/vortex-react-native` | RN SDK (reference implementation) |
-| **React Native Demo** | `/Users/mfarias/Code/vortex/standalone/demo-react-native` | RN demo app |
-| **Shared UI Code** | `/Users/mfarias/Code/vortex/packages/vortex-shared-ui` | Shared UI components used by RN SDK |
+| Project | Path                                                            | Description |
+|---------|-----------------------------------------------------------------|-------------|
+| **iOS SDK** | `.` (this repo)                                                 | This repository - Swift/SwiftUI SDK |
+| **iOS Demo App** | (separate repo: `../vortex-ios-demo`)                           | Demo app called "Acme Tasks" |
+| **React Native SDK** | (separate repo: `../vortex-suite/packages/vortex-react-native`) | RN SDK (reference implementation) |
+| **React Native Demo** | (separate repo: `../vortex-suite/standalone/demo-react-native`) | RN demo app |
+| **Shared UI Code** | (separate repo: `../vortex-suite/packages/vortex-shared-ui`)    | Shared UI components used by RN SDK |
 
 **Important:** The React Native SDK is the reference implementation. When implementing features or fixing bugs, check how the RN SDK handles it for consistency.
 
