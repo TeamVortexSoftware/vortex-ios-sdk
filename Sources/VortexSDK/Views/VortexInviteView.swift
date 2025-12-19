@@ -56,8 +56,8 @@ public struct VortexInviteView: View {
                     }) {
                         VortexIcon(
                             name: viewModel.currentView == .main ? .close : .arrowBack,
-                            size: 20,
-                            color: .primary
+                            size: 24,
+                            color: Color(red: 0x66/255, green: 0x66/255, blue: 0x66/255)
                         )
                         .frame(width: 44, height: 44)
                     }

@@ -43,6 +43,9 @@ public enum FontAwesome6Icon: String {
     case instagram = "\u{f16d}"
     case whatsapp = "\u{f232}"
     case line = "\u{f3c0}"
+    case telegram = "\u{f2c6}"
+    case discord = "\u{f392}"
+    case facebookMessenger = "\u{f39f}"
 }
 
 /// Utility class to load and manage FontAwesome fonts bundled with the SDK

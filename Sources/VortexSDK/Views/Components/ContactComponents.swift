@@ -10,12 +10,10 @@ struct ContactsImportView: View {
             if let label = block.attributes?["label"]?.stringValue {
                 HStack {
                     Text(label)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(Color(red: 0x66/255, green: 0x66/255, blue: 0x66/255))
                     Spacer()
                 }
-                .padding(.horizontal)
             }
             
             // Import from Contacts button
@@ -50,6 +48,7 @@ struct ContactsImportView: View {
             }
         }
         .padding(.horizontal)
+        .padding(.bottom, 16)
     }
 }
 

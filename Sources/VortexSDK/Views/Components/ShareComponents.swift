@@ -10,12 +10,10 @@ struct ShareOptionsView: View {
             if let label = block.attributes?["label"]?.stringValue {
                 HStack {
                     Text(label)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(Color(red: 0x66/255, green: 0x66/255, blue: 0x66/255))
                     Spacer()
                 }
-                .padding(.horizontal)
             }
             
             // Render buttons in configuration order
@@ -24,6 +22,7 @@ struct ShareOptionsView: View {
             }
         }
         .padding(.horizontal)
+        .padding(.bottom, 16)
     }
     
     @ViewBuilder
@@ -71,6 +70,62 @@ struct ShareOptionsView: View {
             ) {
                 viewModel.shareViaLine()
             }
+        case "email":
+            ShareButton(
+                icon: .email,
+                title: "Share via Email",
+                theme: block.theme
+            ) {
+                viewModel.shareViaEmail()
+            }
+        case "twitterDms":
+            ShareButton(
+                icon: .xTwitter,
+                title: "Share via X",
+                theme: block.theme
+            ) {
+                viewModel.shareViaTwitter()
+            }
+        case "instagramDms":
+            ShareButton(
+                icon: .instagram,
+                title: "Share via Instagram",
+                theme: block.theme
+            ) {
+                viewModel.shareViaInstagram()
+            }
+        case "whatsApp":
+            ShareButton(
+                icon: .whatsapp,
+                title: "Share via WhatsApp",
+                theme: block.theme
+            ) {
+                viewModel.shareViaWhatsApp()
+            }
+        case "facebookMessenger":
+            ShareButton(
+                icon: .facebookMessenger,
+                title: "Share via Messenger",
+                theme: block.theme
+            ) {
+                viewModel.shareViaFacebookMessenger()
+            }
+        case "telegram":
+            ShareButton(
+                icon: .telegram,
+                title: "Share via Telegram",
+                theme: block.theme
+            ) {
+                viewModel.shareViaTelegram()
+            }
+        case "discord":
+            ShareButton(
+                icon: .discord,
+                title: "Share via Discord",
+                theme: block.theme
+            ) {
+                viewModel.shareViaDiscord()
+            }
         default:
             EmptyView()
         }
@@ -117,7 +172,8 @@ struct ShareButton: View {
                     .fontWeight(.medium)
             }
             .frame(maxWidth: .infinity)
-            .padding()
+            .padding(.vertical, 12)
+            .padding(.horizontal, 16)
             .backgroundStyle(backgroundStyle)
             .foregroundColor(foregroundColor)
             .cornerRadius(10)

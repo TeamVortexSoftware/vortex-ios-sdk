@@ -143,6 +143,30 @@ class VortexInviteViewModel: ObservableObject {
         shareOptions.contains("email")
     }
     
+    var isTwitterEnabled: Bool {
+        shareOptions.contains("twitterDms")
+    }
+    
+    var isInstagramEnabled: Bool {
+        shareOptions.contains("instagramDms")
+    }
+    
+    var isWhatsAppEnabled: Bool {
+        shareOptions.contains("whatsApp")
+    }
+    
+    var isFacebookMessengerEnabled: Bool {
+        shareOptions.contains("facebookMessenger")
+    }
+    
+    var isTelegramEnabled: Bool {
+        shareOptions.contains("telegram")
+    }
+    
+    var isDiscordEnabled: Bool {
+        shareOptions.contains("discord")
+    }
+    
     // Component checks
     var isNativeContactsEnabled: Bool {
         enabledComponents.contains("vortex.components.importcontacts.providers.importcontacts")
@@ -407,6 +431,197 @@ class VortexInviteViewModel: ObservableObject {
     
     func showQrCode() {
         currentView = .qrCode
+    }
+    
+    func shareViaEmail() {
+        Task {
+            if shareableLink == nil {
+                await fetchShareableLink()
+            }
+            
+            guard let link = shareableLink else { return }
+            
+            // Get subject and body from configuration
+            var subject = "You're invited!"
+            var body = link
+            
+            if let config = configuration {
+                if let subjectProp = config.configuration.props["vortex.components.share.template.subject"],
+                   case .string(let subjectTemplate) = subjectProp.value,
+                   !subjectTemplate.isEmpty {
+                    subject = subjectTemplate
+                }
+                if let bodyProp = config.configuration.props["vortex.components.share.template.body"],
+                   case .string(let template) = bodyProp.value {
+                    if template.contains("{{vortex_share_link}}") {
+                        body = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                    } else {
+                        body = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                    }
+                }
+            }
+            
+            guard let encodedSubject = subject.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                  let encodedBody = body.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                  let url = URL(string: "mailto:?subject=\(encodedSubject)&body=\(encodedBody)") else {
+                return
+            }
+            
+            await MainActor.run {
+                UIApplication.shared.open(url)
+            }
+        }
+    }
+    
+    func shareViaTwitter() {
+        Task {
+            if shareableLink == nil {
+                await fetchShareableLink()
+            }
+            
+            guard let link = shareableLink else { return }
+            
+            var text = link
+            if let config = configuration,
+               let bodyProp = config.configuration.props["vortex.components.share.template.body"],
+               case .string(let template) = bodyProp.value {
+                if template.contains("{{vortex_share_link}}") {
+                    text = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                } else {
+                    text = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                }
+            }
+            
+            guard let encodedText = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return }
+            
+            // Try Twitter app first, fallback to web
+            let twitterAppURL = URL(string: "twitter://post?message=\(encodedText)")
+            let twitterWebURL = URL(string: "https://twitter.com/intent/tweet?text=\(encodedText)")
+            
+            await MainActor.run {
+                if let appURL = twitterAppURL, UIApplication.shared.canOpenURL(appURL) {
+                    UIApplication.shared.open(appURL)
+                } else if let webURL = twitterWebURL {
+                    UIApplication.shared.open(webURL)
+                }
+            }
+        }
+    }
+    
+    func shareViaInstagram() {
+        // Instagram doesn't support direct sharing via URL scheme with pre-filled content
+        // Open Instagram Direct inbox instead
+        let instagramURL = URL(string: "instagram://direct-inbox")
+        let instagramWebURL = URL(string: "https://instagram.com/direct/inbox")
+        
+        if let appURL = instagramURL, UIApplication.shared.canOpenURL(appURL) {
+            UIApplication.shared.open(appURL)
+        } else if let webURL = instagramWebURL {
+            UIApplication.shared.open(webURL)
+        }
+    }
+    
+    func shareViaWhatsApp() {
+        Task {
+            if shareableLink == nil {
+                await fetchShareableLink()
+            }
+            
+            guard let link = shareableLink else { return }
+            
+            var text = link
+            if let config = configuration,
+               let bodyProp = config.configuration.props["vortex.components.share.template.body"],
+               case .string(let template) = bodyProp.value {
+                if template.contains("{{vortex_share_link}}") {
+                    text = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                } else {
+                    text = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                }
+            }
+            
+            guard let encodedText = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return }
+            
+            let whatsappURL = URL(string: "whatsapp://send?text=\(encodedText)")
+            let whatsappWebURL = URL(string: "https://wa.me/?text=\(encodedText)")
+            
+            await MainActor.run {
+                if let appURL = whatsappURL, UIApplication.shared.canOpenURL(appURL) {
+                    UIApplication.shared.open(appURL)
+                } else if let webURL = whatsappWebURL {
+                    UIApplication.shared.open(webURL)
+                }
+            }
+        }
+    }
+    
+    func shareViaFacebookMessenger() {
+        Task {
+            if shareableLink == nil {
+                await fetchShareableLink()
+            }
+            
+            guard let link = shareableLink,
+                  let encodedLink = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return }
+            
+            let messengerURL = URL(string: "fb-messenger://share?link=\(encodedLink)")
+            let messengerWebURL = URL(string: "https://www.facebook.com/dialog/send?link=\(encodedLink)&app_id=0&redirect_uri=\(encodedLink)")
+            
+            await MainActor.run {
+                if let appURL = messengerURL, UIApplication.shared.canOpenURL(appURL) {
+                    UIApplication.shared.open(appURL)
+                } else if let webURL = messengerWebURL {
+                    UIApplication.shared.open(webURL)
+                }
+            }
+        }
+    }
+    
+    func shareViaTelegram() {
+        Task {
+            if shareableLink == nil {
+                await fetchShareableLink()
+            }
+            
+            guard let link = shareableLink else { return }
+            
+            var text = link
+            if let config = configuration,
+               let bodyProp = config.configuration.props["vortex.components.share.template.body"],
+               case .string(let template) = bodyProp.value {
+                if template.contains("{{vortex_share_link}}") {
+                    text = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                } else {
+                    text = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                }
+            }
+            
+            guard let encodedText = text.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return }
+            
+            let telegramURL = URL(string: "tg://msg?text=\(encodedText)")
+            let telegramWebURL = URL(string: "https://t.me/share/url?url=\(encodedText)")
+            
+            await MainActor.run {
+                if let appURL = telegramURL, UIApplication.shared.canOpenURL(appURL) {
+                    UIApplication.shared.open(appURL)
+                } else if let webURL = telegramWebURL {
+                    UIApplication.shared.open(webURL)
+                }
+            }
+        }
+    }
+    
+    func shareViaDiscord() {
+        // Discord doesn't have a direct share URL scheme
+        // Open Discord app or website
+        let discordURL = URL(string: "discord://")
+        let discordWebURL = URL(string: "https://discord.com/channels/@me")
+        
+        if let appURL = discordURL, UIApplication.shared.canOpenURL(appURL) {
+            UIApplication.shared.open(appURL)
+        } else if let webURL = discordWebURL {
+            UIApplication.shared.open(webURL)
+        }
     }
     
     /// Fetch shareable link specifically for QR code display

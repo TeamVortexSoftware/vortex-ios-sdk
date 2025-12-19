@@ -16,6 +16,9 @@ public enum VortexIconName: String {
     case whatsapp = "whatsapp"
     case qrCode = "qr-code"
     case line = "line"
+    case telegram = "telegram"
+    case discord = "discord"
+    case facebookMessenger = "facebook-messenger"
 }
 
 /// A view that renders FontAwesome 6 icons for the Vortex SDK
@@ -60,6 +63,12 @@ public struct VortexIcon: View {
             return (FontAwesome6Icon.qrcode.rawValue, .solid)
         case .line:
             return (FontAwesome6Icon.line.rawValue, .brands)
+        case .telegram:
+            return (FontAwesome6Icon.telegram.rawValue, .brands)
+        case .discord:
+            return (FontAwesome6Icon.discord.rawValue, .brands)
+        case .facebookMessenger:
+            return (FontAwesome6Icon.facebookMessenger.rawValue, .brands)
         }
     }
     
@@ -73,8 +82,9 @@ public struct VortexIcon: View {
                 .foregroundColor(color)
         } else {
             // Fallback to SF Symbols if FontAwesome fails to load
+            // Use .bold weight to match FontAwesome solid icons appearance
             Image(systemName: sfSymbolFallback)
-                .font(.system(size: size, weight: .medium))
+                .font(.system(size: size, weight: .bold))
                 .foregroundColor(color)
         }
     }
@@ -108,6 +118,12 @@ public struct VortexIcon: View {
             return "qrcode"
         case .line:
             return "bubble.left.and.bubble.right"
+        case .telegram:
+            return "paperplane.fill"
+        case .discord:
+            return "gamecontroller.fill"
+        case .facebookMessenger:
+            return "message.fill"
         }
     }
 }
