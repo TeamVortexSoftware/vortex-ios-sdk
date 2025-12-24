@@ -205,8 +205,11 @@ public struct VortexInviteView: View {
                 viewModel: viewModel
             ))
         case "vrtx-email-invitations":
-            // Email invitations input is handled separately in emailEntryView
-            return AnyView(EmptyView())
+            // Render "Add by Email" button that navigates to email entry view
+            return AnyView(EmailInvitationsButtonView(
+                block: block,
+                viewModel: viewModel
+            ))
         
         // MARK: - Content Elements (fully supported)
         case "vrtx-heading":

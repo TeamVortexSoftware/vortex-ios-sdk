@@ -185,10 +185,11 @@ public struct VortexMetadata: Codable, Sendable {
     public let role: String?
 }
 
-/// Dynamic attribute value (can be string or bool)
+/// Dynamic attribute value (can be string, bool, or array of strings)
 public enum AttributeValue: Codable, Sendable {
     case string(String)
     case bool(Bool)
+    case stringArray([String])
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -196,6 +197,8 @@ public enum AttributeValue: Codable, Sendable {
             self = .bool(bool)
         } else if let string = try? container.decode(String.self) {
             self = .string(string)
+        } else if let array = try? container.decode([String].self) {
+            self = .stringArray(array)
         } else {
             throw DecodingError.dataCorruptedError(
                 in: container,
@@ -209,6 +212,7 @@ public enum AttributeValue: Codable, Sendable {
         switch self {
         case .string(let value): try container.encode(value)
         case .bool(let value): try container.encode(value)
+        case .stringArray(let value): try container.encode(value)
         }
     }
 }

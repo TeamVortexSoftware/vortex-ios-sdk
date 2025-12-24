@@ -52,7 +52,29 @@ struct ContactsImportView: View {
     }
 }
 
-// MARK: - Heading View
+// MARK: - Email Invitations Button View
+
+/// Renders an "Add by Email" button for the vrtx-email-invitations element
+/// This button navigates to the email entry view when tapped
+struct EmailInvitationsButtonView: View {
+    let block: ElementNode
+    @ObservedObject var viewModel: VortexInviteViewModel
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            ShareButton(
+                icon: .email,
+                title: "Add by Email",
+                theme: block.theme
+            ) {
+                viewModel.currentView = .emailEntry
+            }
+        }
+        .padding(.horizontal)
+    }
+}
+
+// MARK: - Email Pill View
 
 struct EmailPillView: View {
     let email: String

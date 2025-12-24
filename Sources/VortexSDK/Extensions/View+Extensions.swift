@@ -34,6 +34,20 @@ extension AttributeValue {
             return value
         case .bool(let value):
             return String(value)
+        case .stringArray(let values):
+            return values.first
+        }
+    }
+    
+    /// Get the array of string values if this is a string array attribute
+    var stringArrayValue: [String]? {
+        switch self {
+        case .stringArray(let values):
+            return values
+        case .string(let value):
+            return [value]
+        case .bool:
+            return nil
         }
     }
 }

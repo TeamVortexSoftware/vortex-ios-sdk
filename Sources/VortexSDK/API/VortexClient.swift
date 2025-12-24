@@ -143,7 +143,15 @@ public class VortexClient {
             body["metadata"] = metadata
         }
         
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let bodyData = try JSONSerialization.data(withJSONObject: body)
+        request.httpBody = bodyData
+        
+        #if DEBUG
+        if let bodyString = String(data: bodyData, encoding: .utf8) {
+            print("[VortexSDK] POST /api/v1/invitations request body:")
+            print(bodyString)
+        }
+        #endif
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
@@ -207,7 +215,15 @@ public class VortexClient {
             body["templateVariables"] = templateVariables
         }
         
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let bodyData = try JSONSerialization.data(withJSONObject: body)
+        request.httpBody = bodyData
+        
+        #if DEBUG
+        if let bodyString = String(data: bodyData, encoding: .utf8) {
+            print("[VortexSDK] POST /api/v1/invitations/http://localhost:3002/i/lIc4vJ2I request body:")
+            print(bodyString)
+        }
+        #endif
         
         let (data, response) = try await URLSession.shared.data(for: request)
         
