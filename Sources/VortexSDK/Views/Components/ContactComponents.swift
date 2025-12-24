@@ -39,38 +39,20 @@ struct ContactsImportView: View {
             }
             
             // Add by Email button (navigates to email entry view)
-            ShareButton(
-                icon: .email,
-                title: "Add by Email",
-                theme: block.theme
-            ) {
-                viewModel.currentView = .emailEntry
+            // This matches the RN SDK behavior where VrtxContactsImport renders "Add by Email"
+            // when isEmailInvitationsEnabled() returns true
+            if viewModel.isEmailInvitationsEnabled {
+                ShareButton(
+                    icon: .email,
+                    title: "Add by Email",
+                    theme: block.theme
+                ) {
+                    viewModel.currentView = .emailEntry
+                }
             }
         }
         .padding(.horizontal)
         .padding(.bottom, 16)
-    }
-}
-
-// MARK: - Email Invitations Button View
-
-/// Renders an "Add by Email" button for the vrtx-email-invitations element
-/// This button navigates to the email entry view when tapped
-struct EmailInvitationsButtonView: View {
-    let block: ElementNode
-    @ObservedObject var viewModel: VortexInviteViewModel
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            ShareButton(
-                icon: .email,
-                title: "Add by Email",
-                theme: block.theme
-            ) {
-                viewModel.currentView = .emailEntry
-            }
-        }
-        .padding(.horizontal)
     }
 }
 

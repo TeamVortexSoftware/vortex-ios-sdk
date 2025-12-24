@@ -205,11 +205,11 @@ public struct VortexInviteView: View {
                 viewModel: viewModel
             ))
         case "vrtx-email-invitations":
-            // Render "Add by Email" button that navigates to email entry view
-            return AnyView(EmailInvitationsButtonView(
-                block: block,
-                viewModel: viewModel
-            ))
+            // The vrtx-email-invitations block defines the email input UI for the email entry view.
+            // The "Add by Email" button is rendered by ContactsImportView (vrtx-contacts-import)
+            // when isEmailInvitationsEnabled is true, matching the RN SDK behavior where
+            // VrtxEmailInvitations returns null when not in email view.
+            return AnyView(EmptyView())
         
         // MARK: - Content Elements (fully supported)
         case "vrtx-heading":
