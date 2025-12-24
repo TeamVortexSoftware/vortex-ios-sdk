@@ -249,13 +249,20 @@ public struct VortexInviteView: View {
         case "vrtx-textarea":
             return AnyView(TextareaView(block: block, viewModel: viewModel))
         case "vrtx-select":
-            return AnyView(SelectView(block: block, viewModel: viewModel))
+            // The vrtx-select block is not rendered in the main view, matching RN SDK behavior
+            // where renderBlock returns null for vrtx-select
+            return AnyView(EmptyView())
         case "vrtx-radio":
             return AnyView(RadioView(block: block, viewModel: viewModel))
         case "vrtx-checkbox":
             return AnyView(CheckboxView(block: block, viewModel: viewModel))
         case "vrtx-submit":
-            return AnyView(SubmitButtonView(block: block, viewModel: viewModel))
+            // The vrtx-submit block only renders in email view, matching RN SDK's VrtxSubmit
+            // which returns null when view !== 'email'
+            if viewModel.currentView == .emailEntry {
+                return AnyView(SubmitButtonView(block: block, viewModel: viewModel))
+            }
+            return AnyView(EmptyView())
         
         // MARK: - Autojoin Elements (warning - specialized admin features)
         case "vrtx-admin-autojoin":
