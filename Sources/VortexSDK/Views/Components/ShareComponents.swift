@@ -141,9 +141,12 @@ struct ShareButton: View {
     var theme: Theme? = nil
     let action: () -> Void
     
+    /// Default background color matching RN SDK's #f5f5f5
+    private static let defaultBackgroundColor = Color(red: 0xf5/255, green: 0xf5/255, blue: 0xf5/255)
+    
     /// Computed background style from theme or default
     private var backgroundStyle: BackgroundStyle {
-        theme?.buttonBackgroundStyle ?? .solid(Color(UIColor.secondarySystemBackground))
+        theme?.buttonBackgroundStyle ?? .solid(Self.defaultBackgroundColor)
     }
     
     /// Default dark color matching RN SDK's #333

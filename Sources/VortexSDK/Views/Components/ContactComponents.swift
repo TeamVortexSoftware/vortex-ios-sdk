@@ -60,19 +60,40 @@ struct ContactsImportView: View {
 
 struct EmailPillView: View {
     let email: String
+    var backgroundStyle: BackgroundStyle? = nil
     let onRemove: () -> Void
+    
+    /// Default background color
+    private static let defaultBackgroundColor = Color(UIColor.tertiarySystemBackground)
+    
+    /// Computed text color - use dark text for gradients, gray for default
+    private var textColor: Color {
+        if backgroundStyle != nil {
+            return Color(red: 0x33/255, green: 0x33/255, blue: 0x33/255)
+        }
+        return .primary
+    }
+    
+    /// Computed icon color - use dark color for gradients, gray for default
+    private var iconColor: Color {
+        if backgroundStyle != nil {
+            return Color(red: 0x33/255, green: 0x33/255, blue: 0x33/255)
+        }
+        return .gray
+    }
     
     var body: some View {
         HStack(spacing: 4) {
             Text(email)
                 .font(.subheadline)
+                .foregroundColor(textColor)
             Button(action: onRemove) {
-                VortexIcon(name: .close, size: 14, color: .gray)
+                VortexIcon(name: .close, size: 14, color: iconColor)
             }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 6)
-        .background(Color(UIColor.tertiarySystemBackground))
+        .backgroundStyle(backgroundStyle ?? .solid(Self.defaultBackgroundColor))
         .cornerRadius(16)
     }
 }

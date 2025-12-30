@@ -180,6 +180,27 @@ class VortexInviteViewModel: ObservableObject {
         enabledComponents.contains("vortex.components.emailinvitations")
     }
     
+    /// Find the email invitations block from the form structure
+    var emailInvitationsBlock: ElementNode? {
+        guard let root = formStructure else { return nil }
+        return findBlock(in: root, withSubtype: "vrtx-email-invitations")
+    }
+    
+    /// Recursively find a block by subtype in the element tree
+    private func findBlock(in node: ElementNode, withSubtype subtype: String) -> ElementNode? {
+        if node.subtype == subtype {
+            return node
+        }
+        if let children = node.children {
+            for child in children {
+                if let found = findBlock(in: child, withSubtype: subtype) {
+                    return found
+                }
+            }
+        }
+        return nil
+    }
+    
     // MARK: - Form Field Methods
     
     /// Set a form field value

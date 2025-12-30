@@ -3,11 +3,52 @@ import SwiftUI
 struct HeadingView: View {
     let block: ElementNode
     
+    // Map heading levels to font sizes and weights (matching RN SDK)
+    private var headingStyle: (fontSize: CGFloat, fontWeight: Font.Weight, marginBottom: CGFloat) {
+        let overrideTagName = block.settings?.overrideTagName ?? "h1"
+        switch overrideTagName {
+        case "h1": return (24, .bold, 16)
+        case "h2": return (20, .bold, 14)
+        case "h3": return (18, .semibold, 12)
+        case "h4": return (16, .semibold, 10)
+        case "h5": return (14, .semibold, 8)
+        case "h6": return (12, .semibold, 8)
+        default: return (24, .bold, 16)
+        }
+    }
+    
+    // Get text alignment from block style
+    private var textAlignment: TextAlignment {
+        if let textAlign = block.style?["textAlign"] {
+            switch textAlign {
+            case "center": return .center
+            case "right": return .trailing
+            default: return .leading
+            }
+        }
+        return .leading
+    }
+    
+    // Get frame alignment from block style
+    private var frameAlignment: Alignment {
+        if let textAlign = block.style?["textAlign"] {
+            switch textAlign {
+            case "center": return .center
+            case "right": return .trailing
+            default: return .leading
+            }
+        }
+        return .leading
+    }
+    
     var body: some View {
         if let text = block.textContent {
             Text(text)
-                .font(.headline)
+                .font(.system(size: headingStyle.fontSize, weight: headingStyle.fontWeight))
+                .multilineTextAlignment(textAlignment)
+                .frame(maxWidth: .infinity, alignment: frameAlignment)
                 .padding(.horizontal)
+                .padding(.bottom, headingStyle.marginBottom)
         }
     }
 }

@@ -142,6 +142,22 @@ public struct ElementNode: Codable, Sendable {
     public let children: [ElementNode]?
     public let hidden: Bool?
     public let vortex: VortexMetadata?
+    public let meta: ElementMeta?
+}
+
+/// Metadata for element nodes (source group info, etc.)
+public struct ElementMeta: Codable, Sendable {
+    public let source: ElementSource?
+}
+
+/// Source information for element nodes
+public struct ElementSource: Codable, Sendable {
+    public let group: ElementGroup?
+}
+
+/// Group information for element nodes
+public struct ElementGroup: Codable, Sendable {
+    public let name: String?
 }
 
 /// Element settings (size, layout, actions, etc.)
@@ -152,6 +168,7 @@ public struct ElementSettings: Codable, Sendable {
     public let size: SizeConfig?
     public let layout: [SizeConfig]?
     public let options: [ElementOption]?
+    public let overrideTagName: String?
 }
 
 /// Size configuration for responsive layouts

@@ -133,9 +133,10 @@ public struct VortexInviteView: View {
                 switch viewModel.currentView {
                 case .main:
                     // Dynamic form rendering based on configuration
+                    // Exclude grp-email-invitations group in main view (matching RN SDK behavior)
                     if let formRoot = viewModel.formStructure {
                         ForEach(formRoot.children ?? [], id: \.id) { row in
-                            renderRow(row)
+                            renderRow(row, excludeGroups: ["grp-email-invitations"])
                         }
                     }
                     
@@ -164,22 +165,34 @@ public struct VortexInviteView: View {
     // MARK: - Form Element Rendering
     
     @ViewBuilder
-    private func renderRow(_ row: ElementNode) -> some View {
+    private func renderRow(_ row: ElementNode, excludeGroups: [String] = []) -> some View {
         if row.hidden != true {
-            VStack(spacing: 12) {
-                ForEach(row.children ?? [], id: \.id) { column in
-                    renderColumn(column)
+            // Check if this row should be excluded based on its group
+            let rowGroup = row.meta?.source?.group?.name
+            if let group = rowGroup, excludeGroups.contains(group) {
+                EmptyView()
+            } else {
+                VStack(spacing: 12) {
+                    ForEach(row.children ?? [], id: \.id) { column in
+                        renderColumn(column, excludeGroups: excludeGroups)
+                    }
                 }
             }
         }
     }
     
     @ViewBuilder
-    private func renderColumn(_ column: ElementNode) -> some View {
+    private func renderColumn(_ column: ElementNode, excludeGroups: [String] = []) -> some View {
         if column.hidden != true {
-            VStack(spacing: 12) {
-                ForEach(column.children ?? [], id: \.id) { block in
-                    renderBlock(block)
+            // Check if this column should be excluded based on its group
+            let columnGroup = column.meta?.source?.group?.name
+            if let group = columnGroup, excludeGroups.contains(group) {
+                EmptyView()
+            } else {
+                VStack(spacing: 12) {
+                    ForEach(column.children ?? [], id: \.id) { block in
+                        renderBlock(block, excludeGroups: excludeGroups)
+                    }
                 }
             }
         }
@@ -187,8 +200,13 @@ public struct VortexInviteView: View {
     
     /// Renders a block element based on its subtype
     /// Uses AnyView to avoid Swift's @ViewBuilder limitation with many switch cases
-    private func renderBlock(_ block: ElementNode) -> AnyView {
+    private func renderBlock(_ block: ElementNode, excludeGroups: [String] = []) -> AnyView {
         guard block.hidden != true else {
+            return AnyView(EmptyView())
+        }
+        
+        // Check if this block should be excluded based on its group
+        if let blockGroup = block.meta?.source?.group?.name, excludeGroups.contains(blockGroup) {
             return AnyView(EmptyView())
         }
         
@@ -232,16 +250,16 @@ public struct VortexInviteView: View {
         // MARK: - Layout Elements (supported)
         case "vrtx-root":
             // Root container - render children
-            return AnyView(RootView(block: block, renderBlock: renderBlock))
+            return AnyView(RootView(block: block, renderBlock: { renderBlock($0, excludeGroups: excludeGroups) }))
         case "row_layout":
             // Row layout - render children horizontally
-            return AnyView(RowLayoutView(block: block, renderBlock: renderBlock))
+            return AnyView(RowLayoutView(block: block, renderBlock: { renderBlock($0, excludeGroups: excludeGroups) }))
         case "vrtx-column":
             // Column - render children vertically
-            return AnyView(ColumnView(block: block, renderBlock: renderBlock))
+            return AnyView(ColumnView(block: block, renderBlock: { renderBlock($0, excludeGroups: excludeGroups) }))
         case "vrtx-row":
             // Row - render children horizontally
-            return AnyView(RowView(block: block, renderBlock: renderBlock))
+            return AnyView(RowView(block: block, renderBlock: { renderBlock($0, excludeGroups: excludeGroups) }))
         
         // MARK: - Form Elements (supported)
         case "vrtx-textbox":
@@ -278,6 +296,15 @@ public struct VortexInviteView: View {
     
     // MARK: - Email Entry View
     
+    /// Get the background style for email pills from the email invitations block
+    private var emailPillBackgroundStyle: BackgroundStyle? {
+        guard let block = viewModel.emailInvitationsBlock,
+              let backgroundValue = block.style?["background"] else {
+            return nil
+        }
+        return BackgroundStyle.parse(backgroundValue)
+    }
+    
     private var emailEntryView: some View {
         VStack(spacing: 16) {
             // Email pills for added emails
@@ -285,7 +312,7 @@ public struct VortexInviteView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(viewModel.emails, id: \.self) { email in
-                            EmailPillView(email: email) {
+                            EmailPillView(email: email, backgroundStyle: emailPillBackgroundStyle) {
                                 viewModel.removeEmail(email)
                             }
                         }
