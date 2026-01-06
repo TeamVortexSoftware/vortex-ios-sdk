@@ -102,6 +102,64 @@ VortexInviteView(
 )
 ```
 
+### Prefetch for Instant Rendering
+
+The SDK supports prefetching widget configurations to eliminate loading delays when opening the invite form. This uses a **stale-while-revalidate** pattern: cached configurations are shown immediately while fresh data is fetched in the background.
+
+**Automatic Caching (Zero Code Changes)**
+
+After the first load, configurations are automatically cached. Subsequent opens of `VortexInviteView` with the same `componentId` will render instantly:
+
+```swift
+// First open: shows loading spinner, fetches config, caches it
+// Second open: renders instantly from cache, refreshes in background
+VortexInviteView(
+    componentId: "your-component-id",
+    jwt: jwt,
+    onDismiss: { /* ... */ }
+)
+```
+
+**Manual Prefetch (For Optimal UX)**
+
+Use `VortexConfigurationPrefetcher` to fetch configurations early, such as when the user logs in or when JWT becomes available:
+
+```swift
+import VortexSDK
+
+class AppViewModel: ObservableObject {
+    private var prefetcher: VortexConfigurationPrefetcher?
+    
+    func onUserLoggedIn(jwt: String) {
+        // Start prefetching immediately
+        prefetcher = VortexConfigurationPrefetcher(componentId: "your-component-id")
+        Task {
+            await prefetcher?.prefetch(jwt: jwt)
+        }
+    }
+}
+
+// Later, VortexInviteView uses the cached configuration automatically
+VortexInviteView(
+    componentId: "your-component-id",
+    jwt: jwt,
+    onDismiss: { /* ... */ }
+)
+```
+
+**Pass Configuration Directly**
+
+If you have a configuration from another source, pass it directly:
+
+```swift
+VortexInviteView(
+    componentId: "your-component-id",
+    jwt: jwt,
+    widgetConfiguration: prefetchedConfig,
+    onDismiss: { /* ... */ }
+)
+```
+
 ## Authentication
 
 The SDK requires a JWT token for authentication. You should obtain this token from your backend server:

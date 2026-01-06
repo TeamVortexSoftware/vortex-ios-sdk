@@ -5,6 +5,29 @@ import GoogleSignIn
 
 /// Main invitation form view component
 /// This is the primary entry point for integrating Vortex invitations into your iOS app
+///
+/// ## Prefetch Support
+/// The view automatically uses cached configurations from `VortexConfigurationCache`.
+/// For instant rendering without loading spinners:
+///
+/// 1. **Automatic caching**: After the first load, configurations are cached automatically.
+///    Subsequent opens will show the form instantly while refreshing in the background.
+///
+/// 2. **Manual prefetch**: Use `VortexConfigurationPrefetcher` to fetch configurations early:
+///    ```swift
+///    let prefetcher = VortexConfigurationPrefetcher(componentId: "your-id")
+///    await prefetcher.prefetch(jwt: jwt)
+///    // Later, VortexInviteView will use the cached configuration
+///    ```
+///
+/// 3. **Pass configuration directly**: If you have a configuration from another source:
+///    ```swift
+///    VortexInviteView(
+///        componentId: "your-id",
+///        jwt: jwt,
+///        widgetConfiguration: prefetchedConfig
+///    )
+///    ```
 public struct VortexInviteView: View {
     @StateObject private var viewModel: VortexInviteViewModel
     
@@ -20,6 +43,10 @@ public struct VortexInviteView: View {
     ///   - onEvent: Callback for analytics events (optional)
     ///   - segmentation: Optional segmentation data for analytics
     ///   - onDismiss: Callback when the view is dismissed
+    ///   - widgetConfiguration: Optional pre-fetched widget configuration for instant rendering.
+    ///     If provided, the view renders immediately without showing a loading spinner.
+    ///     Fresh configuration is still fetched in the background (stale-while-revalidate).
+    ///   - deploymentId: Optional deployment ID associated with the widget configuration
     public init(
         componentId: String,
         jwt: String?,
@@ -29,7 +56,9 @@ public struct VortexInviteView: View {
         googleIosClientId: String? = nil,
         onEvent: ((VortexAnalyticsEvent) -> Void)? = nil,
         segmentation: [String: Any]? = nil,
-        onDismiss: (() -> Void)? = nil
+        onDismiss: (() -> Void)? = nil,
+        widgetConfiguration: WidgetConfiguration? = nil,
+        deploymentId: String? = nil
     ) {
         _viewModel = StateObject(wrappedValue: VortexInviteViewModel(
             componentId: componentId,
@@ -40,7 +69,9 @@ public struct VortexInviteView: View {
             googleIosClientId: googleIosClientId,
             onEvent: onEvent,
             segmentation: segmentation,
-            onDismiss: onDismiss
+            onDismiss: onDismiss,
+            initialConfiguration: widgetConfiguration,
+            initialDeploymentId: deploymentId
         ))
     }
     

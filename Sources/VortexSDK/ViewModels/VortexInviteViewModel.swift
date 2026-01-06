@@ -232,6 +232,10 @@ class VortexInviteViewModel: ObservableObject {
     /// Default production analytics collector URL
     private static let defaultAnalyticsBaseURL = URL(string: "https://collector.vortexsoftware.com")!
     
+    /// Optional initial configuration passed from prefetcher or cache
+    private var initialConfiguration: WidgetConfiguration?
+    private var initialDeploymentId: String?
+    
     init(
         componentId: String,
         jwt: String?,
@@ -241,7 +245,9 @@ class VortexInviteViewModel: ObservableObject {
         googleIosClientId: String? = nil,
         onEvent: ((VortexAnalyticsEvent) -> Void)? = nil,
         segmentation: [String: Any]? = nil,
-        onDismiss: (() -> Void)?
+        onDismiss: (() -> Void)?,
+        initialConfiguration: WidgetConfiguration? = nil,
+        initialDeploymentId: String? = nil
     ) {
         self.componentId = componentId
         self.jwt = jwt
@@ -251,6 +257,8 @@ class VortexInviteViewModel: ObservableObject {
         self.segmentation = segmentation
         self.onDismiss = onDismiss
         self.client = VortexClient(baseURL: apiBaseURL)
+        self.initialConfiguration = initialConfiguration
+        self.initialDeploymentId = initialDeploymentId
         
         // Initialize analytics with separate collector URL (defaults to production)
         self.sessionId = UUID().uuidString
@@ -380,31 +388,66 @@ class VortexInviteViewModel: ObservableObject {
     
     // MARK: - Configuration Loading
     
+    /// Load widget configuration with stale-while-revalidate pattern.
+    /// If cached/prefetched configuration exists, it's used immediately (no loading spinner).
+    /// Fresh configuration is always fetched in the background to ensure up-to-date data.
     func loadConfiguration() async {
         guard let jwt = jwt else {
             error = .missingJWT
             return
         }
         
-        isLoading = true
+        // Step 1: Check for initial configuration (passed via init) or cached configuration
+        var hasCachedConfig = false
+        
+        if let initial = initialConfiguration {
+            // Use configuration passed via init (from prefetcher or parent view)
+            configuration = initial
+            deploymentId = initialDeploymentId
+            hasCachedConfig = true
+        } else if let cached = await VortexConfigurationCache.shared.get(componentId) {
+            // Use configuration from shared cache
+            configuration = cached.configuration
+            deploymentId = cached.deploymentId
+            hasCachedConfig = true
+        }
+        
+        // Step 2: Only show loading if we don't have any configuration yet
+        if !hasCachedConfig {
+            isLoading = true
+        }
         error = nil
         
+        // Step 3: Always fetch fresh configuration (stale-while-revalidate)
         do {
             let configData = try await client.getWidgetConfiguration(
                 componentId: componentId,
                 jwt: jwt
             )
             
-            // Extract configuration and deploymentId from response
+            // Update configuration with fresh data
             configuration = configData.widgetConfiguration
             deploymentId = configData.deploymentId
+            
+            // Update shared cache for future use
+            await VortexConfigurationCache.shared.set(
+                componentId,
+                configuration: configData.widgetConfiguration,
+                deploymentId: configData.deploymentId
+            )
             
             // Pre-fetch shareable link
             await fetchShareableLink()
         } catch let vortexError as VortexError {
-            self.error = vortexError
+            // Only set error if we don't have cached config to show
+            if !hasCachedConfig {
+                self.error = vortexError
+            }
         } catch let otherError {
-            self.error = .decodingError(otherError)
+            // Only set error if we don't have cached config to show
+            if !hasCachedConfig {
+                self.error = .decodingError(otherError)
+            }
         }
         
         isLoading = false
