@@ -481,7 +481,7 @@ class VortexInviteViewModel: ObservableObject {
         loadingCopy = true
         
         // Track share link click
-        trackShareLinkClick(clickName: "copy")
+        trackShareLinkClick(clickName: "copyLink")
         
         // Fetch shareable link if not already cached
         if shareableLink == nil {
@@ -508,7 +508,7 @@ class VortexInviteViewModel: ObservableObject {
         loadingShare = true
         
         // Track share link click
-        trackShareLinkClick(clickName: "share")
+        trackShareLinkClick(clickName: "shareViaNativeShare")
         
         // Fetch shareable link if not already cached
         if shareableLink == nil {
@@ -601,7 +601,7 @@ class VortexInviteViewModel: ObservableObject {
     
     func shareViaSms() {
         // Track share link click
-        trackShareLinkClick(clickName: "sms")
+        trackShareLinkClick(clickName: "shareViaSMS")
         
         Task {
             // Fetch shareable link if not already cached
@@ -641,7 +641,7 @@ class VortexInviteViewModel: ObservableObject {
     
     func shareViaLine() {
         // Track share link click
-        trackShareLinkClick(clickName: "line")
+        trackShareLinkClick(clickName: "shareViaLine")
         
         guard let link = shareableLink,
               let encodedLink = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
@@ -652,12 +652,14 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func showQrCode() {
+        // Track share link click
+        trackShareLinkClick(clickName: "shareViaQrCode")
         currentView = .qrCode
     }
     
     func shareViaEmail() {
         // Track share link click
-        trackShareLinkClick(clickName: "email")
+        trackShareLinkClick(clickName: "shareViaEmail")
         
         Task {
             if shareableLink == nil {
@@ -705,7 +707,7 @@ class VortexInviteViewModel: ObservableObject {
     
     func shareViaTwitter() {
         // Track share link click
-        trackShareLinkClick(clickName: "twitter")
+        trackShareLinkClick(clickName: "shareViaTwitter")
         
         Task {
             if shareableLink == nil {
@@ -743,7 +745,7 @@ class VortexInviteViewModel: ObservableObject {
     
     func shareViaInstagram() {
         // Track share link click
-        trackShareLinkClick(clickName: "instagram")
+        trackShareLinkClick(clickName: "shareViaInstagram")
         
         // Instagram doesn't support direct sharing via URL scheme with pre-filled content
         // Open Instagram Direct inbox instead
@@ -759,7 +761,7 @@ class VortexInviteViewModel: ObservableObject {
     
     func shareViaWhatsApp() {
         // Track share link click
-        trackShareLinkClick(clickName: "whatsapp")
+        trackShareLinkClick(clickName: "shareViaWhatsApp")
         
         Task {
             if shareableLink == nil {
@@ -796,7 +798,7 @@ class VortexInviteViewModel: ObservableObject {
     
     func shareViaFacebookMessenger() {
         // Track share link click
-        trackShareLinkClick(clickName: "messenger")
+        trackShareLinkClick(clickName: "shareViaFacebookMessenger")
         
         Task {
             if shareableLink == nil {
@@ -821,7 +823,7 @@ class VortexInviteViewModel: ObservableObject {
     
     func shareViaTelegram() {
         // Track share link click
-        trackShareLinkClick(clickName: "telegram")
+        trackShareLinkClick(clickName: "shareViaTelegram")
         
         Task {
             if shareableLink == nil {
@@ -858,7 +860,7 @@ class VortexInviteViewModel: ObservableObject {
     
     func shareViaDiscord() {
         // Track share link click
-        trackShareLinkClick(clickName: "discord")
+        trackShareLinkClick(clickName: "shareViaDiscord")
         
         // Discord doesn't have a direct share URL scheme
         // Open Discord app or website
