@@ -35,11 +35,11 @@ public class VortexClient {
     /// - Parameters:
     ///   - componentId: The widget/component ID
     ///   - jwt: JWT authentication token
-    /// - Returns: Widget configuration
+    /// - Returns: Widget configuration data including deploymentId and other metadata
     public func getWidgetConfiguration(
         componentId: String,
         jwt: String
-    ) async throws -> WidgetConfiguration {
+    ) async throws -> WidgetConfigurationData {
         let url = baseURL.appendingPathComponent("/api/v1/widgets/\(componentId)")
         
         var request = URLRequest(url: url)
@@ -80,7 +80,7 @@ public class VortexClient {
             self.sessionAttestation = attestation
         }
         
-        return configResponse.data.widgetConfiguration
+        return configResponse.data
     }
     
     // MARK: - Invitations

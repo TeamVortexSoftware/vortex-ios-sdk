@@ -13,23 +13,33 @@ public struct VortexInviteView: View {
     ///   - componentId: The widget/component ID from your Vortex dashboard
     ///   - jwt: JWT authentication token (required for API access)
     ///   - apiBaseURL: Base URL of the Vortex API (default: production)
+    ///   - analyticsBaseURL: Base URL of the analytics collector (default: production collector).
+    ///     Only override this for development/staging environments.
     ///   - group: Optional group information for scoping invitations
     ///   - googleIosClientId: Google iOS Client ID for Google Contacts integration (optional)
+    ///   - onEvent: Callback for analytics events (optional)
+    ///   - segmentation: Optional segmentation data for analytics
     ///   - onDismiss: Callback when the view is dismissed
     public init(
         componentId: String,
         jwt: String?,
         apiBaseURL: URL = URL(string: "https://client-api.vortexsoftware.com")!,
+        analyticsBaseURL: URL? = nil,
         group: GroupDTO? = nil,
         googleIosClientId: String? = nil,
+        onEvent: ((VortexAnalyticsEvent) -> Void)? = nil,
+        segmentation: [String: Any]? = nil,
         onDismiss: (() -> Void)? = nil
     ) {
         _viewModel = StateObject(wrappedValue: VortexInviteViewModel(
             componentId: componentId,
             jwt: jwt,
             apiBaseURL: apiBaseURL,
+            analyticsBaseURL: analyticsBaseURL,
             group: group,
             googleIosClientId: googleIosClientId,
+            onEvent: onEvent,
+            segmentation: segmentation,
             onDismiss: onDismiss
         ))
     }
@@ -71,8 +81,14 @@ public struct VortexInviteView: View {
                     loadingView
                 } else if let error = viewModel.error {
                     errorView(error: error)
+                        .onAppear {
+                            viewModel.trackWidgetError(error)
+                        }
                 } else if viewModel.configuration != nil {
                     formView
+                        .onAppear {
+                            viewModel.trackWidgetRender()
+                        }
                 }
                 
                 Spacer(minLength: 0)

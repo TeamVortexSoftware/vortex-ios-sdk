@@ -77,6 +77,15 @@ class VortexInviteViewModel: ObservableObject {
     private let googleIosClientId: String?
     private let onDismiss: (() -> Void)?
     
+    // Analytics
+    private let analyticsClient: VortexAnalyticsClient
+    private let sessionId: String
+    private let onEvent: ((VortexAnalyticsEvent) -> Void)?
+    private let segmentation: [String: Any]?
+    private var widgetRenderTracked = false
+    private var formRenderTime: Date?
+    private var deploymentId: String?
+    
     // MARK: - Computed Properties
     
     /// Get the form structure from widget configuration
@@ -220,20 +229,153 @@ class VortexInviteViewModel: ObservableObject {
     
     // MARK: - Initialization
     
+    /// Default production analytics collector URL
+    private static let defaultAnalyticsBaseURL = URL(string: "https://collector.vortexsoftware.com")!
+    
     init(
         componentId: String,
         jwt: String?,
         apiBaseURL: URL,
+        analyticsBaseURL: URL? = nil,
         group: GroupDTO?,
         googleIosClientId: String? = nil,
+        onEvent: ((VortexAnalyticsEvent) -> Void)? = nil,
+        segmentation: [String: Any]? = nil,
         onDismiss: (() -> Void)?
     ) {
         self.componentId = componentId
         self.jwt = jwt
         self.group = group
         self.googleIosClientId = googleIosClientId
+        self.onEvent = onEvent
+        self.segmentation = segmentation
         self.onDismiss = onDismiss
         self.client = VortexClient(baseURL: apiBaseURL)
+        
+        // Initialize analytics with separate collector URL (defaults to production)
+        self.sessionId = UUID().uuidString
+        self.analyticsClient = VortexAnalyticsClient(
+            baseURL: analyticsBaseURL ?? Self.defaultAnalyticsBaseURL,
+            sessionId: sessionId,
+            jwt: jwt
+        )
+    }
+    
+    // MARK: - Analytics
+    
+    /// Cached useragent string (computed once)
+    private lazy var useragent: String = VortexDeviceInfo.useragent
+    
+    /// Cached foreign user ID extracted from JWT
+    private lazy var foreignUserId: String? = VortexJWTParser.extractForeignUserId(from: jwt)
+    
+    /// Track an analytics event.
+    /// - Parameters:
+    ///   - name: The event name
+    ///   - payload: Optional event-specific payload
+    private func trackEvent(
+        _ name: VortexEventName,
+        payload: [String: Any]? = nil
+    ) {
+        let event = VortexAnalyticsEvent(
+            name: name.rawValue,
+            widgetConfigurationId: configuration?.id,
+            deploymentId: deploymentId,
+            platform: "ios",
+            sessionId: sessionId,
+            useragent: useragent,
+            foreignUserId: foreignUserId,
+            segmentation: segmentation?.toJSONValues(),
+            payload: payload?.toJSONValues(),
+            groups: group.map { [VortexAnalyticsEvent.GroupInfo(
+                type: $0.type,
+                id: $0.groupId ?? $0.id ?? "",
+                name: $0.name
+            )] }
+        )
+        
+        // Call onEvent callback if provided
+        onEvent?(event)
+        
+        // Send to analytics backend
+        Task {
+            await analyticsClient.track(event)
+        }
+    }
+    
+    /// Track widget render event (only once per session)
+    func trackWidgetRender() {
+        guard !widgetRenderTracked else { return }
+        widgetRenderTracked = true
+        formRenderTime = Date()
+        trackEvent(.widgetRender)
+    }
+    
+    /// Track widget error event
+    /// - Parameter error: The error that occurred
+    func trackWidgetError(_ error: VortexError) {
+        trackEvent(.widgetError, payload: [
+            "error": error.localizedDescription
+        ])
+    }
+    
+    /// Track email field focus event
+    func trackEmailFieldFocus() {
+        let timestamp = formRenderTime.map { Date().timeIntervalSince($0) * 1000 } ?? 0
+        trackEvent(.widgetEmailFieldFocus, payload: [
+            "timestamp": Int(timestamp)
+        ])
+    }
+    
+    /// Track email field blur event
+    func trackEmailFieldBlur() {
+        let timestamp = formRenderTime.map { Date().timeIntervalSince($0) * 1000 } ?? 0
+        trackEvent(.widgetEmailFieldBlur, payload: [
+            "timestamp": Int(timestamp)
+        ])
+    }
+    
+    /// Track email validation event
+    /// - Parameters:
+    ///   - email: The email being validated
+    ///   - isValid: Whether the email is valid
+    func trackEmailValidation(email: String, isValid: Bool) {
+        trackEvent(.widgetEmailValidation, payload: [
+            "email": email,
+            "isValid": isValid
+        ])
+    }
+    
+    /// Track share link click event
+    /// - Parameter clickName: The name/type of the share action (e.g., "copy", "whatsapp", "sms")
+    func trackShareLinkClick(clickName: String) {
+        trackEvent(.widgetShareLinkClick, payload: [
+            "clickName": clickName
+        ])
+    }
+    
+    /// Track email invitations submitted event
+    /// - Parameter formData: The form data being submitted
+    func trackEmailInvitationsSubmitted(formData: [String: Any]) {
+        trackEvent(.emailInvitationsSubmitted, payload: [
+            "formData": formData
+        ])
+    }
+    
+    /// Track email validation error event (form submission validation failure)
+    /// - Parameter formData: The form data that failed validation
+    func trackEmailValidationError(formData: [String: Any]) {
+        trackEvent(.widgetEmailValidationError, payload: [
+            "formData": formData
+        ])
+    }
+    
+    /// Track email submit error event
+    /// - Parameter error: The error message
+    func trackEmailSubmitError(error: String) {
+        trackEvent(.widgetEmailSubmitError, payload: [
+            "error": error
+        ])
     }
     
     // MARK: - Configuration Loading
@@ -248,10 +390,14 @@ class VortexInviteViewModel: ObservableObject {
         error = nil
         
         do {
-            configuration = try await client.getWidgetConfiguration(
+            let configData = try await client.getWidgetConfiguration(
                 componentId: componentId,
                 jwt: jwt
             )
+            
+            // Extract configuration and deploymentId from response
+            configuration = configData.widgetConfiguration
+            deploymentId = configData.deploymentId
             
             // Pre-fetch shareable link
             await fetchShareableLink()
@@ -291,6 +437,9 @@ class VortexInviteViewModel: ObservableObject {
     func copyLink() async {
         loadingCopy = true
         
+        // Track share link click
+        trackShareLinkClick(clickName: "copy")
+        
         // Fetch shareable link if not already cached
         if shareableLink == nil {
             await fetchShareableLink()
@@ -314,6 +463,9 @@ class VortexInviteViewModel: ObservableObject {
     
     func shareInvitation() async {
         loadingShare = true
+        
+        // Track share link click
+        trackShareLinkClick(clickName: "share")
         
         // Fetch shareable link if not already cached
         if shareableLink == nil {
@@ -405,6 +557,9 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func shareViaSms() {
+        // Track share link click
+        trackShareLinkClick(clickName: "sms")
+        
         Task {
             // Fetch shareable link if not already cached
             if shareableLink == nil {
@@ -442,6 +597,9 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func shareViaLine() {
+        // Track share link click
+        trackShareLinkClick(clickName: "line")
+        
         guard let link = shareableLink,
               let encodedLink = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
               let url = URL(string: "https://line.me/R/msg/text/?\(encodedLink)") else {
@@ -455,6 +613,9 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func shareViaEmail() {
+        // Track share link click
+        trackShareLinkClick(clickName: "email")
+        
         Task {
             if shareableLink == nil {
                 await fetchShareableLink()
@@ -500,6 +661,9 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func shareViaTwitter() {
+        // Track share link click
+        trackShareLinkClick(clickName: "twitter")
+        
         Task {
             if shareableLink == nil {
                 await fetchShareableLink()
@@ -535,6 +699,9 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func shareViaInstagram() {
+        // Track share link click
+        trackShareLinkClick(clickName: "instagram")
+        
         // Instagram doesn't support direct sharing via URL scheme with pre-filled content
         // Open Instagram Direct inbox instead
         let instagramURL = URL(string: "instagram://direct-inbox")
@@ -548,6 +715,9 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func shareViaWhatsApp() {
+        // Track share link click
+        trackShareLinkClick(clickName: "whatsapp")
+        
         Task {
             if shareableLink == nil {
                 await fetchShareableLink()
@@ -582,6 +752,9 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func shareViaFacebookMessenger() {
+        // Track share link click
+        trackShareLinkClick(clickName: "messenger")
+        
         Task {
             if shareableLink == nil {
                 await fetchShareableLink()
@@ -604,6 +777,9 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func shareViaTelegram() {
+        // Track share link click
+        trackShareLinkClick(clickName: "telegram")
+        
         Task {
             if shareableLink == nil {
                 await fetchShareableLink()
@@ -638,6 +814,9 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     func shareViaDiscord() {
+        // Track share link click
+        trackShareLinkClick(clickName: "discord")
+        
         // Discord doesn't have a direct share URL scheme
         // Open Discord app or website
         let discordURL = URL(string: "discord://")
@@ -1133,6 +1312,15 @@ class VortexInviteViewModel: ObservableObject {
         isSending = true
         showSuccess = false
         
+        // Build form data for tracking
+        let formData: [String: Any] = [
+            "emails": emails,
+            "formFieldValues": formFieldValues
+        ]
+        
+        // Track email invitations submitted
+        trackEmailInvitationsSubmitted(formData: formData)
+        
         do {
             // Send invitation for each email
             for email in emails {
@@ -1164,8 +1352,12 @@ class VortexInviteViewModel: ObservableObject {
             
         } catch let vortexError as VortexError {
             self.error = vortexError
+            // Track email submit error
+            trackEmailSubmitError(error: vortexError.localizedDescription)
         } catch let otherError {
             self.error = .encodingError(otherError)
+            // Track email submit error
+            trackEmailSubmitError(error: otherError.localizedDescription)
         }
         
         isSending = false
