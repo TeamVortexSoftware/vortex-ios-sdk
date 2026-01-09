@@ -169,6 +169,12 @@ public struct ElementSettings: Codable, Sendable {
     public let layout: [SizeConfig]?
     public let options: [ElementOption]?
     public let overrideTagName: String?
+    public let customizations: [String: ButtonCustomization]?
+}
+
+/// Customization options for buttons (supports custom labels from widget configuration)
+public struct ButtonCustomization: Codable, Sendable {
+    public let textContent: String?
 }
 
 /// Size configuration for responsive layouts
