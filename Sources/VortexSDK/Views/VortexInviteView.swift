@@ -213,15 +213,36 @@ public struct VortexInviteView: View {
     
     @ViewBuilder
     private func renderRow(_ row: ElementNode, excludeGroups: [String] = []) -> some View {
-        if row.hidden != true {
+        // Skip hidden rows or rows with no children (matching RN SDK behavior)
+        if row.hidden != true, let children = row.children, !children.isEmpty {
             // Check if this row should be excluded based on its group
             let rowGroup = row.meta?.source?.group?.name
             if let group = rowGroup, excludeGroups.contains(group) {
                 EmptyView()
             } else {
-                VStack(spacing: 12) {
-                    ForEach(row.children ?? [], id: \.id) { column in
-                        renderColumn(column, excludeGroups: excludeGroups)
+                // Check if any column has visible content
+                let hasVisibleContent = children.contains { column in
+                    guard column.hidden != true else { return false }
+                    guard let columnChildren = column.children, !columnChildren.isEmpty else { return false }
+                    // Check if column group is excluded
+                    if let colGroup = column.meta?.source?.group?.name, excludeGroups.contains(colGroup) {
+                        return false
+                    }
+                    // Check if any block in the column is visible
+                    return columnChildren.contains { block in
+                        guard block.hidden != true else { return false }
+                        if let blockGroup = block.meta?.source?.group?.name, excludeGroups.contains(blockGroup) {
+                            return false
+                        }
+                        return true
+                    }
+                }
+                
+                if hasVisibleContent {
+                    VStack(spacing: 12) {
+                        ForEach(children, id: \.id) { column in
+                            renderColumn(column, excludeGroups: excludeGroups)
+                        }
                     }
                 }
             }
