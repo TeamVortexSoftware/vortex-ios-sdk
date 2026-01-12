@@ -101,6 +101,64 @@ class VortexInviteViewModel: ObservableObject {
         return nil
     }
     
+    /// Extract theme color map from vortex.theme configuration
+    /// Returns a dictionary mapping CSS variable names (e.g., "--color-surface-background") to color values
+    private var themeColorMap: [String: String] {
+        guard let config = configuration,
+              let themeProp = config.configuration.props["vortex.theme"],
+              case .theme(let theme) = themeProp.value,
+              let options = theme.options else {
+            return [:]
+        }
+        
+        var colorMap: [String: String] = [:]
+        for option in options {
+            colorMap[option.key] = option.value
+        }
+        return colorMap
+    }
+    
+    /// Get the surface background color for form container background
+    /// Priority: 1) Root element's inline style, 2) Theme's --color-surface-background
+    var surfaceBackgroundColor: Color? {
+        // First check root element's inline style (e.g., style.background: "#111323")
+        if let rootStyle = formStructure?.style,
+           let backgroundValue = rootStyle["background"],
+           backgroundValue != "transparent" {
+            // Handle both solid colors and gradients
+            if let bgStyle = BackgroundStyle.parse(backgroundValue) {
+                switch bgStyle {
+                case .solid(let color):
+                    return color
+                case .gradient:
+                    // For gradients, extract the first color as fallback
+                    if let color = Color(hex: backgroundValue) {
+                        return color
+                    }
+                }
+            }
+            // Try direct hex parsing
+            if let color = Color(hex: backgroundValue) {
+                return color
+            }
+        }
+        
+        // Fallback to theme's --color-surface-background
+        guard let hexColor = themeColorMap["--color-surface-background"],
+              hexColor != "transparent" else {
+            return nil
+        }
+        return Color(hex: hexColor)
+    }
+    
+    /// Get the surface foreground color from theme (for heading text)
+    var surfaceForegroundColor: Color? {
+        guard let hexColor = themeColorMap["--color-surface-foreground"] else {
+            return nil
+        }
+        return Color(hex: hexColor)
+    }
+    
     /// Get share options from configuration (ordered array)
     var shareOptions: [String] {
         guard let config = configuration,

@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HeadingView: View {
     let block: ElementNode
+    var textColor: Color?
     
     // Map heading levels to font sizes and weights (matching RN SDK)
     private var headingStyle: (fontSize: CGFloat, fontWeight: Font.Weight, marginBottom: CGFloat) {
@@ -41,10 +42,25 @@ struct HeadingView: View {
         return .leading
     }
     
+    /// Get text color from block style, parameter, or default
+    private var resolvedTextColor: Color {
+        // First check block.style for inline color
+        if let colorValue = block.style?["color"], let color = Color(hex: colorValue) {
+            return color
+        }
+        // Then use provided textColor (from theme)
+        if let textColor = textColor {
+            return textColor
+        }
+        // Default to label color
+        return Color(UIColor.label)
+    }
+    
     var body: some View {
         if let text = block.textContent {
             Text(text)
                 .font(.system(size: headingStyle.fontSize, weight: headingStyle.fontWeight))
+                .foregroundColor(resolvedTextColor)
                 .multilineTextAlignment(textAlignment)
                 .frame(maxWidth: .infinity, alignment: frameAlignment)
                 .padding(.horizontal)

@@ -126,7 +126,7 @@ public struct VortexInviteView: View {
             }
             .frame(height: UIScreen.main.bounds.height * 0.8)
             .frame(maxWidth: .infinity)
-            .background(Color(UIColor.systemBackground))
+            .background(viewModel.surfaceBackgroundColor ?? Color(UIColor.systemBackground))
             .cornerRadius(20, corners: [.topLeft, .topRight])
         }
         .ignoresSafeArea()
@@ -278,7 +278,7 @@ public struct VortexInviteView: View {
         
         // MARK: - Content Elements (fully supported)
         case "vrtx-heading":
-            return AnyView(HeadingView(block: block))
+            return AnyView(HeadingView(block: block, textColor: viewModel.surfaceForegroundColor))
         case "vrtx-text":
             return AnyView(TextView(block: block))
         case "vrtx-form-label":
