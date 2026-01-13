@@ -47,6 +47,9 @@ public struct VortexInviteView: View {
     ///     If provided, the view renders immediately without showing a loading spinner.
     ///     Fresh configuration is still fetched in the background (stale-while-revalidate).
     ///   - deploymentId: Optional deployment ID associated with the widget configuration
+    ///   - findFriendsConfig: Optional configuration for the Find Friends feature.
+    ///     When provided, enables the Find Friends component to display contacts with
+    ///     Connect/Invite buttons based on their membership status.
     public init(
         componentId: String,
         jwt: String?,
@@ -58,7 +61,8 @@ public struct VortexInviteView: View {
         segmentation: [String: Any]? = nil,
         onDismiss: (() -> Void)? = nil,
         widgetConfiguration: WidgetConfiguration? = nil,
-        deploymentId: String? = nil
+        deploymentId: String? = nil,
+        findFriendsConfig: FindFriendsConfig? = nil
     ) {
         _viewModel = StateObject(wrappedValue: VortexInviteViewModel(
             componentId: componentId,
@@ -71,7 +75,8 @@ public struct VortexInviteView: View {
             segmentation: segmentation,
             onDismiss: onDismiss,
             initialConfiguration: widgetConfiguration,
-            initialDeploymentId: deploymentId
+            initialDeploymentId: deploymentId,
+            findFriendsConfig: findFriendsConfig
         ))
     }
     
@@ -296,6 +301,8 @@ public struct VortexInviteView: View {
             // when isEmailInvitationsEnabled is true, matching the RN SDK behavior where
             // VrtxEmailInvitations returns null when not in email view.
             return AnyView(EmptyView())
+        case "vrtx-find-friends":
+            return AnyView(FindFriendsView(block: block, viewModel: viewModel))
         
         // MARK: - Content Elements (fully supported)
         case "vrtx-heading":

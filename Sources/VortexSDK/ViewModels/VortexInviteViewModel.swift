@@ -44,6 +44,11 @@ class VortexInviteViewModel: ObservableObject {
     // Form field values for custom form elements
     @Published var formFieldValues: [String: String] = [:]
     
+    // Find Friends state
+    @Published var findFriendsContacts: [FindFriendsClassifiedContact] = []
+    @Published var findFriendsLoadingState: FindFriendsLoadingState = .idle
+    @Published var findFriendsActionInProgress: String? = nil
+    
     /// Filtered contacts based on search query
     var filteredContacts: [VortexContact] {
         if contactsSearchQuery.isEmpty {
@@ -76,6 +81,9 @@ class VortexInviteViewModel: ObservableObject {
     private let group: GroupDTO?
     private let googleIosClientId: String?
     private let onDismiss: (() -> Void)?
+    
+    // Find Friends
+    let findFriendsConfig: FindFriendsConfig?
     
     // Analytics
     private let analyticsClient: VortexAnalyticsClient
@@ -154,6 +162,58 @@ class VortexInviteViewModel: ObservableObject {
     /// Get the surface foreground color from theme (for heading text)
     var surfaceForegroundColor: Color? {
         guard let hexColor = themeColorMap["--color-surface-foreground"] else {
+            return nil
+        }
+        return Color(hex: hexColor)
+    }
+    
+    // MARK: - Theme Colors for Find Friends
+    // These colors are extracted from vortex.theme configuration and used as fallbacks
+    // when block.theme.options doesn't have specific values set
+    
+    /// Primary background color from theme (e.g., for Connect button background)
+    var themePrimaryBackground: Color? {
+        guard let hexColor = themeColorMap["--color-primary-background"] else {
+            return nil
+        }
+        return Color(hex: hexColor)
+    }
+    
+    /// Primary foreground color from theme (e.g., for Connect button text)
+    var themePrimaryForeground: Color? {
+        guard let hexColor = themeColorMap["--color-primary-foreground"] else {
+            return nil
+        }
+        return Color(hex: hexColor)
+    }
+    
+    /// Secondary background color from theme (e.g., for Invite button background)
+    var themeSecondaryBackground: Color? {
+        guard let hexColor = themeColorMap["--color-secondary-background"] else {
+            return nil
+        }
+        return Color(hex: hexColor)
+    }
+    
+    /// Secondary foreground color from theme (e.g., for Invite button text)
+    var themeSecondaryForeground: Color? {
+        guard let hexColor = themeColorMap["--color-secondary-foreground"] else {
+            return nil
+        }
+        return Color(hex: hexColor)
+    }
+    
+    /// Foreground color from theme (e.g., for contact name text)
+    var themeForeground: Color? {
+        guard let hexColor = themeColorMap["--color-foreground"] else {
+            return nil
+        }
+        return Color(hex: hexColor)
+    }
+    
+    /// Border color from theme (e.g., for Invite button border)
+    var themeBorder: Color? {
+        guard let hexColor = themeColorMap["--color-border"] else {
             return nil
         }
         return Color(hex: hexColor)
@@ -305,7 +365,8 @@ class VortexInviteViewModel: ObservableObject {
         segmentation: [String: Any]? = nil,
         onDismiss: (() -> Void)?,
         initialConfiguration: WidgetConfiguration? = nil,
-        initialDeploymentId: String? = nil
+        initialDeploymentId: String? = nil,
+        findFriendsConfig: FindFriendsConfig? = nil
     ) {
         self.componentId = componentId
         self.jwt = jwt
@@ -317,6 +378,7 @@ class VortexInviteViewModel: ObservableObject {
         self.client = VortexClient(baseURL: apiBaseURL)
         self.initialConfiguration = initialConfiguration
         self.initialDeploymentId = initialDeploymentId
+        self.findFriendsConfig = findFriendsConfig
         
         // Initialize analytics with separate collector URL (defaults to production)
         self.sessionId = UUID().uuidString
@@ -1470,5 +1532,220 @@ class VortexInviteViewModel: ObservableObject {
     
     func dismiss() {
         onDismiss?()
+    }
+    
+    // MARK: - Find Friends
+    
+    /// Load and classify contacts for the Find Friends feature
+    func loadFindFriendsContacts() {
+        // If pre-classified contacts are provided, use them directly
+        if let classifiedContacts = findFriendsConfig?.classifiedContacts, !classifiedContacts.isEmpty {
+            findFriendsContacts = sortFindFriendsContacts(classifiedContacts)
+            findFriendsLoadingState = .idle
+            return
+        }
+        
+        // Otherwise, use the callback approach to fetch and classify contacts
+        guard let config = findFriendsConfig, let onClassifyContacts = config.onClassifyContacts else {
+            return
+        }
+        
+        Task {
+            findFriendsLoadingState = .fetching
+            
+            do {
+                // Fetch contacts from device
+                var allRawContacts: [FindFriendsRawContact] = []
+                
+                // Fetch device contacts
+                let deviceContacts = await fetchDeviceContactsForFindFriends()
+                allRawContacts.append(contentsOf: deviceContacts)
+                
+                // Fetch Google contacts if available
+                if googleIosClientId != nil {
+                    let googleContacts = await fetchGoogleContactsForFindFriends()
+                    allRawContacts.append(contentsOf: googleContacts)
+                }
+                
+                if allRawContacts.isEmpty {
+                    findFriendsContacts = []
+                    findFriendsLoadingState = .idle
+                    return
+                }
+                
+                // Classify contacts via platform callback
+                findFriendsLoadingState = .classifying
+                let classifiedContacts = try await onClassifyContacts(allRawContacts)
+                
+                // Sort: members first, then non-members, alphabetically within each group
+                findFriendsContacts = sortFindFriendsContacts(classifiedContacts)
+                findFriendsLoadingState = .idle
+                
+            } catch {
+                findFriendsLoadingState = .error(error.localizedDescription)
+            }
+        }
+    }
+    
+    /// Sort contacts: members first, then non-members, alphabetically within each group
+    private func sortFindFriendsContacts(_ contacts: [FindFriendsClassifiedContact]) -> [FindFriendsClassifiedContact] {
+        return contacts.sorted { a, b in
+            if a.status == .member && b.status != .member { return true }
+            if a.status != .member && b.status == .member { return false }
+            return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
+        }
+    }
+    
+    /// Fetch device contacts and convert to FindFriendsRawContact format
+    private func fetchDeviceContactsForFindFriends() async -> [FindFriendsRawContact] {
+        let store = CNContactStore()
+        
+        // Check authorization status
+        var status = CNContactStore.authorizationStatus(for: .contacts)
+        
+        // Request access if not determined
+        if status == .notDetermined {
+            do {
+                let granted = try await store.requestAccess(for: .contacts)
+                if !granted { return [] }
+                status = CNContactStore.authorizationStatus(for: .contacts)
+            } catch {
+                return []
+            }
+        }
+        
+        guard status == .authorized else {
+            return []
+        }
+        
+        // Fetch contacts
+        let keysToFetch: [CNKeyDescriptor] = [
+            CNContactIdentifierKey as CNKeyDescriptor,
+            CNContactGivenNameKey as CNKeyDescriptor,
+            CNContactFamilyNameKey as CNKeyDescriptor,
+            CNContactEmailAddressesKey as CNKeyDescriptor,
+            CNContactPhoneNumbersKey as CNKeyDescriptor
+        ]
+        
+        var rawContacts: [FindFriendsRawContact] = []
+        let request = CNContactFetchRequest(keysToFetch: keysToFetch)
+        
+        do {
+            try store.enumerateContacts(with: request) { contact, _ in
+                let emails = contact.emailAddresses.map { String($0.value) }
+                guard !emails.isEmpty else { return }
+                
+                let name = [contact.givenName, contact.familyName]
+                    .filter { !$0.isEmpty }
+                    .joined(separator: " ")
+                
+                guard !name.isEmpty else { return }
+                
+                let phones = contact.phoneNumbers.map { $0.value.stringValue }
+                
+                let rawContact = FindFriendsRawContact(
+                    id: contact.identifier,
+                    name: name,
+                    emails: emails,
+                    phones: phones.isEmpty ? nil : phones,
+                    avatarUrl: nil
+                )
+                rawContacts.append(rawContact)
+            }
+        } catch {
+            return []
+        }
+        
+        return rawContacts
+    }
+    
+    /// Fetch Google contacts and convert to FindFriendsRawContact format
+    private func fetchGoogleContactsForFindFriends() async -> [FindFriendsRawContact] {
+        // Use existing Google contacts if already fetched
+        guard !googleContacts.isEmpty else { return [] }
+        
+        // Convert VortexContact to FindFriendsRawContact, grouping by name
+        var contactMap: [String: FindFriendsRawContact] = [:]
+        
+        for contact in googleContacts {
+            let key = contact.name.lowercased()
+            if var existing = contactMap[key] {
+                // Add email to existing contact if not already present
+                if !existing.emails.contains(contact.email) {
+                    var emails = existing.emails
+                    emails.append(contact.email)
+                    contactMap[key] = FindFriendsRawContact(
+                        id: existing.id,
+                        name: existing.name,
+                        emails: emails,
+                        phones: existing.phones,
+                        avatarUrl: existing.avatarUrl
+                    )
+                }
+            } else {
+                contactMap[key] = FindFriendsRawContact(
+                    id: contact.id,
+                    name: contact.name,
+                    emails: [contact.email],
+                    phones: nil,
+                    avatarUrl: nil
+                )
+            }
+        }
+        
+        return Array(contactMap.values)
+    }
+    
+    /// Handle Connect button tap for a member contact
+    func handleFindFriendsConnect(_ contact: FindFriendsClassifiedContact) {
+        guard let config = findFriendsConfig else { return }
+        
+        findFriendsActionInProgress = contact.id
+        
+        Task {
+            await config.onConnect(contact)
+            findFriendsActionInProgress = nil
+        }
+    }
+    
+    /// Handle Invite button tap for a non-member contact
+    func handleFindFriendsInvite(_ contact: FindFriendsClassifiedContact) {
+        findFriendsActionInProgress = contact.id
+        
+        Task {
+            // If platform provides custom onInvite, use it
+            if let onInvite = findFriendsConfig?.onInvite {
+                await onInvite(contact)
+            } else if let email = contact.emails.first {
+                // Otherwise use SDK's built-in invite
+                await sendFindFriendsInvite(email: email, contactName: contact.name)
+            }
+            findFriendsActionInProgress = nil
+        }
+    }
+    
+    /// Send invitation using SDK's built-in mechanism
+    private func sendFindFriendsInvite(email: String, contactName: String) async {
+        guard let jwt = jwt, let config = configuration else { return }
+        
+        let payload: [String: Any] = [
+            "invitee_email": ["value": email, "type": "email"]
+        ]
+        
+        var groups: [GroupDTO]? = nil
+        if let group = group {
+            groups = [group]
+        }
+        
+        do {
+            _ = try await client.createInvitation(
+                jwt: jwt,
+                widgetConfigurationId: config.id,
+                payload: payload,
+                groups: groups
+            )
+        } catch {
+            // Silently fail - the UI will show the button is no longer loading
+        }
     }
 }
