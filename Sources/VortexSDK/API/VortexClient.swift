@@ -35,12 +35,26 @@ public class VortexClient {
     /// - Parameters:
     ///   - componentId: The widget/component ID
     ///   - jwt: JWT authentication token
+    ///   - locale: Optional locale for i18n (e.g., "pt-BR", "en-US")
     /// - Returns: Widget configuration data including deploymentId and other metadata
     public func getWidgetConfiguration(
         componentId: String,
-        jwt: String
+        jwt: String,
+        locale: String? = nil
     ) async throws -> WidgetConfigurationData {
-        let url = baseURL.appendingPathComponent("/api/v1/widgets/\(componentId)")
+        var urlComponents = URLComponents(url: baseURL.appendingPathComponent("/api/v1/widgets/\(componentId)"), resolvingAgainstBaseURL: false)!
+        
+        // Add locale query parameter if provided
+        if let locale = locale {
+            urlComponents.queryItems = [URLQueryItem(name: "locale", value: locale)]
+        }
+        
+        let url = urlComponents.url!
+        
+        #if DEBUG
+        print("[VortexSDK] Fetching widget configuration from URL: \(url.absoluteString)")
+        print("[VortexSDK] Locale parameter: \(locale ?? "nil")")
+        #endif
         
         var request = URLRequest(url: url)
         request.httpMethod = "GET"

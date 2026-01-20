@@ -46,22 +46,26 @@ public class VortexConfigurationPrefetcher: ObservableObject {
     /// The prefetched widget configuration (read from cache)
     public var widgetConfiguration: WidgetConfiguration? {
         get async {
-            await VortexConfigurationCache.shared.get(componentId)?.configuration
+            await VortexConfigurationCache.shared.get(componentId, locale: locale)?.configuration
         }
     }
     
     private let client: VortexClient
+    private let locale: String?
     
     /// Initialize a new prefetcher
     /// - Parameters:
     ///   - componentId: The widget/component ID from your Vortex dashboard
     ///   - apiBaseURL: Base URL of the Vortex API (default: production)
+    ///   - locale: Optional locale for internationalization (e.g., "pt-BR", "en-US")
     public init(
         componentId: String,
-        apiBaseURL: URL = URL(string: "https://client-api.vortexsoftware.com")!
+        apiBaseURL: URL = URL(string: "https://client-api.vortexsoftware.com")!,
+        locale: String? = nil
     ) {
         self.componentId = componentId
         self.client = VortexClient(baseURL: apiBaseURL)
+        self.locale = locale
     }
     
     /// Prefetch the widget configuration
@@ -69,8 +73,8 @@ public class VortexConfigurationPrefetcher: ObservableObject {
     /// - Returns: The prefetched configuration, or nil if prefetch failed
     @discardableResult
     public func prefetch(jwt: String) async -> WidgetConfiguration? {
-        // Check if already cached
-        if let cached = await VortexConfigurationCache.shared.get(componentId) {
+        // Check if already cached (locale-aware)
+        if let cached = await VortexConfigurationCache.shared.get(componentId, locale: locale) {
             isPrefetched = true
             return cached.configuration
         }
@@ -81,14 +85,16 @@ public class VortexConfigurationPrefetcher: ObservableObject {
         do {
             let configData = try await client.getWidgetConfiguration(
                 componentId: componentId,
-                jwt: jwt
+                jwt: jwt,
+                locale: locale
             )
             
-            // Store in shared cache
+            // Store in shared cache (locale-aware)
             await VortexConfigurationCache.shared.set(
                 componentId,
                 configuration: configData.widgetConfiguration,
-                deploymentId: configData.deploymentId
+                deploymentId: configData.deploymentId,
+                locale: locale
             )
             
             isPrefetched = true
@@ -103,7 +109,7 @@ public class VortexConfigurationPrefetcher: ObservableObject {
     
     /// Clear the prefetched configuration from cache
     public func clearCache() async {
-        await VortexConfigurationCache.shared.clear(componentId)
+        await VortexConfigurationCache.shared.clear(componentId, locale: locale)
         isPrefetched = false
     }
 }

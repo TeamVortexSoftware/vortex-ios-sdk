@@ -37,8 +37,8 @@ struct FindFriendsView: View {
     
     /// Text for the "Invite your contacts" entry
     private var inviteContactsEntryText: String {
-        // Check block customizations first, then config, then default
-        if let customText = block.attributes?["inviteContactsEntryText"]?.stringValue {
+        // Priority: block.settings.customizations > findFriendsConfig > hardcoded default
+        if let customText = block.settings?.customizations?["inviteYourContactsText"]?.textContent {
             return customText
         }
         return viewModel.findFriendsConfig?.inviteContactsEntryText ?? "Invite your contacts"
@@ -289,8 +289,16 @@ private struct FindFriendsContactItemView: View {
     
     private var buttonText: String {
         if isMember {
+            // Priority: block.settings.customizations > findFriendsConfig > hardcoded default
+            if let customText = block.settings?.customizations?["connectButton"]?.textContent {
+                return customText
+            }
             return viewModel.findFriendsConfig?.connectButtonText ?? "Connect"
         } else {
+            // Priority: block.settings.customizations > findFriendsConfig > hardcoded default
+            if let customText = block.settings?.customizations?["inviteButton"]?.textContent {
+                return customText
+            }
             return viewModel.findFriendsConfig?.inviteButtonText ?? "Invite"
         }
     }

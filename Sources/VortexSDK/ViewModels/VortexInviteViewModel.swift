@@ -81,6 +81,7 @@ class VortexInviteViewModel: ObservableObject {
     private let group: GroupDTO?
     private let googleIosClientId: String?
     private let onDismiss: (() -> Void)?
+    private let locale: String?
     
     // Find Friends
     let findFriendsConfig: FindFriendsConfig?
@@ -266,6 +267,10 @@ class VortexInviteViewModel: ObservableObject {
         shareOptions.contains("line")
     }
     
+    var isLineLiffEnabled: Bool {
+        shareOptions.contains("lineLiff")
+    }
+    
     var isEmailShareEnabled: Bool {
         shareOptions.contains("email")
     }
@@ -366,7 +371,8 @@ class VortexInviteViewModel: ObservableObject {
         onDismiss: (() -> Void)?,
         initialConfiguration: WidgetConfiguration? = nil,
         initialDeploymentId: String? = nil,
-        findFriendsConfig: FindFriendsConfig? = nil
+        findFriendsConfig: FindFriendsConfig? = nil,
+        locale: String? = nil
     ) {
         self.componentId = componentId
         self.jwt = jwt
@@ -379,6 +385,7 @@ class VortexInviteViewModel: ObservableObject {
         self.initialConfiguration = initialConfiguration
         self.initialDeploymentId = initialDeploymentId
         self.findFriendsConfig = findFriendsConfig
+        self.locale = locale
         
         // Initialize analytics with separate collector URL (defaults to production)
         self.sessionId = UUID().uuidString
@@ -525,8 +532,8 @@ class VortexInviteViewModel: ObservableObject {
             configuration = initial
             deploymentId = initialDeploymentId
             hasCachedConfig = true
-        } else if let cached = await VortexConfigurationCache.shared.get(componentId) {
-            // Use configuration from shared cache
+        } else if let cached = await VortexConfigurationCache.shared.get(componentId, locale: locale) {
+            // Use configuration from shared cache (locale-aware)
             configuration = cached.configuration
             deploymentId = cached.deploymentId
             hasCachedConfig = true
@@ -542,18 +549,20 @@ class VortexInviteViewModel: ObservableObject {
         do {
             let configData = try await client.getWidgetConfiguration(
                 componentId: componentId,
-                jwt: jwt
+                jwt: jwt,
+                locale: locale
             )
             
             // Update configuration with fresh data
             configuration = configData.widgetConfiguration
             deploymentId = configData.deploymentId
             
-            // Update shared cache for future use
+            // Update shared cache for future use (locale-aware)
             await VortexConfigurationCache.shared.set(
                 componentId,
                 configuration: configData.widgetConfiguration,
-                deploymentId: configData.deploymentId
+                deploymentId: configData.deploymentId,
+                locale: locale
             )
             
             // Pre-fetch shareable link
@@ -763,12 +772,84 @@ class VortexInviteViewModel: ObservableObject {
         // Track share link click
         trackShareLinkClick(clickName: "shareViaLine")
         
-        guard let link = shareableLink,
-              let encodedLink = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
-              let url = URL(string: "https://line.me/R/msg/text/?\(encodedLink)") else {
-            return
+        Task {
+            // Fetch shareable link if not already cached
+            if shareableLink == nil {
+                await fetchShareableLink()
+            }
+            
+            guard let link = shareableLink else {
+                return
+            }
+            
+            // Get the share template from configuration (matching SMS behavior)
+            var message = link
+            if let config = configuration,
+               let templateProp = config.configuration.props["vortex.components.share.template.body"],
+               case .string(let template) = templateProp.value {
+                // Replace placeholder with actual link
+                if template.contains("{{vortex_share_link}}") {
+                    message = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                } else {
+                    // If no placeholder, append link to template
+                    message = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                }
+            }
+            
+            // Use LINE's standard share URL
+            guard let encodedMessage = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                  let url = URL(string: "https://line.me/R/msg/text/?\(encodedMessage)") else {
+                return
+            }
+            
+            await MainActor.run {
+                UIApplication.shared.open(url)
+            }
         }
-        UIApplication.shared.open(url)
+    }
+    
+    func shareViaLineLiff() {
+        // Track share link click
+        trackShareLinkClick(clickName: "shareViaLineLiff")
+        
+        Task {
+            // Fetch shareable link if not already cached
+            if shareableLink == nil {
+                await fetchShareableLink()
+            }
+            
+            guard let link = shareableLink else {
+                return
+            }
+            
+            // Get the share template from configuration (matching SMS behavior)
+            var message = link
+            if let config = configuration,
+               let templateProp = config.configuration.props["vortex.components.share.template.body"],
+               case .string(let template) = templateProp.value {
+                // Replace placeholder with actual link
+                if template.contains("{{vortex_share_link}}") {
+                    message = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                } else {
+                    // If no placeholder, append link to template
+                    message = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                }
+            }
+            
+            // Build LIFF URL with invitationLink and message parameters
+            // Hard-coded LIFF app URL for proof of concept
+            let liffBaseUrl = "https://liff.line.me/2008909352-RwnncfLZ"
+            
+            guard let encodedLink = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                  let encodedMessage = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+                  let url = URL(string: "\(liffBaseUrl)?invitationLink=\(encodedLink)&message=\(encodedMessage)") else {
+                return
+            }
+            
+            await MainActor.run {
+                UIApplication.shared.open(url)
+            }
+        }
     }
     
     func showQrCode() {

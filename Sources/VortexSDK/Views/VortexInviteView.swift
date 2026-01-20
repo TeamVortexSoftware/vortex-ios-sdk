@@ -50,6 +50,8 @@ public struct VortexInviteView: View {
     ///   - findFriendsConfig: Optional configuration for the Find Friends feature.
     ///     When provided, enables the Find Friends component to display contacts with
     ///     Connect/Invite buttons based on their membership status.
+    ///   - locale: Optional locale for internationalization (e.g., "pt-BR", "en-US").
+    ///     When provided, the widget configuration will be fetched in the specified locale.
     public init(
         componentId: String,
         jwt: String?,
@@ -62,7 +64,8 @@ public struct VortexInviteView: View {
         onDismiss: (() -> Void)? = nil,
         widgetConfiguration: WidgetConfiguration? = nil,
         deploymentId: String? = nil,
-        findFriendsConfig: FindFriendsConfig? = nil
+        findFriendsConfig: FindFriendsConfig? = nil,
+        locale: String? = nil
     ) {
         _viewModel = StateObject(wrappedValue: VortexInviteViewModel(
             componentId: componentId,
@@ -76,7 +79,8 @@ public struct VortexInviteView: View {
             onDismiss: onDismiss,
             initialConfiguration: widgetConfiguration,
             initialDeploymentId: deploymentId,
-            findFriendsConfig: findFriendsConfig
+            findFriendsConfig: findFriendsConfig,
+            locale: locale
         ))
     }
     

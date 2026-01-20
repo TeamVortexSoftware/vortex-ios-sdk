@@ -75,6 +75,14 @@ struct ShareOptionsView: View {
             ) {
                 viewModel.shareViaLine()
             }
+        case "lineLiff":
+            ShareButton(
+                icon: .line,
+                title: customLabel(for: "lineLiff", default: "Share via LINE (LIFF)"),
+                theme: block.theme
+            ) {
+                viewModel.shareViaLineLiff()
+            }
         case "email":
             ShareButton(
                 icon: .email,
