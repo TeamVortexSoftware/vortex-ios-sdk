@@ -252,4 +252,70 @@ public class VortexClient {
         let decoder = JSONDecoder()
         return try decoder.decode(ShareableLinkResponse.self, from: data)
     }
+    
+    // MARK: - Deferred Deep Links
+    
+    /// Match device fingerprint to retrieve deferred deep link context
+    ///
+    /// This method is used for deferred deep linking. When a user clicks an invitation link
+    /// and is redirected to the App Store to install the app, the server stores a fingerprint
+    /// of the user's device. After installation, the app can call this method to retrieve
+    /// the original invitation context by matching the device fingerprint.
+    ///
+    /// The account ID is derived from the JWT token, so account-wide matching is performed.
+    ///
+    /// - Parameters:
+    ///   - jwt: JWT authentication token
+    ///   - fingerprint: Device fingerprint data collected from the device
+    /// - Returns: Match result containing invitation context if a match is found
+    public func matchFingerprint(
+        jwt: String,
+        fingerprint: DeviceFingerprint
+    ) async throws -> MatchFingerprintResponse {
+        let url = baseURL.appendingPathComponent("/api/v1/deferred-links/match")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(sessionId, forHTTPHeaderField: "x-session-id")
+        request.setValue(clientVersion, forHTTPHeaderField: "x-vortex-client-version")
+        request.setValue(clientName, forHTTPHeaderField: "x-vortex-client-name")
+        
+        if let attestation = sessionAttestation {
+            request.setValue(attestation, forHTTPHeaderField: "x-session-attestation")
+        }
+        
+        let requestBody = MatchFingerprintRequest(fingerprint: fingerprint)
+        let encoder = JSONEncoder()
+        let bodyData = try encoder.encode(requestBody)
+        request.httpBody = bodyData
+        
+        #if DEBUG
+        if let bodyString = String(data: bodyData, encoding: .utf8) {
+            print("[VortexSDK] POST /api/v1/deferred-links/match request body:")
+            print(bodyString)
+        }
+        #endif
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VortexError.invalidResponse
+        }
+        
+        #if DEBUG
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("[VortexSDK] Match fingerprint response (status \(httpResponse.statusCode)):")
+            print(jsonString)
+        }
+        #endif
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw VortexError.httpError(statusCode: httpResponse.statusCode)
+        }
+        
+        let decoder = JSONDecoder()
+        return try decoder.decode(MatchFingerprintResponse.self, from: data)
+    }
 }

@@ -248,6 +248,94 @@ struct GroupDTO {
 }
 ```
 
+## Deferred Deep Linking
+
+Deferred deep linking allows your app to retrieve invitation context even when a user installs the app after clicking an invitation link. When a user clicks an invitation link but doesn't have the app installed, they're redirected to the App Store. After installation, the SDK can match the device fingerprint to retrieve the original invitation context.
+
+### Basic Usage
+
+Call `VortexDeferredLinks.retrieveDeferredDeepLink` when the user signs in or when the app session is restored:
+
+```swift
+import VortexSDK
+
+class AuthManager: ObservableObject {
+    func onUserSignedIn(vortexJwt: String) async {
+        do {
+            let result = try await VortexDeferredLinks.retrieveDeferredDeepLink(jwt: vortexJwt)
+            
+            if result.matched, let context = result.context {
+                print("Found pending invitation!")
+                print("Invitation ID: \(context.invitationId)")
+                print("Inviter ID: \(context.inviterId ?? "N/A")")
+                print("Group ID: \(context.groupId ?? "N/A")")
+                // Handle the invitation (e.g., show UI, auto-join group, etc.)
+            }
+        } catch {
+            print("Deferred link check failed: \(error)")
+        }
+    }
+}
+```
+
+### Response Types
+
+**MatchFingerprintResponse:**
+```swift
+struct MatchFingerprintResponse {
+    let matched: Bool           // Whether a matching invitation was found
+    let confidence: Double?     // Match confidence score (0.0 - 1.0)
+    let context: DeferredLinkContext?  // Invitation context if matched
+    let error: String?          // Error message if any
+}
+```
+
+**DeferredLinkContext:**
+```swift
+struct DeferredLinkContext {
+    let invitationId: String    // The original invitation ID
+    let inviterId: String?      // ID of the user who sent the invitation
+    let groupId: String?        // Group/team ID if applicable
+    let metadata: [String: AnyCodable]?  // Additional metadata
+}
+```
+
+### Best Practices
+
+1. **Call on authentication**: Check for deferred deep links immediately after user sign-in or session restore
+2. **Use Vortex JWT**: The endpoint requires a Vortex JWT token (not your app's auth token)
+3. **Handle once**: Clear or mark the invitation as handled after processing to avoid showing it repeatedly
+4. **Graceful degradation**: The check may fail (network issues, no match found) - handle errors gracefully
+
+### Example Integration
+
+```swift
+import SwiftUI
+import VortexSDK
+
+@MainActor
+class AppViewModel: ObservableObject {
+    @Published var pendingInvitation: DeferredLinkContext?
+    
+    func checkForPendingInvitations(vortexJwt: String) async {
+        do {
+            let result = try await VortexDeferredLinks.retrieveDeferredDeepLink(jwt: vortexJwt)
+            
+            if result.matched {
+                pendingInvitation = result.context
+            }
+        } catch {
+            // Log error but don't block the user
+            print("Deferred deep link check failed: \(error)")
+        }
+    }
+    
+    func dismissPendingInvitation() {
+        pendingInvitation = nil
+    }
+}
+```
+
 ## Features
 
 **Invitation Methods:**
@@ -268,6 +356,7 @@ struct GroupDTO {
 - Group/team context support
 - Real-time loading states and error handling
 - Customizable UI based on widget configuration
+- Deferred deep linking via fingerprint matching
 
 ## Examples
 
