@@ -50,6 +50,9 @@ public struct VortexInviteView: View {
     ///   - findFriendsConfig: Optional configuration for the Find Friends feature.
     ///     When provided, enables the Find Friends component to display contacts with
     ///     Connect/Invite buttons based on their membership status.
+    ///   - inviteContactsConfig: Optional configuration for the Invite Contacts feature.
+    ///     When provided, enables the Invite Contacts component to display a list of
+    ///     contacts that can be invited via SMS.
     ///   - locale: Optional locale for internationalization (e.g., "pt-BR", "en-US").
     ///     When provided, the widget configuration will be fetched in the specified locale.
     public init(
@@ -65,6 +68,7 @@ public struct VortexInviteView: View {
         widgetConfiguration: WidgetConfiguration? = nil,
         deploymentId: String? = nil,
         findFriendsConfig: FindFriendsConfig? = nil,
+        inviteContactsConfig: InviteContactsConfig? = nil,
         locale: String? = nil
     ) {
         _viewModel = StateObject(wrappedValue: VortexInviteViewModel(
@@ -80,6 +84,7 @@ public struct VortexInviteView: View {
             initialConfiguration: widgetConfiguration,
             initialDeploymentId: deploymentId,
             findFriendsConfig: findFriendsConfig,
+            inviteContactsConfig: inviteContactsConfig,
             locale: locale
         ))
     }
@@ -307,6 +312,8 @@ public struct VortexInviteView: View {
             return AnyView(EmptyView())
         case "vrtx-find-friends":
             return AnyView(FindFriendsView(block: block, viewModel: viewModel))
+        case "vrtx-invite-contacts":
+            return AnyView(InviteContactsView(block: block, viewModel: viewModel))
         
         // MARK: - Content Elements (fully supported)
         case "vrtx-heading":

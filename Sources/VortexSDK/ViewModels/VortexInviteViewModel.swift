@@ -2,6 +2,33 @@ import SwiftUI
 import Contacts
 import GoogleSignIn
 
+// MARK: - Invitation Sent Event
+
+/// Event fired when an invitation is sent from any subcomponent.
+/// Other subcomponents can observe this via the ViewModel's `invitationSentEvent` property.
+public struct InvitationSentEvent: Equatable {
+    /// The source component that sent the invitation
+    public let source: InvitationSource
+    /// The short link that was created for the invitation
+    public let shortLink: String
+    /// Timestamp when the event was fired
+    public let timestamp: Date
+    
+    public init(source: InvitationSource, shortLink: String, timestamp: Date = Date()) {
+        self.source = source
+        self.shortLink = shortLink
+        self.timestamp = timestamp
+    }
+    
+    /// Source component types that can fire invitation events
+    public enum InvitationSource: String, Equatable {
+        case inviteContacts = "invite_contacts"
+        case findFriends = "find_friends"
+        case emailInvitations = "email_invitations"
+        case shareLink = "share_link"
+    }
+}
+
 @MainActor
 class VortexInviteViewModel: ObservableObject {
     // MARK: - Published Properties
@@ -85,6 +112,15 @@ class VortexInviteViewModel: ObservableObject {
     
     // Find Friends
     let findFriendsConfig: FindFriendsConfig?
+    
+    // Invite Contacts
+    let inviteContactsConfig: InviteContactsConfig?
+    
+    // MARK: - Internal Events
+    
+    /// Publisher that fires when an invitation is created/sent from any subcomponent.
+    /// Other subcomponents can observe this to refresh their data (e.g., Outgoing Invitations).
+    @Published var invitationSentEvent: InvitationSentEvent?
     
     // Analytics
     private let analyticsClient: VortexAnalyticsClient
@@ -372,6 +408,7 @@ class VortexInviteViewModel: ObservableObject {
         initialConfiguration: WidgetConfiguration? = nil,
         initialDeploymentId: String? = nil,
         findFriendsConfig: FindFriendsConfig? = nil,
+        inviteContactsConfig: InviteContactsConfig? = nil,
         locale: String? = nil
     ) {
         self.componentId = componentId
@@ -385,6 +422,7 @@ class VortexInviteViewModel: ObservableObject {
         self.initialConfiguration = initialConfiguration
         self.initialDeploymentId = initialDeploymentId
         self.findFriendsConfig = findFriendsConfig
+        self.inviteContactsConfig = inviteContactsConfig
         self.locale = locale
         
         // Initialize analytics with separate collector URL (defaults to production)
@@ -602,6 +640,62 @@ class VortexInviteViewModel: ObservableObject {
             shareableLink = response.data.invitation.shortLink
         } catch {
         }
+    }
+    
+    // MARK: - SMS Invitation (for Invite Contacts)
+    
+    /// Create an SMS invitation and return the short link.
+    /// Used by InviteContactsView to create invitations for contacts.
+    /// - Parameters:
+    ///   - phoneNumber: The phone number to invite
+    ///   - contactName: Optional name of the contact (for analytics)
+    /// - Returns: The short link for the invitation, or nil if creation failed
+    func createSmsInvitation(phoneNumber: String, contactName: String?) async -> String? {
+        guard let jwt = jwt,
+              let config = configuration else { return nil }
+        
+        do {
+            var groups: [GroupDTO]? = nil
+            if let group = group {
+                groups = [group]
+            }
+            
+            let response = try await client.getShareableLink(
+                jwt: jwt,
+                widgetConfigurationId: config.id,
+                groups: groups
+            )
+            
+            // Track the SMS invitation
+            trackShareLinkClick(clickName: "inviteContactViaSMS")
+            
+            return response.data.invitation.shortLink
+        } catch {
+            return nil
+        }
+    }
+    
+    /// Get the SMS message template from configuration.
+    /// Returns the template with placeholder for the link.
+    func getSmsMessageTemplate() -> String {
+        if let config = configuration,
+           let templateProp = config.configuration.props["vortex.components.share.template.body"],
+           case .string(let template) = templateProp.value {
+            return template
+        }
+        // Default template if none configured
+        return "{{vortex_share_link}}"
+    }
+    
+    // MARK: - Internal Event Firing
+    
+    /// Fire an invitation sent event that other subcomponents can observe.
+    /// Call this when an invitation is successfully sent from any subcomponent.
+    /// - Parameters:
+    ///   - source: The component that sent the invitation
+    ///   - shortLink: The invitation short link that was created
+    func fireInvitationSentEvent(source: InvitationSentEvent.InvitationSource, shortLink: String) {
+        invitationSentEvent = InvitationSentEvent(source: source, shortLink: shortLink)
     }
     
     // MARK: - Share Actions

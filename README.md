@@ -160,6 +160,75 @@ VortexInviteView(
 )
 ```
 
+### Invite Contacts
+
+The Invite Contacts component displays a list of contacts that can be invited via SMS. Unlike the Contact Import feature (which fetches contacts from the device), Invite Contacts receives a pre-populated list of contacts from your app.
+
+**Basic Usage:**
+
+```swift
+import VortexSDK
+
+VortexInviteView(
+    componentId: "your-component-id",
+    jwt: jwt,
+    inviteContactsConfig: InviteContactsConfig(
+        contacts: [
+            InviteContactsContact(id: "1", name: "Alice Johnson", phoneNumber: "+1 (555) 123-4567"),
+            InviteContactsContact(id: "2", name: "Bob Smith", phoneNumber: "+1 (555) 234-5678"),
+            InviteContactsContact(id: "3", name: "Carol Davis", phoneNumber: "+1 (555) 345-6789")
+        ],
+        onInvitationSent: { contact, shortLink in
+            print("SMS sent to \(contact.name) with link: \(shortLink)")
+        }
+    ),
+    onDismiss: { /* ... */ }
+)
+```
+
+**How It Works:**
+
+1. The component shows an "Invite your contacts" entry with a contact count
+2. Tapping it navigates to a searchable list of contacts
+3. Each contact has an "Invite" button that:
+   - Creates an SMS invitation via the Vortex API
+   - Opens the in-app SMS composer (on supported devices)
+   - Pre-fills the message with the invitation link
+4. The `onInvitationSent` callback is called when the SMS is actually sent
+
+**Callback Behavior:**
+
+The `onInvitationSent` callback has different behavior depending on the environment:
+
+| Environment | Behavior |
+|-------------|----------|
+| Real device with SMS | Called only when user taps "Send" in the SMS composer |
+| Real device without SMS | Called optimistically when Messages app opens (fallback) |
+| iOS Simulator | Called when user taps "Send" in the simulated composer |
+
+**InviteContactsContact Properties:**
+
+```swift
+InviteContactsContact(
+    id: String,              // Unique identifier
+    name: String,            // Display name
+    phoneNumber: String,     // Phone number for SMS
+    avatarUrl: String?,      // Optional avatar image URL
+    metadata: [String: Any]? // Optional custom metadata
+)
+```
+
+**InviteContactsConfig Properties:**
+
+```swift
+InviteContactsConfig(
+    contacts: [InviteContactsContact],  // List of contacts to display
+    onInvitationSent: ((contact, shortLink) -> Void)?,  // Called when SMS is sent
+    onNavigateToContacts: (() -> Void)?,  // Analytics: user opened contacts list
+    onNavigateBack: (() -> Void)?         // Analytics: user went back
+)
+```
+
 ## Authentication
 
 The SDK requires a JWT token for authentication. You should obtain this token from your backend server:
@@ -349,6 +418,11 @@ class AppViewModel: ObservableObject {
 **Contact Import:**
 - iOS Contacts integration
 - Google Contacts integration (requires GoogleSignIn SDK)
+
+**Invite Contacts:**
+- Display a list of contacts for SMS invitation
+- In-app SMS composer on supported devices
+- Callback when SMS is actually sent (not just opened)
 
 **Core Capabilities:**
 - Dynamic form rendering from server configuration
