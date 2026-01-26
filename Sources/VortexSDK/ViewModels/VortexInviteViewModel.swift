@@ -160,16 +160,47 @@ class VortexInviteViewModel: ObservableObject {
               let options = theme.options else {
             return [:]
         }
-        
+
         var colorMap: [String: String] = [:]
         for option in options {
             colorMap[option.key] = option.value
         }
         return colorMap
     }
+
+    /// Get a theme color value with fallback support.
+    /// Tries the new --vrtx-* token first, then falls back to the legacy token.
+    /// - Parameters:
+    ///   - newKey: The new --vrtx-* prefixed token key
+    ///   - fallbackKey: The legacy token key to use if new key is not found
+    /// - Returns: The color value string, or nil if neither key exists
+    private func getThemeColor(newKey: String, fallbackKey: String) -> String? {
+        // Try new token first
+        if let color = themeColorMap[newKey], !color.isEmpty {
+            return color
+        }
+        // Fallback to old token
+        if let color = themeColorMap[fallbackKey], !color.isEmpty {
+            return color
+        }
+        return nil
+    }
+
+    /// Get a theme color value with multiple fallback options.
+    /// Tries each key in order until one is found.
+    /// - Parameter keys: Array of token keys to try in order
+    /// - Returns: The color value string, or nil if no key exists
+    private func getThemeColor(keys: [String]) -> String? {
+        for key in keys {
+            if let color = themeColorMap[key], !color.isEmpty {
+                return color
+            }
+        }
+        return nil
+    }
     
     /// Get the surface background color for form container background
-    /// Priority: 1) Root element's inline style, 2) Theme's --color-surface-background
+    /// Priority: 1) Root element's inline style, 2) Theme's --vrtx-root-background, 3) Legacy --color-surface-background
     var surfaceBackgroundColor: Color? {
         // First check root element's inline style (e.g., style.background: "#111323")
         if let rootStyle = formStructure?.style,
@@ -192,18 +223,19 @@ class VortexInviteViewModel: ObservableObject {
                 return color
             }
         }
-        
-        // Fallback to theme's --color-surface-background
-        guard let hexColor = themeColorMap["--color-surface-background"],
+
+        // Try new --vrtx-root-background, fallback to legacy --color-surface-background
+        guard let hexColor = getThemeColor(newKey: "--vrtx-root-background", fallbackKey: "--color-surface-background"),
               hexColor != "transparent" else {
             return nil
         }
         return Color(hex: hexColor)
     }
-    
+
     /// Get the surface foreground color from theme (for heading text)
+    /// Priority: 1) New --vrtx-root-color, 2) Legacy --color-surface-foreground
     var surfaceForegroundColor: Color? {
-        guard let hexColor = themeColorMap["--color-surface-foreground"] else {
+        guard let hexColor = getThemeColor(newKey: "--vrtx-root-color", fallbackKey: "--color-surface-foreground") else {
             return nil
         }
         return Color(hex: hexColor)
@@ -211,51 +243,80 @@ class VortexInviteViewModel: ObservableObject {
     
     // MARK: - Theme Colors for Find Friends
     // These colors are extracted from vortex.theme configuration and used as fallbacks
-    // when block.theme.options doesn't have specific values set
-    
+    // when block.theme.options doesn't have specific values set.
+    // Each property tries new --vrtx-* tokens first, then falls back to legacy tokens.
+
     /// Primary background color from theme (e.g., for Connect button background)
+    /// Priority: 1) --vrtx-button-primary-background, 2) --vrtx-button-background, 3) --color-primary-background
     var themePrimaryBackground: Color? {
-        guard let hexColor = themeColorMap["--color-primary-background"] else {
+        guard let hexColor = getThemeColor(keys: [
+            "--vrtx-button-primary-background",
+            "--vrtx-button-background",
+            "--color-primary-background"
+        ]) else {
             return nil
         }
         return Color(hex: hexColor)
     }
-    
+
     /// Primary foreground color from theme (e.g., for Connect button text)
+    /// Priority: 1) --vrtx-button-primary-color, 2) --vrtx-button-color, 3) --color-primary-foreground
     var themePrimaryForeground: Color? {
-        guard let hexColor = themeColorMap["--color-primary-foreground"] else {
+        guard let hexColor = getThemeColor(keys: [
+            "--vrtx-button-primary-color",
+            "--vrtx-button-color",
+            "--color-primary-foreground"
+        ]) else {
             return nil
         }
         return Color(hex: hexColor)
     }
-    
+
     /// Secondary background color from theme (e.g., for Invite button background)
+    /// Priority: 1) --vrtx-button-secondary-background, 2) --vrtx-button-background, 3) --color-secondary-background
     var themeSecondaryBackground: Color? {
-        guard let hexColor = themeColorMap["--color-secondary-background"] else {
+        guard let hexColor = getThemeColor(keys: [
+            "--vrtx-button-secondary-background",
+            "--vrtx-button-background",
+            "--color-secondary-background"
+        ]) else {
             return nil
         }
         return Color(hex: hexColor)
     }
-    
+
     /// Secondary foreground color from theme (e.g., for Invite button text)
+    /// Priority: 1) --vrtx-button-secondary-color, 2) --vrtx-button-color, 3) --color-secondary-foreground
     var themeSecondaryForeground: Color? {
-        guard let hexColor = themeColorMap["--color-secondary-foreground"] else {
+        guard let hexColor = getThemeColor(keys: [
+            "--vrtx-button-secondary-color",
+            "--vrtx-button-color",
+            "--color-secondary-foreground"
+        ]) else {
             return nil
         }
         return Color(hex: hexColor)
     }
-    
+
     /// Foreground color from theme (e.g., for contact name text)
+    /// Priority: 1) --vrtx-root-color, 2) --color-foreground
     var themeForeground: Color? {
-        guard let hexColor = themeColorMap["--color-foreground"] else {
+        guard let hexColor = getThemeColor(keys: [
+            "--vrtx-root-color",
+            "--color-foreground"
+        ]) else {
             return nil
         }
         return Color(hex: hexColor)
     }
-    
+
     /// Border color from theme (e.g., for Invite button border)
+    /// Priority: 1) --vrtx-form-control-border-color, 2) --color-border
     var themeBorder: Color? {
-        guard let hexColor = themeColorMap["--color-border"] else {
+        guard let hexColor = getThemeColor(keys: [
+            "--vrtx-form-control-border-color",
+            "--color-border"
+        ]) else {
             return nil
         }
         return Color(hex: hexColor)
