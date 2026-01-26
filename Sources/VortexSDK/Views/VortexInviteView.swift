@@ -85,6 +85,7 @@ public struct VortexInviteView: View {
             initialDeploymentId: deploymentId,
             findFriendsConfig: findFriendsConfig,
             inviteContactsConfig: inviteContactsConfig,
+            outgoingInvitationsConfig: nil,
             locale: locale
         ))
     }
@@ -314,6 +315,15 @@ public struct VortexInviteView: View {
             return AnyView(FindFriendsView(block: block, viewModel: viewModel))
         case "vrtx-invite-contacts":
             return AnyView(InviteContactsView(block: block, viewModel: viewModel))
+        case "vrtx-outgoing-invitations":
+            return AnyView(OutgoingInvitationsView(
+                block: block,
+                theme: block.theme,
+                client: viewModel.client,
+                jwt: viewModel.jwt,
+                config: viewModel.outgoingInvitationsConfig,
+                viewModel: viewModel
+            ))
         
         // MARK: - Content Elements (fully supported)
         case "vrtx-heading":

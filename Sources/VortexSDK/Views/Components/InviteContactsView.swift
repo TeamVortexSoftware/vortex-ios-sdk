@@ -12,17 +12,27 @@ private var isSimulator: Bool {
     #endif
 }
 
-// MARK: - Fake SMS Preview View (for Simulator)
+// MARK: - Fake SMS Data Model (for Simulator)
+/// Data model for the fake SMS preview, used with .sheet(item:) to avoid race conditions
+private struct FakeSMSData: Identifiable {
+    let id = UUID()
+    let recipient: String
+    let recipientName: String
+    let messageBody: String
+}
 
+// MARK: - Fake SMS Preview View (for Simulator)
 /// A fake SMS composer view that mimics the native iOS Messages compose screen.
 /// Used on the iOS Simulator where MFMessageComposeViewController.canSendText() returns false
 /// and the sms: URL scheme has known issues with displaying recipients.
 private struct FakeSMSPreviewView: View {
-    let recipient: String
-    let recipientName: String
-    let messageBody: String
+    let data: FakeSMSData
     let onCancel: () -> Void
     let onSend: () -> Void
+    
+    var recipient: String { data.recipient }
+    var recipientName: String { data.recipientName }
+    var messageBody: String { data.messageBody }
     
     var body: some View {
         NavigationView {
@@ -215,10 +225,7 @@ struct InviteContactsView: View {
     @State private var pendingShortLink: String? = nil
     
     /// State for showing fake SMS preview on simulator
-    @State private var showFakeSMSPreview = false
-    @State private var fakeSMSRecipient = ""
-    @State private var fakeSMSRecipientName = ""
-    @State private var fakeSMSMessage = ""
+    @State private var fakeSMSData: FakeSMSData?
     
     /// Sorted contacts from config
     private var contacts: [InviteContactsContact] {
@@ -280,20 +287,18 @@ struct InviteContactsView: View {
                 inviteContactsEntryView
             }
         }
-        .sheet(isPresented: $showFakeSMSPreview) {
+        .sheet(item: $fakeSMSData) { smsData in
             FakeSMSPreviewView(
-                recipient: fakeSMSRecipient,
-                recipientName: fakeSMSRecipientName,
-                messageBody: fakeSMSMessage,
+                data: smsData,
                 onCancel: {
                     // User cancelled - don't mark as invited
-                    showFakeSMSPreview = false
+                    fakeSMSData = nil
                     pendingInviteContact = nil
                     pendingShortLink = nil
                 },
                 onSend: {
                     // User "sent" - mark as invited and call callback
-                    showFakeSMSPreview = false
+                    fakeSMSData = nil
                     if let contact = pendingInviteContact, let shortLink = pendingShortLink {
                         invitedContacts.insert(contact.id)
                         viewModel.inviteContactsConfig?.onInvitationSent?(contact, shortLink)
@@ -453,11 +458,14 @@ struct InviteContactsView: View {
                 } else if isSimulator {
                     // On simulator, show fake SMS preview instead of URL scheme
                     // (Messages app on simulator has known issues with sms: URL scheme)
+                    // Using .sheet(item:) pattern to avoid race condition where sheet
+                    // could display before state variables are updated
                     await MainActor.run {
-                        fakeSMSRecipient = contact.phoneNumber
-                        fakeSMSRecipientName = contact.name
-                        fakeSMSMessage = message
-                        showFakeSMSPreview = true
+                        fakeSMSData = FakeSMSData(
+                            recipient: contact.phoneNumber,
+                            recipientName: contact.name,
+                            messageBody: message
+                        )
                     }
                 } else {
                     // Fallback to URL scheme (opens Messages app externally)
@@ -608,14 +616,35 @@ private struct InviteContactsItemView: View {
     
     private var inviteButtonBackgroundColor: Color {
         if let value = getBlockThemeValue("--vrtx-invite-contacts-invite-button-background") {
-            if let color = parseGradientFirstColor(value) {
-                return color
+            // Skip gradient values - handled by inviteButtonGradient
+            if value.contains("linear-gradient") {
+                return .clear
             }
             if let color = Color(hex: value) {
                 return color
             }
         }
         return defaultColors.primaryBackground
+    }
+    
+    private var inviteButtonGradient: LinearGradient? {
+        guard let value = getBlockThemeValue("--vrtx-invite-contacts-invite-button-background"),
+              value.contains("linear-gradient") else {
+            return nil
+        }
+        
+        let colors = parseGradientColors(value)
+        guard colors.count >= 2 else { return nil }
+        
+        // Parse angle (default 90deg = horizontal left to right)
+        let angle = parseGradientAngle(value)
+        let (start, end) = gradientPoints(for: angle)
+        
+        return LinearGradient(
+            gradient: Gradient(colors: colors),
+            startPoint: start,
+            endPoint: end
+        )
     }
     
     private var inviteButtonForegroundColor: Color {
@@ -652,26 +681,58 @@ private struct InviteContactsItemView: View {
     
     // MARK: - Gradient Parsing Helpers
     
-    private func parseGradientFirstColor(_ gradientString: String) -> Color? {
-        guard gradientString.contains("linear-gradient") else {
-            return nil
-        }
-        
-        let colorPattern = #"(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8})\s+(\d+)%"#
+    private func parseGradientColors(_ gradientString: String) -> [Color] {
+        let colorPattern = #"(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8})\s+\d+%"#
         guard let colorRegex = try? NSRegularExpression(pattern: colorPattern, options: .caseInsensitive) else {
-            return nil
+            return []
         }
         
         let matches = colorRegex.matches(in: gradientString, range: NSRange(gradientString.startIndex..., in: gradientString))
         
-        if let firstMatch = matches.first,
-           firstMatch.numberOfRanges >= 2,
-           let colorRange = Range(firstMatch.range(at: 1), in: gradientString) {
+        return matches.compactMap { match -> Color? in
+            guard match.numberOfRanges >= 2,
+                  let colorRange = Range(match.range(at: 1), in: gradientString) else {
+                return nil
+            }
             let colorStr = String(gradientString[colorRange]).trimmingCharacters(in: .whitespaces)
             return Color(hex: colorStr)
         }
-        
-        return nil
+    }
+    
+    private func parseGradientAngle(_ gradientString: String) -> Double {
+        let anglePattern = #"linear-gradient\s*\(\s*(\d+)deg"#
+        guard let regex = try? NSRegularExpression(pattern: anglePattern, options: .caseInsensitive),
+              let match = regex.firstMatch(in: gradientString, range: NSRange(gradientString.startIndex..., in: gradientString)),
+              match.numberOfRanges >= 2,
+              let angleRange = Range(match.range(at: 1), in: gradientString),
+              let angle = Double(gradientString[angleRange]) else {
+            return 90 // Default to horizontal
+        }
+        return angle
+    }
+    
+    private func gradientPoints(for angle: Double) -> (UnitPoint, UnitPoint) {
+        // CSS angles: 0deg = bottom to top, 90deg = left to right
+        switch angle {
+        case 0:
+            return (.bottom, .top)
+        case 45:
+            return (.bottomLeading, .topTrailing)
+        case 90:
+            return (.leading, .trailing)
+        case 135:
+            return (.topLeading, .bottomTrailing)
+        case 180:
+            return (.top, .bottom)
+        case 225:
+            return (.topTrailing, .bottomLeading)
+        case 270:
+            return (.trailing, .leading)
+        case 315:
+            return (.bottomTrailing, .topLeading)
+        default:
+            return (.leading, .trailing)
+        }
     }
     
     // MARK: - Border Parsing Helpers
@@ -788,7 +849,15 @@ private struct InviteContactsItemView: View {
             .padding(.vertical, 8)
             .frame(minWidth: 80)
             .foregroundColor(inviteButtonForegroundColor)
-            .background(inviteButtonBackgroundColor)
+            .background(
+                Group {
+                    if let gradient = inviteButtonGradient {
+                        gradient
+                    } else {
+                        inviteButtonBackgroundColor
+                    }
+                }
+            )
             .cornerRadius(inviteButtonCornerRadius)
             .overlay(
                 RoundedRectangle(cornerRadius: inviteButtonCornerRadius)

@@ -39,6 +39,7 @@ public struct CreateInvitationData: Codable, Sendable {
 public struct InvitationEntry: Codable, Sendable {
     public let id: String?
     public let status: String?
+    public let shortLink: String?
 }
 
 // MARK: - Shareable Link Response
@@ -142,6 +143,38 @@ public struct MatchFingerprintResponse: Codable, Sendable {
     public let context: DeferredLinkContext?
     public let error: String?
 }
+
+// MARK: - Outgoing Invitations
+
+/// Response from GET /api/v1/invitations endpoint
+public struct OutgoingInvitationsResponse: Codable, Sendable {
+    public let data: OutgoingInvitationsData
+}
+
+/// Data wrapper for outgoing invitations response
+public struct OutgoingInvitationsData: Codable, Sendable {
+    public let invitations: [OutgoingInvitation]
+}
+
+/// Target of an invitation (e.g., email or SMS recipient)
+public struct InvitationTarget: Codable, Sendable {
+    public let targetType: String
+    public let targetValue: String
+    public let targetName: String?
+}
+
+/// Individual outgoing invitation from the API
+public struct OutgoingInvitation: Codable, Sendable {
+    public let id: String
+    public let targets: [InvitationTarget]?
+    public let senderIdentifier: String?
+    public let senderIdentifierType: String?
+    public let avatarUrl: String?
+    public let status: String?
+    public let createdAt: String?
+}
+
+// MARK: - AnyCodable
 
 /// Type-erased Codable wrapper for handling dynamic JSON values
 public struct AnyCodable: Codable, Sendable {

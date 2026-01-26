@@ -81,8 +81,15 @@ public class VortexClient {
         // Debug: Log raw JSON response
         #if DEBUG
         if let jsonString = String(data: data, encoding: .utf8) {
-            print("[VortexSDK] Raw widget configuration response:")
+            print("\n")
+            print("╔══════════════════════════════════════════════════════════════════════════════╗")
+            print("║                    [VortexSDK] WIDGET CONFIGURATION                          ║")
+            print("╚══════════════════════════════════════════════════════════════════════════════╝")
             print(jsonString)
+            print("╔══════════════════════════════════════════════════════════════════════════════╗")
+            print("║                    [VortexSDK] END WIDGET CONFIGURATION                      ║")
+            print("╚══════════════════════════════════════════════════════════════════════════════╝")
+            print("\n")
         }
         #endif
         
@@ -104,8 +111,9 @@ public class VortexClient {
     ///   - jwt: JWT authentication token
     ///   - widgetConfigurationId: ID of the widget configuration
     ///   - payload: Invitation payload (content tokens, etc.)
-    ///   - source: Source of the invitation (e.g., "email")
+    ///   - source: Source of the invitation (e.g., "email", "sms")
     ///   - groups: Associated groups
+    ///   - targets: Optional targets array for SMS invitations
     ///   - templateVariables: Optional template variables
     ///   - metadata: Optional metadata
     /// - Returns: Created invitation response
@@ -115,6 +123,7 @@ public class VortexClient {
         payload: [String: Any],
         source: String = "email",
         groups: [GroupDTO]? = nil,
+        targets: [[String: Any]]? = nil,
         templateVariables: [String: String]? = nil,
         metadata: [String: Any]? = nil
     ) async throws -> CreateInvitationResponse {
@@ -147,6 +156,10 @@ public class VortexClient {
                     "name": group.name
                 ]
             }
+        }
+        
+        if let targets = targets {
+            body["targets"] = targets
         }
         
         if let templateVariables = templateVariables {
@@ -234,7 +247,7 @@ public class VortexClient {
         
         #if DEBUG
         if let bodyString = String(data: bodyData, encoding: .utf8) {
-            print("[VortexSDK] POST /api/v1/invitations/http://localhost:3002/i/lIc4vJ2I request body:")
+            print("[VortexSDK] POST /api/v1/invitations/generate-shareable-link-invite request body:")
             print(bodyString)
         }
         #endif
@@ -251,6 +264,84 @@ public class VortexClient {
         
         let decoder = JSONDecoder()
         return try decoder.decode(ShareableLinkResponse.self, from: data)
+    }
+    
+    // MARK: - Outgoing Invitations
+    
+    /// Fetch outgoing invitations for the current user
+    /// - Parameter jwt: JWT authentication token
+    /// - Returns: List of outgoing invitations
+    public func getOutgoingInvitations(jwt: String) async throws -> [OutgoingInvitation] {
+        let url = baseURL.appendingPathComponent("/api/v1/invitations/sent")
+        
+        print("[VortexSDK] VortexClient.getOutgoingInvitations() - URL: \(url.absoluteString)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(sessionId, forHTTPHeaderField: "x-session-id")
+        request.setValue(clientVersion, forHTTPHeaderField: "x-vortex-client-version")
+        request.setValue(clientName, forHTTPHeaderField: "x-vortex-client-name")
+        
+        if let attestation = sessionAttestation {
+            request.setValue(attestation, forHTTPHeaderField: "x-session-attestation")
+        }
+        
+        print("[VortexSDK] VortexClient.getOutgoingInvitations() - Making request...")
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            print("[VortexSDK] VortexClient.getOutgoingInvitations() - Invalid response (not HTTP)")
+            throw VortexError.invalidResponse
+        }
+        
+        print("[VortexSDK] VortexClient.getOutgoingInvitations() - Status code: \(httpResponse.statusCode)")
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            print("[VortexSDK] VortexClient.getOutgoingInvitations() - HTTP error: \(httpResponse.statusCode)")
+            throw VortexError.httpError(statusCode: httpResponse.statusCode)
+        }
+        
+        if let responseString = String(data: data, encoding: .utf8) {
+            print("[VortexSDK] VortexClient.getOutgoingInvitations() - Response body: \(responseString)")
+        }
+        
+        let decoder = JSONDecoder()
+        let invitationsResponse = try decoder.decode(OutgoingInvitationsResponse.self, from: data)
+        print("[VortexSDK] VortexClient.getOutgoingInvitations() - Decoded \(invitationsResponse.data.invitations.count) invitations")
+        print("[VortexSDK] VortexClient.getOutgoingInvitations() - Raw invitations data: \(invitationsResponse.data.invitations)")
+        return invitationsResponse.data.invitations
+    }
+    
+    /// Revoke (cancel) an outgoing invitation
+    /// - Parameters:
+    ///   - jwt: JWT authentication token
+    ///   - invitationId: ID of the invitation to revoke
+    public func revokeInvitation(jwt: String, invitationId: String) async throws {
+        let url = baseURL.appendingPathComponent("/api/v1/invitations/\(invitationId)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(sessionId, forHTTPHeaderField: "x-session-id")
+        request.setValue(clientVersion, forHTTPHeaderField: "x-vortex-client-version")
+        request.setValue(clientName, forHTTPHeaderField: "x-vortex-client-name")
+        
+        if let attestation = sessionAttestation {
+            request.setValue(attestation, forHTTPHeaderField: "x-session-attestation")
+        }
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VortexError.invalidResponse
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) || httpResponse.statusCode == 204 else {
+            throw VortexError.httpError(statusCode: httpResponse.statusCode)
+        }
     }
     
     // MARK: - Deferred Deep Links

@@ -103,9 +103,11 @@ class VortexInviteViewModel: ObservableObject {
     // MARK: - Private Properties
     
     private let componentId: String
-    private let jwt: String?
-    private let client: VortexClient
     private let group: GroupDTO?
+    
+    // Internal (for subcomponents like OutgoingInvitationsView)
+    let jwt: String?
+    let client: VortexClient
     private let googleIosClientId: String?
     private let onDismiss: (() -> Void)?
     private let locale: String?
@@ -115,6 +117,9 @@ class VortexInviteViewModel: ObservableObject {
     
     // Invite Contacts
     let inviteContactsConfig: InviteContactsConfig?
+    
+    // Outgoing Invitations
+    let outgoingInvitationsConfig: OutgoingInvitationsConfig?
     
     // MARK: - Internal Events
     
@@ -409,6 +414,7 @@ class VortexInviteViewModel: ObservableObject {
         initialDeploymentId: String? = nil,
         findFriendsConfig: FindFriendsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
+        outgoingInvitationsConfig: OutgoingInvitationsConfig? = nil,
         locale: String? = nil
     ) {
         self.componentId = componentId
@@ -423,6 +429,7 @@ class VortexInviteViewModel: ObservableObject {
         self.initialDeploymentId = initialDeploymentId
         self.findFriendsConfig = findFriendsConfig
         self.inviteContactsConfig = inviteContactsConfig
+        self.outgoingInvitationsConfig = outgoingInvitationsConfig
         self.locale = locale
         
         // Initialize analytics with separate collector URL (defaults to production)
@@ -653,23 +660,40 @@ class VortexInviteViewModel: ObservableObject {
     func createSmsInvitation(phoneNumber: String, contactName: String?) async -> String? {
         guard let jwt = jwt,
               let config = configuration else { return nil }
-        
+
         do {
             var groups: [GroupDTO]? = nil
             if let group = group {
                 groups = [group]
             }
-            
-            let response = try await client.getShareableLink(
+
+            // Server expects value as array of objects with value and name
+            var valueObject: [String: Any] = ["value": phoneNumber]
+            if let name = contactName {
+                valueObject["name"] = name
+            }
+            let smsTarget: [String: Any] = [
+                "type": "sms",
+                "value": [valueObject]
+            ]
+            let payload: [String: Any] = [
+                "smsTarget": smsTarget
+            ]
+
+            let response = try await client.createInvitation(
                 jwt: jwt,
                 widgetConfigurationId: config.id,
-                groups: groups
+                payload: payload,
+                source: "sms",
+                groups: groups,
+                targets: nil,
+                templateVariables: nil,
+                metadata: nil
             )
-            
+
             // Track the SMS invitation
             trackShareLinkClick(clickName: "inviteContactViaSMS")
-            
-            return response.data.invitation.shortLink
+            return response.data.invitationEntries?.first?.shortLink
         } catch {
             return nil
         }
