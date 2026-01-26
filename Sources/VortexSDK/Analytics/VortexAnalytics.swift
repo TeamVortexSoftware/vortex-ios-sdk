@@ -21,7 +21,7 @@ import Foundation
 /// ```
 public struct VortexAnalyticsEvent: Codable, Sendable {
     
-    /// The name of the event (e.g., "widget_render", "email_invitations_submitted")
+    /// The name of the event (e.g., "invite_formRender_succeeded", "email_fieldSubmission_succeeded")
     public let name: String
     
     /// The widget configuration ID associated with this event
@@ -137,34 +137,71 @@ extension VortexAnalyticsEvent {
 ///
 /// These events are available via the `onEvent` callback and can be used
 /// to track user interactions with the invitation widget.
+///
+/// Event names follow the `object_action` naming convention for consistency
+/// across all Vortex SDKs and platforms.
 public enum VortexEventName: String, CaseIterable, Sendable {
-    
-    /// Emitted when the widget is rendered successfully.
-    case widgetRender = "widget_render"
-    
-    /// Emitted when there's an error rendering the widget.
-    case widgetError = "widget_error"
-    
-    /// Emitted when email invitations are submitted.
-    case emailInvitationsSubmitted = "email_invitations_submitted"
-    
+
+    // MARK: - Invite Form Events
+
+    /// Emitted when the invite form is rendered successfully.
+    case inviteFormRenderSucceeded = "invite_formRender_succeeded"
+
+    /// Emitted when there's an error rendering the invite form.
+    case inviteFormRenderFailed = "invite_formRender_failed"
+
+    // MARK: - Email Field Events
+
     /// Emitted when the email field receives focus.
-    case widgetEmailFieldFocus = "widget_email_field_focus"
-    
+    case emailFieldFocussed = "email_field_focussed"
+
     /// Emitted when the email field loses focus.
-    case widgetEmailFieldBlur = "widget_email_field_blur"
-    
+    case emailFieldBlurred = "email_field_blurred"
+
     /// Emitted when email validation occurs.
-    case widgetEmailValidation = "widget_email_validation"
-    
-    /// Emitted when a share link is clicked.
-    case widgetShareLinkClick = "widget_share_link_click"
-    
-    /// Emitted when there's a validation error on form submission.
-    case widgetEmailValidationError = "widget_email_validation_error"
-    
+    case emailSubmissionValidated = "email_submission_validated"
+
+    /// Emitted when email invitations are submitted successfully.
+    case emailFieldSubmissionSucceeded = "email_fieldSubmission_succeeded"
+
     /// Emitted when there's an error submitting the email form.
-    case widgetEmailSubmitError = "widget_email_submit_error"
+    case emailFieldSubmissionFailed = "email_fieldSubmission_failed"
+
+    // MARK: - Sharing Events
+
+    /// Emitted when a sharing destination button is clicked.
+    case sharingDestinationButtonClicked = "sharingDestination_button_clicked"
+
+    // MARK: - Inbound Invitation Events (requested by Mixerbox)
+
+    /// Emitted when accept button is clicked on an inbound invitation.
+    case inboundInvitationAcceptClicked = "inboundInvitationAccept_button_clicked"
+
+    /// Emitted when delete button is clicked on an inbound invitation.
+    case inboundInvitationDeleteClicked = "inboundInvitationDelete_button_clicked"
+
+    // MARK: - Outbound Invitation Events (requested by Mixerbox)
+
+    /// Emitted when delete button is clicked on an outbound invitation.
+    case outboundInvitationDeleteClicked = "outboundInvitationDelete_button_clicked"
+
+    // MARK: - People You May Know (PYMK) Events (requested by Mixerbox)
+
+    /// Emitted when invite button is clicked on a PYMK suggestion.
+    case pymkInviteClicked = "pymkInvite_button_clicked"
+
+    /// Emitted when delete button is clicked on a PYMK suggestion.
+    case pymkDeleteClicked = "pymkDelete_button_clicked"
+
+    // MARK: - Find Friends Events (requested by Mixerbox)
+
+    /// Emitted when invite button is clicked in Find Friends.
+    case findFriendsInviteClicked = "findFriendsInvite_button_clicked"
+
+    // MARK: - Widget Lifecycle Events
+
+    /// Emitted when widget configuration is loaded.
+    case widgetConfigurationLoaded = "widget_configuration_loaded"
 }
 
 // MARK: - JSON Value
