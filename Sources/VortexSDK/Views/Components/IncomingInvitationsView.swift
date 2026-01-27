@@ -72,41 +72,51 @@ struct IncomingInvitationsView: View {
         return nil
     }
     
-    // MARK: - Customization from config
+    // MARK: - Customization from block settings (widget config) and config props
     
     private var acceptButtonText: String {
+        // Priority: block.settings.customizations > config props > default
+        block.settings?.customizations?["acceptButton"]?.textContent ??
         config?.acceptButtonText ?? "Accept"
     }
     
     private var deleteButtonText: String {
+        block.settings?.customizations?["deleteButton"]?.textContent ??
         config?.deleteButtonText ?? "Delete"
     }
     
     private var emptyStateMessage: String {
+        block.settings?.customizations?["emptyStateMessage"]?.textContent ??
         config?.emptyStateMessage ?? "No incoming invitations"
     }
     
     private var acceptConfirmTitle: String {
+        block.settings?.customizations?["acceptConfirmTitle"]?.textContent ??
         config?.acceptConfirmTitle ?? "Accept Invitation"
     }
     
     private var acceptConfirmMessage: String {
+        block.settings?.customizations?["acceptConfirmMessage"]?.textContent ??
         config?.acceptConfirmMessage ?? "Accept invitation from {name}?"
     }
     
     private var deleteConfirmTitle: String {
+        block.settings?.customizations?["deleteConfirmTitle"]?.textContent ??
         config?.deleteConfirmTitle ?? "Delete Invitation"
     }
     
     private var deleteConfirmMessage: String {
+        block.settings?.customizations?["deleteConfirmMessage"]?.textContent ??
         config?.deleteConfirmMessage ?? "Delete invitation from {name}?"
     }
     
     private var confirmButtonText: String {
+        block.settings?.customizations?["confirmButtonText"]?.textContent ??
         config?.confirmButtonText ?? "Confirm"
     }
     
     private var cancelButtonText: String {
+        block.settings?.customizations?["cancelButtonText"]?.textContent ??
         config?.cancelButtonText ?? "Cancel"
     }
     
