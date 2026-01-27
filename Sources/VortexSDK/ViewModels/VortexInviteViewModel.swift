@@ -549,80 +549,86 @@ class VortexInviteViewModel: ObservableObject {
         }
     }
     
-    /// Track widget render event (only once per session)
+    /// Track invite form render success event (only once per session)
     func trackWidgetRender() {
         guard !widgetRenderTracked else { return }
         widgetRenderTracked = true
         formRenderTime = Date()
-        trackEvent(.widgetRender)
+        trackEvent(.inviteFormRenderSucceeded)
     }
-    
-    /// Track widget error event
+
+    /// Track invite form render failure event
     /// - Parameter error: The error that occurred
     func trackWidgetError(_ error: VortexError) {
-        trackEvent(.widgetError, payload: [
+        trackEvent(.inviteFormRenderFailed, payload: [
             "error": error.localizedDescription
         ])
     }
-    
+
     /// Track email field focus event
     func trackEmailFieldFocus() {
         let timestamp = formRenderTime.map { Date().timeIntervalSince($0) * 1000 } ?? 0
-        trackEvent(.widgetEmailFieldFocus, payload: [
+        trackEvent(.emailFieldFocussed, payload: [
             "timestamp": Int(timestamp)
         ])
     }
-    
+
     /// Track email field blur event
     func trackEmailFieldBlur() {
         let timestamp = formRenderTime.map { Date().timeIntervalSince($0) * 1000 } ?? 0
-        trackEvent(.widgetEmailFieldBlur, payload: [
+        trackEvent(.emailFieldBlurred, payload: [
             "timestamp": Int(timestamp)
         ])
     }
-    
+
     /// Track email validation event
     /// - Parameters:
     ///   - email: The email being validated
     ///   - isValid: Whether the email is valid
     func trackEmailValidation(email: String, isValid: Bool) {
-        trackEvent(.widgetEmailValidation, payload: [
+        trackEvent(.emailSubmissionValidated, payload: [
             "email": email,
             "isValid": isValid
         ])
     }
-    
-    /// Track share link click event
+
+    /// Track sharing destination button click event
     /// - Parameter clickName: The name/type of the share action (e.g., "copy", "whatsapp", "sms")
     func trackShareLinkClick(clickName: String) {
-        trackEvent(.widgetShareLinkClick, payload: [
+        trackEvent(.sharingDestinationButtonClicked, payload: [
             "clickName": clickName
         ])
     }
-    
-    /// Track email invitations submitted event
+
+    /// Track email field submission success event
     /// - Parameter formData: The form data being submitted
     func trackEmailInvitationsSubmitted(formData: [String: Any]) {
-        trackEvent(.emailInvitationsSubmitted, payload: [
+        trackEvent(.emailFieldSubmissionSucceeded, payload: [
             "formData": formData
         ])
     }
-    
-    /// Track email validation error event (form submission validation failure)
-    /// - Parameter formData: The form data that failed validation
-    func trackEmailValidationError(formData: [String: Any]) {
-        trackEvent(.widgetEmailValidationError, payload: [
-            "formData": formData
-        ])
-    }
-    
-    /// Track email submit error event
+
+    /// Track email field submission failure event
     /// - Parameter error: The error message
     func trackEmailSubmitError(error: String) {
-        trackEvent(.widgetEmailSubmitError, payload: [
+        trackEvent(.emailFieldSubmissionFailed, payload: [
             "error": error
         ])
     }
+
+    // MARK: - Deprecated/Removed Events
+
+    // trackEmailValidationError is not used - validation errors should be tracked via
+    // trackEmailValidation(email:isValid:) with isValid: false, which emits the
+    // EMAIL_SUBMISSION_VALIDATED event with the validation result in the payload.
+    // This matches the pattern used in vortex-wc and vortex-react-native.
+    //
+    // func trackEmailValidationError(formData: [String: Any]) {
+    //     trackEvent(.emailSubmissionValidated, payload: [
+    //         "formData": formData,
+    //         "isValid": false
+    //     ])
+    // }
     
     // MARK: - Configuration Loading
     
@@ -1976,7 +1982,7 @@ class VortexInviteViewModel: ObservableObject {
     /// Handle Invite button tap for a non-member contact
     func handleFindFriendsInvite(_ contact: FindFriendsClassifiedContact) {
         findFriendsActionInProgress = contact.id
-        
+
         Task {
             // If platform provides custom onInvite, use it
             if let onInvite = findFriendsConfig?.onInvite {
