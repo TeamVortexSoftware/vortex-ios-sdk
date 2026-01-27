@@ -251,7 +251,7 @@ struct IncomingInvitationsView: View {
                         name: name,
                         subtitle: subtitle,
                         avatarUrl: inv.avatarUrl,
-                        isFromVortexAPI: true,
+                        isVortexInvitation: true,
                         metadata: nil
                     )
                 }
@@ -289,14 +289,15 @@ struct IncomingInvitationsView: View {
     private func handleAccept(_ invitation: IncomingInvitationItem) async {
         actionInProgress = invitation.id
         
-        // Call the callback first - it must return true to proceed
-        var shouldProceed = false
+        // Call the callback if provided
+        var shouldProceed = true
         if let onAccept = config?.onAccept {
             shouldProceed = await onAccept(invitation)
         }
         
-        // If callback returns true and it's from Vortex API, call the accept endpoint
-        if shouldProceed && invitation.isFromVortexAPI {
+        // Only call Vortex API for Vortex invitations when callback returns true (or no callback)
+        // For non-Vortex invitations, the app handles the logic in the callback
+        if shouldProceed && invitation.isVortexInvitation {
             if let client = client, let jwt = jwt {
                 do {
                     try await client.acceptIncomingInvitation(jwt: jwt, invitationId: invitation.id)
@@ -308,10 +309,12 @@ struct IncomingInvitationsView: View {
                     return
                 }
             }
-        }
-        
-        if shouldProceed {
-            // Remove from list with animation
+            // Remove from list after successful API call
+            withAnimation {
+                invitations.removeAll { $0.id == invitation.id }
+            }
+        } else if shouldProceed && !invitation.isVortexInvitation {
+            // For non-Vortex invitations, remove from list if callback returned true
             withAnimation {
                 invitations.removeAll { $0.id == invitation.id }
             }
@@ -323,14 +326,15 @@ struct IncomingInvitationsView: View {
     private func handleDelete(_ invitation: IncomingInvitationItem) async {
         actionInProgress = invitation.id
         
-        // Call the callback first
+        // Call the callback if provided
         var shouldProceed = true
         if let onDelete = config?.onDelete {
             shouldProceed = await onDelete(invitation)
         }
         
-        // If callback returns true and it's from Vortex API, call the delete endpoint
-        if shouldProceed && invitation.isFromVortexAPI {
+        // Only call Vortex API for Vortex invitations when callback returns true (or no callback)
+        // For non-Vortex invitations, the app handles the logic in the callback
+        if shouldProceed && invitation.isVortexInvitation {
             if let client = client, let jwt = jwt {
                 do {
                     try await client.deleteIncomingInvitation(jwt: jwt, invitationId: invitation.id)
@@ -342,10 +346,12 @@ struct IncomingInvitationsView: View {
                     return
                 }
             }
-        }
-        
-        if shouldProceed {
-            // Remove from list with animation
+            // Remove from list after successful API call
+            withAnimation {
+                invitations.removeAll { $0.id == invitation.id }
+            }
+        } else if shouldProceed && !invitation.isVortexInvitation {
+            // For non-Vortex invitations, remove from list if callback returned true
             withAnimation {
                 invitations.removeAll { $0.id == invitation.id }
             }

@@ -417,20 +417,49 @@ IncomingInvitationsConfig(
             avatarUrl: "https://example.com/avatar.jpg"
         )
     ],
-    onAccept: { invitation in /* ... */ return true },
-    onDelete: { invitation in /* ... */ return true }
+    onAccept: { invitation in
+        if invitation.isVortexInvitation {
+            // Vortex invitation: return true to let SDK call the Vortex API
+            return true
+        } else {
+            // Internal/app invitation: handle it yourself, return false (no API call needed)
+            await myAPI.acceptInvitation(invitation.id)
+            return true  // Return true to remove from list
+        }
+    },
+    onDelete: { invitation in
+        if invitation.isVortexInvitation {
+            return true  // Let SDK handle the API call
+        } else {
+            await myAPI.deleteInvitation(invitation.id)
+            return true  // Return true to remove from list
+        }
+    }
 )
 ```
+
+**Identifying Invitation Source:**
+
+Use the `isVortexInvitation` property to determine where an invitation came from:
+- `true`: Fetched from the Vortex API — the SDK will handle accept/delete API calls
+- `false`: Provided by your app via `internalInvitations` — your app must handle the action
 
 **IncomingInvitationsConfig Properties:**
 
 ```swift
 IncomingInvitationsConfig(
-    internalInvitations: [IncomingInvitationItem]?,  // App-provided invitations
-    onAccept: ((IncomingInvitationItem) async -> Bool)?,  // Return true to proceed
-    onDelete: ((IncomingInvitationItem) async -> Bool)?   // Return true to proceed
+    internalInvitations: [IncomingInvitationItem]?,  // App-provided invitations (isVortexInvitation = false)
+    onAccept: ((IncomingInvitationItem) async -> Bool)?,  // Called when user accepts
+    onDelete: ((IncomingInvitationItem) async -> Bool)?   // Called when user deletes
 )
 ```
+
+**Callback Return Values:**
+
+| Invitation Source | Return `true` | Return `false` |
+|-------------------|---------------|----------------|
+| Vortex (`isVortexInvitation == true`) | SDK calls Vortex API, removes from list | Cancels the action |
+| Internal (`isVortexInvitation == false`) | Removes from list (no API call) | Keeps in list |
 
 ## Authentication
 
