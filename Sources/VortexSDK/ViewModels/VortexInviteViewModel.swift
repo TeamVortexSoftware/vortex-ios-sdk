@@ -72,9 +72,8 @@ class VortexInviteViewModel: ObservableObject {
     @Published var formFieldValues: [String: String] = [:]
     
     // Find Friends state
-    @Published var findFriendsContacts: [FindFriendsClassifiedContact] = []
-    @Published var findFriendsLoadingState: FindFriendsLoadingState = .idle
     @Published var findFriendsActionInProgress: String? = nil
+    @Published var connectedFindFriendsContactIds: Set<String> = []
     
     /// Filtered contacts based on search query
     var filteredContacts: [VortexContact] {
@@ -1807,200 +1806,44 @@ class VortexInviteViewModel: ObservableObject {
     
     // MARK: - Find Friends
     
-    /// Load and classify contacts for the Find Friends feature
-    func loadFindFriendsContacts() {
-        // If pre-classified contacts are provided, use them directly
-        if let classifiedContacts = findFriendsConfig?.classifiedContacts, !classifiedContacts.isEmpty {
-            findFriendsContacts = sortFindFriendsContacts(classifiedContacts)
-            findFriendsLoadingState = .idle
-            return
-        }
-        
-        // Otherwise, use the callback approach to fetch and classify contacts
-        guard let config = findFriendsConfig, let onClassifyContacts = config.onClassifyContacts else {
-            return
-        }
-        
-        Task {
-            findFriendsLoadingState = .fetching
-            
-            do {
-                // Fetch contacts from device
-                var allRawContacts: [FindFriendsRawContact] = []
-                
-                // Fetch device contacts
-                let deviceContacts = await fetchDeviceContactsForFindFriends()
-                allRawContacts.append(contentsOf: deviceContacts)
-                
-                // Fetch Google contacts if available
-                if googleIosClientId != nil {
-                    let googleContacts = await fetchGoogleContactsForFindFriends()
-                    allRawContacts.append(contentsOf: googleContacts)
-                }
-                
-                if allRawContacts.isEmpty {
-                    findFriendsContacts = []
-                    findFriendsLoadingState = .idle
-                    return
-                }
-                
-                // Classify contacts via platform callback
-                findFriendsLoadingState = .classifying
-                let classifiedContacts = try await onClassifyContacts(allRawContacts)
-                
-                // Sort: members first, then non-members, alphabetically within each group
-                findFriendsContacts = sortFindFriendsContacts(classifiedContacts)
-                findFriendsLoadingState = .idle
-                
-            } catch {
-                findFriendsLoadingState = .error(error.localizedDescription)
-            }
-        }
-    }
-    
-    /// Sort contacts: members first, then non-members, alphabetically within each group
-    private func sortFindFriendsContacts(_ contacts: [FindFriendsClassifiedContact]) -> [FindFriendsClassifiedContact] {
-        return contacts.sorted { a, b in
-            if a.status == .member && b.status != .member { return true }
-            if a.status != .member && b.status == .member { return false }
-            return a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
-        }
-    }
-    
-    /// Fetch device contacts and convert to FindFriendsRawContact format
-    private func fetchDeviceContactsForFindFriends() async -> [FindFriendsRawContact] {
-        let store = CNContactStore()
-        
-        // Check authorization status
-        var status = CNContactStore.authorizationStatus(for: .contacts)
-        
-        // Request access if not determined
-        if status == .notDetermined {
-            do {
-                let granted = try await store.requestAccess(for: .contacts)
-                if !granted { return [] }
-                status = CNContactStore.authorizationStatus(for: .contacts)
-            } catch {
-                return []
-            }
-        }
-        
-        guard status == .authorized else {
-            return []
-        }
-        
-        // Fetch contacts
-        let keysToFetch: [CNKeyDescriptor] = [
-            CNContactIdentifierKey as CNKeyDescriptor,
-            CNContactGivenNameKey as CNKeyDescriptor,
-            CNContactFamilyNameKey as CNKeyDescriptor,
-            CNContactEmailAddressesKey as CNKeyDescriptor,
-            CNContactPhoneNumbersKey as CNKeyDescriptor
-        ]
-        
-        var rawContacts: [FindFriendsRawContact] = []
-        let request = CNContactFetchRequest(keysToFetch: keysToFetch)
-        
-        do {
-            try store.enumerateContacts(with: request) { contact, _ in
-                let emails = contact.emailAddresses.map { String($0.value) }
-                guard !emails.isEmpty else { return }
-                
-                let name = [contact.givenName, contact.familyName]
-                    .filter { !$0.isEmpty }
-                    .joined(separator: " ")
-                
-                guard !name.isEmpty else { return }
-                
-                let phones = contact.phoneNumbers.map { $0.value.stringValue }
-                
-                let rawContact = FindFriendsRawContact(
-                    id: contact.identifier,
-                    name: name,
-                    emails: emails,
-                    phones: phones.isEmpty ? nil : phones,
-                    avatarUrl: nil
-                )
-                rawContacts.append(rawContact)
-            }
-        } catch {
-            return []
-        }
-        
-        return rawContacts
-    }
-    
-    /// Fetch Google contacts and convert to FindFriendsRawContact format
-    private func fetchGoogleContactsForFindFriends() async -> [FindFriendsRawContact] {
-        // Use existing Google contacts if already fetched
-        guard !googleContacts.isEmpty else { return [] }
-        
-        // Convert VortexContact to FindFriendsRawContact, grouping by name
-        var contactMap: [String: FindFriendsRawContact] = [:]
-        
-        for contact in googleContacts {
-            let key = contact.name.lowercased()
-            if var existing = contactMap[key] {
-                // Add email to existing contact if not already present
-                if !existing.emails.contains(contact.email) {
-                    var emails = existing.emails
-                    emails.append(contact.email)
-                    contactMap[key] = FindFriendsRawContact(
-                        id: existing.id,
-                        name: existing.name,
-                        emails: emails,
-                        phones: existing.phones,
-                        avatarUrl: existing.avatarUrl
-                    )
-                }
-            } else {
-                contactMap[key] = FindFriendsRawContact(
-                    id: contact.id,
-                    name: contact.name,
-                    emails: [contact.email],
-                    phones: nil,
-                    avatarUrl: nil
-                )
-            }
-        }
-        
-        return Array(contactMap.values)
-    }
-    
-    /// Handle Connect button tap for a member contact
-    func handleFindFriendsConnect(_ contact: FindFriendsClassifiedContact) {
+    /// Handle Connect button tap for a contact in Find Friends
+    /// Calls the onConnect callback, and if it returns true, creates an invitation with targetType=internalId
+    func handleFindFriendsConnect(_ contact: FindFriendsContact) {
         guard let config = findFriendsConfig else { return }
         
         findFriendsActionInProgress = contact.id
         
         Task {
-            await config.onConnect(contact)
-            findFriendsActionInProgress = nil
-        }
-    }
-    
-    /// Handle Invite button tap for a non-member contact
-    func handleFindFriendsInvite(_ contact: FindFriendsClassifiedContact) {
-        findFriendsActionInProgress = contact.id
-
-        Task {
-            // If platform provides custom onInvite, use it
-            if let onInvite = findFriendsConfig?.onInvite {
-                await onInvite(contact)
-            } else if let email = contact.emails.first {
-                // Otherwise use SDK's built-in invite
-                await sendFindFriendsInvite(email: email, contactName: contact.name)
+            // Call the customer's onConnect callback
+            let shouldCreateInvitation = await config.onConnect(contact)
+            
+            if shouldCreateInvitation {
+                // Create invitation with targetType = internalId
+                await createInternalIdInvitation(for: contact)
             }
+            
             findFriendsActionInProgress = nil
         }
     }
     
-    /// Send invitation using SDK's built-in mechanism
-    private func sendFindFriendsInvite(email: String, contactName: String) async {
-        guard let jwt = jwt, let config = configuration else { return }
+    /// Create an invitation with target type = internalId
+    private func createInternalIdInvitation(for contact: FindFriendsContact) async {
+        guard let jwt = jwt, let widgetConfig = configuration else {
+            findFriendsConfig?.onInvitationFailed?(contact, VortexError.missingConfiguration)
+            return
+        }
         
+        // The backend extracts targets from payload fields with type: "internal"
+        // Key must be "internalId" (camelCase) to match React Native SDK
+        // The value is an object { value: internalId, name: contactName } so the backend can populate target_name
         let payload: [String: Any] = [
-            "invitee_email": ["value": email, "type": "email"]
+            "internalId": [
+                "type": "internal",
+                "value": [
+                    "value": contact.internalId,
+                    "name": contact.name
+                ]
+            ]
         ]
         
         var groups: [GroupDTO]? = nil
@@ -2011,12 +1854,26 @@ class VortexInviteViewModel: ObservableObject {
         do {
             _ = try await client.createInvitation(
                 jwt: jwt,
-                widgetConfigurationId: config.id,
+                widgetConfigurationId: widgetConfig.id,
                 payload: payload,
+                source: "other",
                 groups: groups
             )
+            
+            // Fire the invitation sent event so other components (like Outgoing Invitations) can refresh
+            invitationSentEvent = InvitationSentEvent(
+                source: .findFriends,
+                shortLink: ""
+            )
+            
+            // Mark contact as connected so it's removed from the list
+            connectedFindFriendsContactIds.insert(contact.id)
+            
+            // Notify the customer that the invitation was created
+            findFriendsConfig?.onInvitationCreated?(contact)
+            
         } catch {
-            // Silently fail - the UI will show the button is no longer loading
+            findFriendsConfig?.onInvitationFailed?(contact, error)
         }
     }
 }
