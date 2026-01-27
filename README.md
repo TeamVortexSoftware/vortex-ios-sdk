@@ -91,17 +91,6 @@ struct TeamView: View {
 }
 ```
 
-### Custom API Base URL (Development)
-
-```swift
-VortexInviteView(
-    componentId: "your-component-id",
-    jwt: devToken,
-    apiBaseURL: URL(string: "http://localhost:3002")!,
-    onDismiss: { /* ... */ }
-)
-```
-
 ### Prefetch for Instant Rendering
 
 The SDK supports prefetching widget configurations to eliminate loading delays when opening the invite form. This uses a **stale-while-revalidate** pattern: cached configurations are shown immediately while fresh data is fetched in the background.
@@ -476,40 +465,34 @@ The main SwiftUI component for rendering invitation forms.
 VortexInviteView(
     componentId: String,
     jwt: String?,
-    apiBaseURL: URL = URL(string: "https://client-api.vortexsoftware.com")!,
-    analyticsBaseURL: URL? = nil,
-    group: GroupDTO? = nil,
     googleIosClientId: String? = nil,
     onEvent: ((VortexAnalyticsEvent) -> Void)? = nil,
-    segmentation: [String: Any]? = nil,
     onDismiss: (() -> Void)? = nil,
     widgetConfiguration: WidgetConfiguration? = nil,
-    deploymentId: String? = nil,
     findFriendsConfig: FindFriendsConfig? = nil,
     invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
     inviteContactsConfig: InviteContactsConfig? = nil,
     incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
-    locale: String? = nil
+    locale: String? = nil,
+    scope: String? = nil,
+    scopeType: String? = nil
 )
 ```
 
 **Parameters:**
 - `componentId`: Your widget/component ID from the Vortex dashboard
 - `jwt`: JWT authentication token (required for API access)
-- `apiBaseURL`: Base URL of the Vortex API (defaults to production)
-- `analyticsBaseURL`: Base URL of the analytics collector (defaults to production). Only override for development/staging.
-- `group`: Optional group context for scoped invitations
 - `googleIosClientId`: Google iOS Client ID for Google Contacts integration (optional)
 - `onEvent`: Callback for analytics events (optional)
-- `segmentation`: Optional segmentation data for analytics
 - `onDismiss`: Callback invoked when the view is dismissed
 - `widgetConfiguration`: Optional pre-fetched configuration for instant rendering (stale-while-revalidate)
-- `deploymentId`: Optional deployment ID associated with the widget configuration
 - `findFriendsConfig`: Optional configuration for the Find Friends feature (see [Find Friends](#find-friends))
 - `invitationSuggestionsConfig`: Optional configuration for the Invitation Suggestions feature (see [Invitation Suggestions](#invitation-suggestions))
 - `inviteContactsConfig`: Optional configuration for the Invite Contacts feature (see [Invite Contacts](#invite-contacts))
 - `incomingInvitationsConfig`: Optional configuration for the Incoming Invitations feature (see [Incoming Invitations](#incoming-invitations))
-- `locale`: Optional locale for internationalization (e.g., "pt-BR", "en-US")
+- `locale`: Optional BCP 47 language code for internationalization (e.g., "pt-BR", "en-US")
+- `scope`: Scope identifier for scoping invitations (e.g., team ID, project ID). Used with `scopeType`.
+- `scopeType`: Type of the scope (e.g., "team", "project"). Used with `scope`.
 
 ### VortexClient
 

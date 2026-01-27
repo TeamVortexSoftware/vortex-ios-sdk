@@ -142,7 +142,6 @@ class VortexInviteViewModel: ObservableObject {
     private let analyticsClient: VortexAnalyticsClient
     private let sessionId: String
     private let onEvent: ((VortexAnalyticsEvent) -> Void)?
-    private let segmentation: [String: Any]?
     private var widgetRenderTracked = false
     private var formRenderTime: Date?
     private var deploymentId: String?
@@ -470,7 +469,6 @@ class VortexInviteViewModel: ObservableObject {
     
     /// Optional initial configuration passed from prefetcher or cache
     private var initialConfiguration: WidgetConfiguration?
-    private var initialDeploymentId: String?
     
     init(
         componentId: String,
@@ -480,10 +478,8 @@ class VortexInviteViewModel: ObservableObject {
         group: GroupDTO?,
         googleIosClientId: String? = nil,
         onEvent: ((VortexAnalyticsEvent) -> Void)? = nil,
-        segmentation: [String: Any]? = nil,
         onDismiss: (() -> Void)?,
         initialConfiguration: WidgetConfiguration? = nil,
-        initialDeploymentId: String? = nil,
         findFriendsConfig: FindFriendsConfig? = nil,
         invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
@@ -496,11 +492,9 @@ class VortexInviteViewModel: ObservableObject {
         self.group = group
         self.googleIosClientId = googleIosClientId
         self.onEvent = onEvent
-        self.segmentation = segmentation
         self.onDismiss = onDismiss
         self.client = VortexClient(baseURL: apiBaseURL)
         self.initialConfiguration = initialConfiguration
-        self.initialDeploymentId = initialDeploymentId
         self.findFriendsConfig = findFriendsConfig
         self.invitationSuggestionsConfig = invitationSuggestionsConfig
         self.inviteContactsConfig = inviteContactsConfig
@@ -541,7 +535,6 @@ class VortexInviteViewModel: ObservableObject {
             sessionId: sessionId,
             useragent: useragent,
             foreignUserId: foreignUserId,
-            segmentation: segmentation?.toJSONValues(),
             payload: payload?.toJSONValues(),
             groups: group.map { [VortexAnalyticsEvent.GroupInfo(
                 type: $0.type,
@@ -657,7 +650,7 @@ class VortexInviteViewModel: ObservableObject {
         if let initial = initialConfiguration {
             // Use configuration passed via init (from prefetcher or parent view)
             configuration = initial
-            deploymentId = initialDeploymentId
+            deploymentId = initial.deploymentId
             hasCachedConfig = true
         } else if let cached = await VortexConfigurationCache.shared.get(componentId, locale: locale) {
             // Use configuration from shared cache (locale-aware)

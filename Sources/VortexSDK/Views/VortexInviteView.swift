@@ -41,12 +41,10 @@ public struct VortexInviteView: View {
     ///   - group: Optional group information for scoping invitations
     ///   - googleIosClientId: Google iOS Client ID for Google Contacts integration (optional)
     ///   - onEvent: Callback for analytics events (optional)
-    ///   - segmentation: Optional segmentation data for analytics
     ///   - onDismiss: Callback when the view is dismissed
     ///   - widgetConfiguration: Optional pre-fetched widget configuration for instant rendering.
     ///     If provided, the view renders immediately without showing a loading spinner.
     ///     Fresh configuration is still fetched in the background (stale-while-revalidate).
-    ///   - deploymentId: Optional deployment ID associated with the widget configuration
     ///   - findFriendsConfig: Optional configuration for the Find Friends feature.
     ///     When provided, enables the Find Friends component to display contacts with
     ///     Connect/Invite buttons based on their membership status.
@@ -59,38 +57,47 @@ public struct VortexInviteView: View {
     ///   - incomingInvitationsConfig: Optional configuration for the Incoming Invitations feature.
     ///     When provided, enables the Incoming Invitations component to display invitations
     ///     the user has received with Accept/Delete actions.
-    ///   - locale: Optional locale for internationalization (e.g., "pt-BR", "en-US").
+    ///   - locale: Optional BCP 47 language code for internationalization (e.g., "pt-BR", "en-US").
     ///     When provided, the widget configuration will be fetched in the specified locale.
+    ///   - scope: Scope identifier for scoping invitations (e.g., team ID, project ID).
+    ///     Used together with `scopeType` to create group context for API calls.
+    ///   - scopeType: Type of the scope (e.g., "team", "project").
+    ///     Used together with `scope` to create group context for API calls.
     public init(
         componentId: String,
         jwt: String?,
         apiBaseURL: URL = URL(string: "https://client-api.vortexsoftware.com")!,
         analyticsBaseURL: URL? = nil,
-        group: GroupDTO? = nil,
         googleIosClientId: String? = nil,
         onEvent: ((VortexAnalyticsEvent) -> Void)? = nil,
-        segmentation: [String: Any]? = nil,
         onDismiss: (() -> Void)? = nil,
         widgetConfiguration: WidgetConfiguration? = nil,
-        deploymentId: String? = nil,
         findFriendsConfig: FindFriendsConfig? = nil,
         invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
         incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
-        locale: String? = nil
+        locale: String? = nil,
+        scope: String? = nil,
+        scopeType: String? = nil
     ) {
+        // Convert scope/scopeType to GroupDTO for API calls
+        let effectiveGroup: GroupDTO? = {
+            if let scope = scope, let scopeType = scopeType {
+                return GroupDTO(id: nil, groupId: scope, type: scopeType, name: scope)
+            }
+            return nil
+        }()
+        
         _viewModel = StateObject(wrappedValue: VortexInviteViewModel(
             componentId: componentId,
             jwt: jwt,
             apiBaseURL: apiBaseURL,
             analyticsBaseURL: analyticsBaseURL,
-            group: group,
+            group: effectiveGroup,
             googleIosClientId: googleIosClientId,
             onEvent: onEvent,
-            segmentation: segmentation,
             onDismiss: onDismiss,
             initialConfiguration: widgetConfiguration,
-            initialDeploymentId: deploymentId,
             findFriendsConfig: findFriendsConfig,
             invitationSuggestionsConfig: invitationSuggestionsConfig,
             inviteContactsConfig: inviteContactsConfig,
