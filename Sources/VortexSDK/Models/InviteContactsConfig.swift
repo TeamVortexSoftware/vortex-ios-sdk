@@ -65,46 +65,9 @@ public struct InviteContactsConfig {
     /// If empty or undefined, the component renders nothing (no height).
     public let contacts: [InviteContactsContact]
     
-    /// Called when the user successfully sends an SMS invitation.
-    ///
-    /// On real devices with in-app SMS composer (`MFMessageComposeViewController`),
-    /// this callback is only called when the user actually taps "Send" in the composer.
-    /// If the user cancels or the message fails to send, this callback is NOT called.
-    ///
-    /// On real devices without SMS capability (fallback to URL scheme), this callback
-    /// is called optimistically when the Messages app is opened, since we cannot detect
-    /// whether the user actually sent the message.
-    ///
-    /// On the iOS Simulator (fake SMS preview), this callback is called when the user
-    /// taps "Send" in the simulated composer.
-    ///
-    /// Use cases:
-    /// - Analytics tracking
-    /// - Refreshing other components (like Outgoing Invitations)
-    /// - Custom post-invite logic
-    ///
-    /// - Parameters:
-    ///   - contact: The contact that was invited
-    ///   - shortLink: The invitation short link that was created
-    public let onInvitationSent: ((InviteContactsContact, String) -> Void)?
-    
-    /// Optional: Called when user navigates to the contacts list.
-    /// Can be used for analytics.
-    public let onNavigateToContacts: (() -> Void)?
-    
-    /// Optional: Called when user navigates back from the contacts list.
-    /// Can be used for analytics.
-    public let onNavigateBack: (() -> Void)?
-    
     public init(
-        contacts: [InviteContactsContact],
-        onInvitationSent: ((InviteContactsContact, String) -> Void)? = nil,
-        onNavigateToContacts: (() -> Void)? = nil,
-        onNavigateBack: (() -> Void)? = nil
+        contacts: [InviteContactsContact]
     ) {
         self.contacts = contacts
-        self.onInvitationSent = onInvitationSent
-        self.onNavigateToContacts = onNavigateToContacts
-        self.onNavigateBack = onNavigateBack
     }
 }

@@ -166,10 +166,7 @@ VortexInviteView(
             InviteContactsContact(name: "Alice Johnson", phoneNumber: "+1 (555) 123-4567"),
             InviteContactsContact(name: "Bob Smith", phoneNumber: "+1 (555) 234-5678"),
             InviteContactsContact(name: "Carol Davis", phoneNumber: "+1 (555) 345-6789")
-        ],
-        onInvitationSent: { contact, shortLink in
-            print("SMS sent to \(contact.name) with link: \(shortLink)")
-        }
+        ]
     ),
     onDismiss: { /* ... */ }
 )
@@ -183,17 +180,6 @@ VortexInviteView(
    - Creates an SMS invitation via the Vortex API
    - Opens the in-app SMS composer (on supported devices)
    - Pre-fills the message with the invitation link
-4. The `onInvitationSent` callback is called when the SMS is actually sent
-
-**Callback Behavior:**
-
-The `onInvitationSent` callback has different behavior depending on the environment:
-
-| Environment | Behavior |
-|-------------|----------|
-| Real device with SMS | Called only when user taps "Send" in the SMS composer |
-| Real device without SMS | Called optimistically when Messages app opens (fallback) |
-| iOS Simulator | Called when user taps "Send" in the simulated composer |
 
 **InviteContactsContact Properties:**
 
@@ -220,10 +206,7 @@ InviteContactsContact(
 
 ```swift
 InviteContactsConfig(
-    contacts: [InviteContactsContact],  // List of contacts to display
-    onInvitationSent: ((contact, shortLink) -> Void)?,  // Called when SMS is sent
-    onNavigateToContacts: (() -> Void)?,  // Analytics: user opened contacts list
-    onNavigateBack: (() -> Void)?         // Analytics: user went back
+    contacts: [InviteContactsContact]  // List of contacts to display
 )
 ```
 

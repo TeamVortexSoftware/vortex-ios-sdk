@@ -297,11 +297,10 @@ struct InviteContactsView: View {
                     pendingShortLink = nil
                 },
                 onSend: {
-                    // User "sent" - mark as invited and call callback
+                    // User "sent" - mark as invited
                     fakeSMSData = nil
                     if let contact = pendingInviteContact, let shortLink = pendingShortLink {
                         invitedContacts.insert(contact.id)
-                        viewModel.inviteContactsConfig?.onInvitationSent?(contact, shortLink)
                         // Fire internal event for other subcomponents to observe
                         viewModel.fireInvitationSentEvent(source: .inviteContacts, shortLink: shortLink)
                     }
@@ -317,7 +316,6 @@ struct InviteContactsView: View {
     private var inviteContactsEntryView: some View {
         Button(action: {
             showContactsList = true
-            viewModel.inviteContactsConfig?.onNavigateToContacts?()
         }) {
             HStack {
                 HStack(spacing: 8) {
@@ -387,7 +385,6 @@ struct InviteContactsView: View {
         Button(action: {
             showContactsList = false
             searchQuery = ""
-            viewModel.inviteContactsConfig?.onNavigateBack?()
         }) {
             HStack(spacing: 4) {
                 Text("‹")
@@ -494,10 +491,9 @@ struct InviteContactsView: View {
                         }
                     }
                     
-                    // Mark contact as invited and call callback immediately for fallback
+                    // Mark contact as invited immediately for fallback
                     // (We can't detect if user actually sent the message via URL scheme)
                     invitedContacts.insert(contact.id)
-                    viewModel.inviteContactsConfig?.onInvitationSent?(contact, shortLink)
                     // Fire internal event for other subcomponents to observe
                     viewModel.fireInvitationSentEvent(source: .inviteContacts, shortLink: shortLink)
                     
@@ -518,9 +514,8 @@ struct InviteContactsView: View {
         if let contact = pendingInviteContact, let shortLink = pendingShortLink {
             switch result {
             case .sent:
-                // User sent the message - mark as invited and call callback
+                // User sent the message - mark as invited
                 invitedContacts.insert(contact.id)
-                viewModel.inviteContactsConfig?.onInvitationSent?(contact, shortLink)
                 // Fire internal event for other subcomponents to observe
                 viewModel.fireInvitationSentEvent(source: .inviteContacts, shortLink: shortLink)
             case .cancelled:
