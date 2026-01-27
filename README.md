@@ -174,9 +174,9 @@ VortexInviteView(
     jwt: jwt,
     inviteContactsConfig: InviteContactsConfig(
         contacts: [
-            InviteContactsContact(id: "1", name: "Alice Johnson", phoneNumber: "+1 (555) 123-4567"),
-            InviteContactsContact(id: "2", name: "Bob Smith", phoneNumber: "+1 (555) 234-5678"),
-            InviteContactsContact(id: "3", name: "Carol Davis", phoneNumber: "+1 (555) 345-6789")
+            InviteContactsContact(name: "Alice Johnson", phoneNumber: "+1 (555) 123-4567"),
+            InviteContactsContact(name: "Bob Smith", phoneNumber: "+1 (555) 234-5678"),
+            InviteContactsContact(name: "Carol Davis", phoneNumber: "+1 (555) 345-6789")
         ],
         onInvitationSent: { contact, shortLink in
             print("SMS sent to \(contact.name) with link: \(shortLink)")
@@ -209,8 +209,17 @@ The `onInvitationSent` callback has different behavior depending on the environm
 **InviteContactsContact Properties:**
 
 ```swift
+// Simple usage - just name and phone number (ID is auto-generated)
 InviteContactsContact(
-    id: String,              // Unique identifier
+    name: String,            // Display name
+    phoneNumber: String,     // Phone number for SMS
+    avatarUrl: String?,      // Optional avatar image URL
+    metadata: [String: Any]? // Optional custom metadata
+)
+
+// Full usage - with custom ID
+InviteContactsContact(
+    id: String,              // Custom unique identifier
     name: String,            // Display name
     phoneNumber: String,     // Phone number for SMS
     avatarUrl: String?,      // Optional avatar image URL
