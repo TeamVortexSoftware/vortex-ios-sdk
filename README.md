@@ -231,7 +231,7 @@ InviteContactsConfig(
 
 ### Find Friends
 
-The Find Friends component displays contacts classified as "members" (existing users) or "non-members" (potential invitees). Members show a "Connect" button, while non-members show an "Invite" button.
+The Find Friends component displays a list of contacts provided by your app. Each contact has a "Connect" button that creates an invitation with `targetType: internalId`.
 
 **Basic Usage:**
 
@@ -242,22 +242,22 @@ VortexInviteView(
     componentId: "your-component-id",
     jwt: jwt,
     findFriendsConfig: FindFriendsConfig(
-        onClassifyContacts: { rawContacts in
-            // Call your backend to classify contacts
-            let classified = try await myAPI.classifyContacts(rawContacts)
-            return classified.map { contact in
-                FindFriendsClassifiedContact(
-                    id: contact.id,
-                    name: contact.name,
-                    emails: contact.emails,
-                    status: contact.isMember ? .member : .nonMember,
-                    platformUserId: contact.userId
-                )
-            }
-        },
+        contacts: [
+            FindFriendsContact(internalId: "user-123", name: "Alice Johnson", subtitle: "@alice"),
+            FindFriendsContact(internalId: "user-456", name: "Bob Smith", subtitle: "@bob")
+        ],
         onConnect: { contact in
-            // Handle connection (e.g., send friend request)
-            await myAPI.sendFriendRequest(to: contact.platformUserId!)
+            // Called when user taps Connect
+            // Return true to create an invitation via Vortex API
+            // Return false to cancel
+            print("Connecting to \(contact.name)")
+            return true
+        },
+        onInvitationCreated: { contact in
+            print("Invitation created for \(contact.name)")
+        },
+        onInvitationFailed: { contact, error in
+            print("Failed to invite \(contact.name): \(error)")
         }
     ),
     onDismiss: { /* ... */ }
@@ -266,21 +266,21 @@ VortexInviteView(
 
 **How It Works:**
 
-1. The SDK fetches contacts from device or Google
-2. Your `onClassifyContacts` callback classifies them as members or non-members
-3. Members are displayed with a "Connect" button
-4. Non-members are accessible via an "Invite your contacts" entry
-5. Tapping "Connect" triggers your `onConnect` callback
-6. Tapping "Invite" uses the SDK's invitation flow (or your custom `onInvite` callback)
+1. Your app provides a list of contacts with internal IDs (users already in your platform)
+2. The component displays them with a "Connect" button
+3. When the user taps "Connect", your `onConnect` callback is called
+4. If `onConnect` returns `true`, the SDK creates an invitation via the Vortex API with `targetType: internalId`
+5. The `onInvitationCreated` or `onInvitationFailed` callback is called based on the result
 
-**Pre-classified Contacts (Instant Rendering):**
-
-For instant rendering without loading states, provide pre-classified contacts:
+**FindFriendsContact Properties:**
 
 ```swift
-FindFriendsConfig(
-    classifiedContacts: preClassifiedContacts,  // Skip fetching, render immediately
-    onConnect: { contact in /* ... */ }
+FindFriendsContact(
+    internalId: String,          // Required: ID in your platform
+    name: String,                // Required: Display name
+    subtitle: String?,           // Optional: Secondary text (e.g., username)
+    avatarUrl: String?,          // Optional: Avatar image URL
+    metadata: [String: Any]?     // Optional: Custom metadata
 )
 ```
 
@@ -288,17 +288,12 @@ FindFriendsConfig(
 
 ```swift
 FindFriendsConfig(
-    classifiedContacts: [FindFriendsClassifiedContact]?,  // Pre-classified contacts (optional)
-    onClassifyContacts: (([FindFriendsRawContact]) async throws -> [FindFriendsClassifiedContact])?,  // Classification callback
-    onConnect: (FindFriendsClassifiedContact) async -> Void,  // Required: handle member connections
-    onInvite: ((FindFriendsClassifiedContact) async -> Void)?,  // Optional: custom invite logic
-    connectButtonText: String = "Connect",
-    inviteButtonText: String = "Invite",
-    emptyStateMessage: String = "No contacts found",
-    loadingMessage: String = "Finding friends...",
-    inviteContactsEntryText: String = "Invite your contacts",
-    onNavigateToInviteContacts: (() -> Void)?,  // Analytics callback
-    onNavigateBackFromInviteContacts: (() -> Void)?  // Analytics callback
+    contacts: [FindFriendsContact],                      // Required: List of contacts to display
+    onConnect: (FindFriendsContact) async -> Bool,       // Required: Return true to create invitation
+    onInvitationCreated: ((FindFriendsContact) -> Void)?,  // Called after successful invitation
+    onInvitationFailed: ((FindFriendsContact, Error) -> Void)?,  // Called on failure
+    connectButtonText: String = "Connect",               // Custom button text
+    emptyStateMessage: String = "No contacts found"      // Empty state message
 )
 ```
 
