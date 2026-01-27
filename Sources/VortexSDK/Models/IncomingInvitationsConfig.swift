@@ -32,7 +32,10 @@ public struct IncomingInvitationItem: Identifiable, Sendable {
     }
 }
 
-/// Configuration for the Incoming Invitations component
+/// Configuration for the Incoming Invitations component.
+///
+/// Note: UI strings (button text, empty state message, confirmation dialogs) are configured
+/// via the widget configuration in the Vortex dashboard, not through this config object.
 public struct IncomingInvitationsConfig {
     /// Internal invitations provided by the app (merged with API-fetched ones)
     public let internalInvitations: [IncomingInvitationItem]?
@@ -47,62 +50,13 @@ public struct IncomingInvitationsConfig {
     /// Return false to cancel the action.
     public let onDelete: ((IncomingInvitationItem) async -> Bool)?
     
-    /// Custom text for the Accept button (default: "Accept")
-    public let acceptButtonText: String?
-    
-    /// Custom text for the Delete button (default: "Delete")
-    public let deleteButtonText: String?
-    
-    /// Custom empty state message (default: "No incoming invitations")
-    public let emptyStateMessage: String?
-    
-    /// Custom title for the Accept confirmation dialog (default: "Accept Invitation")
-    public let acceptConfirmTitle: String?
-    
-    /// Custom message for the Accept confirmation dialog.
-    /// Use {name} as a placeholder for the person's name.
-    /// (default: "Accept invitation from {name}?")
-    public let acceptConfirmMessage: String?
-    
-    /// Custom title for the Delete confirmation dialog (default: "Delete Invitation")
-    public let deleteConfirmTitle: String?
-    
-    /// Custom message for the Delete confirmation dialog.
-    /// Use {name} as a placeholder for the person's name.
-    /// (default: "Delete invitation from {name}?")
-    public let deleteConfirmMessage: String?
-    
-    /// Custom text for the confirmation dialog's confirm button (default: "Confirm")
-    public let confirmButtonText: String?
-    
-    /// Custom text for the confirmation dialog's cancel button (default: "Cancel")
-    public let cancelButtonText: String?
-    
     public init(
         internalInvitations: [IncomingInvitationItem]? = nil,
         onAccept: ((IncomingInvitationItem) async -> Bool)? = nil,
-        onDelete: ((IncomingInvitationItem) async -> Bool)? = nil,
-        acceptButtonText: String? = nil,
-        deleteButtonText: String? = nil,
-        emptyStateMessage: String? = nil,
-        acceptConfirmTitle: String? = nil,
-        acceptConfirmMessage: String? = nil,
-        deleteConfirmTitle: String? = nil,
-        deleteConfirmMessage: String? = nil,
-        confirmButtonText: String? = nil,
-        cancelButtonText: String? = nil
+        onDelete: ((IncomingInvitationItem) async -> Bool)? = nil
     ) {
         self.internalInvitations = internalInvitations
         self.onAccept = onAccept
         self.onDelete = onDelete
-        self.acceptButtonText = acceptButtonText
-        self.deleteButtonText = deleteButtonText
-        self.emptyStateMessage = emptyStateMessage
-        self.acceptConfirmTitle = acceptConfirmTitle
-        self.acceptConfirmMessage = acceptConfirmMessage
-        self.deleteConfirmTitle = deleteConfirmTitle
-        self.deleteConfirmMessage = deleteConfirmMessage
-        self.confirmButtonText = confirmButtonText
-        self.cancelButtonText = cancelButtonText
     }
 }
