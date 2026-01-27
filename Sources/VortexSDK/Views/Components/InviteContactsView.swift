@@ -379,6 +379,10 @@ struct InviteContactsView: View {
     
     // MARK: - Back Header View
     
+    private var backButtonText: String {
+        block.settings?.customizations?["backButton"]?.textContent ?? "Back"
+    }
+    
     private var backHeaderView: some View {
         Button(action: {
             showContactsList = false
@@ -390,7 +394,7 @@ struct InviteContactsView: View {
                     .font(.system(size: 24, weight: .light))
                     .foregroundColor(secondaryForegroundColor)
                 
-                Text("Back")
+                Text(backButtonText)
                     .font(.system(size: 16, weight: .medium))
                     .foregroundColor(foregroundColor)
             }
