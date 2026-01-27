@@ -145,11 +145,11 @@ struct OutgoingInvitationsView: View {
                         .foregroundColor(cancelButtonTextColor)
                 }
             }
-            .frame(minWidth: 80)
             .padding(.horizontal, 16)
             .padding(.vertical, 8)
             .background(cancelButtonBackground)
             .cornerRadius(cancelButtonBorderRadius)
+            .fixedSize(horizontal: true, vertical: false)
             .disabled(actionInProgress != nil)
         }
         .padding(.vertical, 12)

@@ -344,6 +344,106 @@ public class VortexClient {
         }
     }
     
+    // MARK: - Incoming Invitations
+    
+    /// Fetch incoming (open) invitations for the current user
+    /// - Parameter jwt: JWT authentication token
+    /// - Returns: List of incoming invitations (only pending, not yet accepted)
+    public func getIncomingInvitations(jwt: String) async throws -> [IncomingInvitation] {
+        // Note: The API only accepts a single status value, so we fetch without status filter
+        // and let the API return all open invitations for the current user
+        let url = baseURL.appendingPathComponent("/api/v1/invitations")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(sessionId, forHTTPHeaderField: "x-session-id")
+        request.setValue(clientVersion, forHTTPHeaderField: "x-vortex-client-version")
+        request.setValue(clientName, forHTTPHeaderField: "x-vortex-client-name")
+        
+        if let attestation = sessionAttestation {
+            request.setValue(attestation, forHTTPHeaderField: "x-session-attestation")
+        }
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VortexError.invalidResponse
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw VortexError.httpError(statusCode: httpResponse.statusCode)
+        }
+        
+        let decoder = JSONDecoder()
+        let invitationsResponse = try decoder.decode(IncomingInvitationsResponse.self, from: data)
+        return invitationsResponse.data.invitations
+    }
+    
+    /// Accept an incoming invitation
+    /// - Parameters:
+    ///   - jwt: JWT authentication token
+    ///   - invitationId: ID of the invitation to accept
+    public func acceptIncomingInvitation(jwt: String, invitationId: String) async throws {
+        let url = baseURL.appendingPathComponent("/api/v1/invitations/accept")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(sessionId, forHTTPHeaderField: "x-session-id")
+        request.setValue(clientVersion, forHTTPHeaderField: "x-vortex-client-version")
+        request.setValue(clientName, forHTTPHeaderField: "x-vortex-client-name")
+        
+        if let attestation = sessionAttestation {
+            request.setValue(attestation, forHTTPHeaderField: "x-session-attestation")
+        }
+        
+        let body: [String: Any] = ["invitationId": invitationId]
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VortexError.invalidResponse
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw VortexError.httpError(statusCode: httpResponse.statusCode)
+        }
+    }
+    
+    /// Delete (reject/decline) an incoming invitation
+    /// - Parameters:
+    ///   - jwt: JWT authentication token
+    ///   - invitationId: ID of the invitation to delete
+    public func deleteIncomingInvitation(jwt: String, invitationId: String) async throws {
+        let url = baseURL.appendingPathComponent("/api/v1/invitations/\(invitationId)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "DELETE"
+        request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(sessionId, forHTTPHeaderField: "x-session-id")
+        request.setValue(clientVersion, forHTTPHeaderField: "x-vortex-client-version")
+        request.setValue(clientName, forHTTPHeaderField: "x-vortex-client-name")
+        
+        if let attestation = sessionAttestation {
+            request.setValue(attestation, forHTTPHeaderField: "x-session-attestation")
+        }
+        
+        let (_, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VortexError.invalidResponse
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) || httpResponse.statusCode == 204 else {
+            throw VortexError.httpError(statusCode: httpResponse.statusCode)
+        }
+    }
+    
     // MARK: - Deferred Deep Links
     
     /// Match device fingerprint to retrieve deferred deep link context

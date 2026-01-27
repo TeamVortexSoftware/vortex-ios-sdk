@@ -121,6 +121,9 @@ class VortexInviteViewModel: ObservableObject {
     // Outgoing Invitations
     let outgoingInvitationsConfig: OutgoingInvitationsConfig?
     
+    // Incoming Invitations
+    let incomingInvitationsConfig: IncomingInvitationsConfig?
+    
     // MARK: - Internal Events
     
     /// Publisher that fires when an invitation is created/sent from any subcomponent.
@@ -476,6 +479,7 @@ class VortexInviteViewModel: ObservableObject {
         findFriendsConfig: FindFriendsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
         outgoingInvitationsConfig: OutgoingInvitationsConfig? = nil,
+        incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
         locale: String? = nil
     ) {
         self.componentId = componentId
@@ -491,6 +495,7 @@ class VortexInviteViewModel: ObservableObject {
         self.findFriendsConfig = findFriendsConfig
         self.inviteContactsConfig = inviteContactsConfig
         self.outgoingInvitationsConfig = outgoingInvitationsConfig
+        self.incomingInvitationsConfig = incomingInvitationsConfig
         self.locale = locale
         
         // Initialize analytics with separate collector URL (defaults to production)

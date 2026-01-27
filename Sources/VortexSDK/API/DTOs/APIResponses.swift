@@ -174,6 +174,34 @@ public struct OutgoingInvitation: Codable, Sendable {
     public let createdAt: String?
 }
 
+// MARK: - Incoming Invitations
+
+/// Response from GET /api/v1/invitations endpoint (open/incoming invitations)
+public struct IncomingInvitationsResponse: Codable, Sendable {
+    public let data: IncomingInvitationsData
+}
+
+/// Data wrapper for incoming invitations response
+public struct IncomingInvitationsData: Codable, Sendable {
+    public let invitations: [IncomingInvitation]
+    public let nextCursor: String?
+    public let hasMore: Bool?
+    public let count: Int?
+}
+
+/// Individual incoming invitation from the API
+public struct IncomingInvitation: Codable, Sendable {
+    public let id: String
+    public let targets: [InvitationTarget]?
+    public let senderIdentifier: String?
+    public let senderIdentifierType: String?
+    public let avatarUrl: String?
+    public let status: String?
+    public let createdAt: String?
+    public let source: String?
+    public let deliveryType: String?
+}
+
 // MARK: - AnyCodable
 
 /// Type-erased Codable wrapper for handling dynamic JSON values

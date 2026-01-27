@@ -53,6 +53,9 @@ public struct VortexInviteView: View {
     ///   - inviteContactsConfig: Optional configuration for the Invite Contacts feature.
     ///     When provided, enables the Invite Contacts component to display a list of
     ///     contacts that can be invited via SMS.
+    ///   - incomingInvitationsConfig: Optional configuration for the Incoming Invitations feature.
+    ///     When provided, enables the Incoming Invitations component to display invitations
+    ///     the user has received with Accept/Delete actions.
     ///   - locale: Optional locale for internationalization (e.g., "pt-BR", "en-US").
     ///     When provided, the widget configuration will be fetched in the specified locale.
     public init(
@@ -69,6 +72,7 @@ public struct VortexInviteView: View {
         deploymentId: String? = nil,
         findFriendsConfig: FindFriendsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
+        incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
         locale: String? = nil
     ) {
         _viewModel = StateObject(wrappedValue: VortexInviteViewModel(
@@ -86,6 +90,7 @@ public struct VortexInviteView: View {
             findFriendsConfig: findFriendsConfig,
             inviteContactsConfig: inviteContactsConfig,
             outgoingInvitationsConfig: nil,
+            incomingInvitationsConfig: incomingInvitationsConfig,
             locale: locale
         ))
     }
@@ -323,6 +328,14 @@ public struct VortexInviteView: View {
                 jwt: viewModel.jwt,
                 config: viewModel.outgoingInvitationsConfig,
                 viewModel: viewModel
+            ))
+        case "vrtx-incoming-invitations":
+            return AnyView(IncomingInvitationsView(
+                block: block,
+                theme: block.theme,
+                config: viewModel.incomingInvitationsConfig,
+                client: viewModel.client,
+                jwt: viewModel.jwt
             ))
         
         // MARK: - Content Elements (fully supported)
