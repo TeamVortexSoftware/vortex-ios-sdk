@@ -227,18 +227,10 @@ VortexInviteView(
             FindFriendsContact(internalId: "user-123", name: "Alice Johnson", subtitle: "@alice"),
             FindFriendsContact(internalId: "user-456", name: "Bob Smith", subtitle: "@bob")
         ],
-        onConnect: { contact in
-            // Called when user taps Connect
-            // Return true to create an invitation via Vortex API
-            // Return false to cancel
-            print("Connecting to \(contact.name)")
-            return true
-        },
         onInvitationCreated: { contact in
+            // Called after an invitation is successfully created
+            // Use this to trigger in-app notifications
             print("Invitation created for \(contact.name)")
-        },
-        onInvitationFailed: { contact, error in
-            print("Failed to invite \(contact.name): \(error)")
         }
     ),
     onDismiss: { /* ... */ }
@@ -248,10 +240,10 @@ VortexInviteView(
 **How It Works:**
 
 1. Your app provides a list of contacts with internal IDs (users already in your platform)
-2. The component displays them with a "Connect" button
-3. When the user taps "Connect", your `onConnect` callback is called
-4. If `onConnect` returns `true`, the SDK creates an invitation via the Vortex API with `targetType: internalId`
-5. The `onInvitationCreated` or `onInvitationFailed` callback is called based on the result
+2. The component displays them with a "Connect" button (text configurable via widget config)
+3. When the user taps "Connect", the SDK creates an invitation via the Vortex API with `targetType: internalId`
+4. The `onInvitationCreated` callback is called after a successful invitation
+5. The section is hidden when there are no contacts to display
 
 **FindFriendsContact Properties:**
 
@@ -269,12 +261,8 @@ FindFriendsContact(
 
 ```swift
 FindFriendsConfig(
-    contacts: [FindFriendsContact],                      // Required: List of contacts to display
-    onConnect: (FindFriendsContact) async -> Bool,       // Required: Return true to create invitation
-    onInvitationCreated: ((FindFriendsContact) -> Void)?,  // Called after successful invitation
-    onInvitationFailed: ((FindFriendsContact, Error) -> Void)?,  // Called on failure
-    connectButtonText: String = "Connect",               // Custom button text
-    emptyStateMessage: String = "No contacts found"      // Empty state message
+    contacts: [FindFriendsContact],                        // Required: List of contacts to display
+    onInvitationCreated: ((FindFriendsContact) -> Void)?   // Optional: Called after successful invitation
 )
 ```
 

@@ -101,18 +101,6 @@ struct FindFriendsView: View {
         .frame(minHeight: 120)
     }
     
-    // MARK: - Empty View
-    
-    private var emptyView: some View {
-        VStack {
-            Text(viewModel.findFriendsConfig?.emptyStateMessage ?? "No contacts found")
-                .font(.system(size: 14))
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding(16)
-        .frame(minHeight: 120)
-    }
     
     // MARK: - Contacts List View
     
@@ -153,11 +141,11 @@ private struct FindFriendsContactItemView: View {
     }
     
     private var buttonText: String {
-        // Priority: block.settings.customizations > findFriendsConfig > hardcoded default
+        // Get text from widget config customizations
         if let customText = block.settings?.customizations?["connectButton"]?.textContent {
             return customText
         }
-        return viewModel.findFriendsConfig?.connectButtonText ?? "Connect"
+        return "Connect"
     }
     
     // MARK: - Theme Color Helpers

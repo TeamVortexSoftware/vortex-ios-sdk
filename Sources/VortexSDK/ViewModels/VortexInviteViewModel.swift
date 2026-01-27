@@ -1811,21 +1811,14 @@ class VortexInviteViewModel: ObservableObject {
     // MARK: - Find Friends
     
     /// Handle Connect button tap for a contact in Find Friends
-    /// Calls the onConnect callback, and if it returns true, creates an invitation with targetType=internalId
+    /// Creates an invitation with targetType=internalId
     func handleFindFriendsConnect(_ contact: FindFriendsContact) {
-        guard let config = findFriendsConfig else { return }
+        guard findFriendsConfig != nil else { return }
         
         findFriendsActionInProgress = contact.id
         
         Task {
-            // Call the customer's onConnect callback
-            let shouldCreateInvitation = await config.onConnect(contact)
-            
-            if shouldCreateInvitation {
-                // Create invitation with targetType = internalId
-                await createInternalIdInvitation(for: contact)
-            }
-            
+            await createInternalIdInvitation(for: contact)
             findFriendsActionInProgress = nil
         }
     }
@@ -1833,7 +1826,6 @@ class VortexInviteViewModel: ObservableObject {
     /// Create an invitation with target type = internalId
     private func createInternalIdInvitation(for contact: FindFriendsContact) async {
         guard let jwt = jwt, let widgetConfig = configuration else {
-            findFriendsConfig?.onInvitationFailed?(contact, VortexError.missingConfiguration)
             return
         }
         
@@ -1877,7 +1869,7 @@ class VortexInviteViewModel: ObservableObject {
             findFriendsConfig?.onInvitationCreated?(contact)
             
         } catch {
-            findFriendsConfig?.onInvitationFailed?(contact, error)
+            // Invitation creation failed - contact remains in the list
         }
     }
     

@@ -38,50 +38,21 @@ public struct FindFriendsContact: Identifiable, Sendable {
 /// Passed to VortexInviteView to enable and configure the Find Friends component.
 ///
 /// The customer provides a list of contacts with internal IDs. When the user taps "Connect",
-/// the SDK calls the onConnect callback. If it returns true, an invitation with
-/// target type = internalId is created via the Vortex backend.
+/// the SDK creates an invitation with target type = internalId via the Vortex backend.
 public struct FindFriendsConfig {
     /// List of contacts to display.
     /// Each contact must have an internalId that identifies them in the customer's platform.
     public let contacts: [FindFriendsContact]
     
-    /// Called when user taps "Connect" on a contact.
-    /// The customer implements this callback to perform any pre-connection logic.
-    ///
-    /// If the callback returns true, the SDK will create an invitation via the
-    /// Vortex backend with target type = internalId.
-    ///
-    /// If the callback returns false, no invitation is created.
-    public let onConnect: (FindFriendsContact) async -> Bool
-    
     /// Optional: Called after an invitation is successfully created.
-    /// Use this to update your UI or local state.
+    /// Use this to trigger in-app notifications or update your UI.
     public let onInvitationCreated: ((FindFriendsContact) -> Void)?
-    
-    /// Optional: Called if creating the invitation fails.
-    public let onInvitationFailed: ((FindFriendsContact, Error) -> Void)?
-    
-    /// Optional: Custom text for the "Connect" button.
-    /// Default: "Connect"
-    public let connectButtonText: String
-    
-    /// Optional: Custom empty state message when no contacts are found.
-    /// Default: "No contacts found"
-    public let emptyStateMessage: String
     
     public init(
         contacts: [FindFriendsContact],
-        onConnect: @escaping (FindFriendsContact) async -> Bool,
-        onInvitationCreated: ((FindFriendsContact) -> Void)? = nil,
-        onInvitationFailed: ((FindFriendsContact, Error) -> Void)? = nil,
-        connectButtonText: String = "Connect",
-        emptyStateMessage: String = "No contacts found"
+        onInvitationCreated: ((FindFriendsContact) -> Void)? = nil
     ) {
         self.contacts = contacts
-        self.onConnect = onConnect
         self.onInvitationCreated = onInvitationCreated
-        self.onInvitationFailed = onInvitationFailed
-        self.connectButtonText = connectButtonText
-        self.emptyStateMessage = emptyStateMessage
     }
 }
