@@ -229,6 +229,135 @@ InviteContactsConfig(
 )
 ```
 
+### Find Friends
+
+The Find Friends component displays contacts classified as "members" (existing users) or "non-members" (potential invitees). Members show a "Connect" button, while non-members show an "Invite" button.
+
+**Basic Usage:**
+
+```swift
+import VortexSDK
+
+VortexInviteView(
+    componentId: "your-component-id",
+    jwt: jwt,
+    findFriendsConfig: FindFriendsConfig(
+        onClassifyContacts: { rawContacts in
+            // Call your backend to classify contacts
+            let classified = try await myAPI.classifyContacts(rawContacts)
+            return classified.map { contact in
+                FindFriendsClassifiedContact(
+                    id: contact.id,
+                    name: contact.name,
+                    emails: contact.emails,
+                    status: contact.isMember ? .member : .nonMember,
+                    platformUserId: contact.userId
+                )
+            }
+        },
+        onConnect: { contact in
+            // Handle connection (e.g., send friend request)
+            await myAPI.sendFriendRequest(to: contact.platformUserId!)
+        }
+    ),
+    onDismiss: { /* ... */ }
+)
+```
+
+**How It Works:**
+
+1. The SDK fetches contacts from device or Google
+2. Your `onClassifyContacts` callback classifies them as members or non-members
+3. Members are displayed with a "Connect" button
+4. Non-members are accessible via an "Invite your contacts" entry
+5. Tapping "Connect" triggers your `onConnect` callback
+6. Tapping "Invite" uses the SDK's invitation flow (or your custom `onInvite` callback)
+
+**Pre-classified Contacts (Instant Rendering):**
+
+For instant rendering without loading states, provide pre-classified contacts:
+
+```swift
+FindFriendsConfig(
+    classifiedContacts: preClassifiedContacts,  // Skip fetching, render immediately
+    onConnect: { contact in /* ... */ }
+)
+```
+
+**FindFriendsConfig Properties:**
+
+```swift
+FindFriendsConfig(
+    classifiedContacts: [FindFriendsClassifiedContact]?,  // Pre-classified contacts (optional)
+    onClassifyContacts: (([FindFriendsRawContact]) async throws -> [FindFriendsClassifiedContact])?,  // Classification callback
+    onConnect: (FindFriendsClassifiedContact) async -> Void,  // Required: handle member connections
+    onInvite: ((FindFriendsClassifiedContact) async -> Void)?,  // Optional: custom invite logic
+    connectButtonText: String = "Connect",
+    inviteButtonText: String = "Invite",
+    emptyStateMessage: String = "No contacts found",
+    loadingMessage: String = "Finding friends...",
+    inviteContactsEntryText: String = "Invite your contacts",
+    onNavigateToInviteContacts: (() -> Void)?,  // Analytics callback
+    onNavigateBackFromInviteContacts: (() -> Void)?  // Analytics callback
+)
+```
+
+### Incoming Invitations
+
+The Incoming Invitations component displays invitations the user has received, with Accept and Delete actions.
+
+**Basic Usage:**
+
+```swift
+import VortexSDK
+
+VortexInviteView(
+    componentId: "your-component-id",
+    jwt: jwt,
+    incomingInvitationsConfig: IncomingInvitationsConfig(
+        onAccept: { invitation in
+            // Handle acceptance (return true to proceed with API call)
+            await myAPI.acceptInvitation(invitation.id)
+            return true
+        },
+        onDelete: { invitation in
+            // Handle deletion (return true to proceed with API call)
+            return true
+        }
+    ),
+    onDismiss: { /* ... */ }
+)
+```
+
+**With Internal Invitations:**
+
+You can merge your app's invitations with Vortex API invitations:
+
+```swift
+IncomingInvitationsConfig(
+    internalInvitations: [
+        IncomingInvitationItem(
+            id: "internal-1",
+            name: "Alice Johnson",
+            subtitle: "alice@example.com",
+            avatarUrl: "https://example.com/avatar.jpg"
+        )
+    ],
+    onAccept: { invitation in /* ... */ return true },
+    onDelete: { invitation in /* ... */ return true }
+)
+```
+
+**IncomingInvitationsConfig Properties:**
+
+```swift
+IncomingInvitationsConfig(
+    internalInvitations: [IncomingInvitationItem]?,  // App-provided invitations
+    onAccept: ((IncomingInvitationItem) async -> Bool)?,  // Return true to proceed
+    onDelete: ((IncomingInvitationItem) async -> Bool)?   // Return true to proceed
+)
+```
+
 ## Authentication
 
 The SDK requires a JWT token for authentication. You should obtain this token from your backend server:
@@ -263,17 +392,37 @@ VortexInviteView(
     componentId: String,
     jwt: String?,
     apiBaseURL: URL = URL(string: "https://client-api.vortexsoftware.com")!,
+    analyticsBaseURL: URL? = nil,
     group: GroupDTO? = nil,
-    onDismiss: (() -> Void)? = nil
+    googleIosClientId: String? = nil,
+    onEvent: ((VortexAnalyticsEvent) -> Void)? = nil,
+    segmentation: [String: Any]? = nil,
+    onDismiss: (() -> Void)? = nil,
+    widgetConfiguration: WidgetConfiguration? = nil,
+    deploymentId: String? = nil,
+    findFriendsConfig: FindFriendsConfig? = nil,
+    inviteContactsConfig: InviteContactsConfig? = nil,
+    incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
+    locale: String? = nil
 )
 ```
 
 **Parameters:**
 - `componentId`: Your widget/component ID from the Vortex dashboard
-- `jwt`: JWT authentication token (required)
+- `jwt`: JWT authentication token (required for API access)
 - `apiBaseURL`: Base URL of the Vortex API (defaults to production)
+- `analyticsBaseURL`: Base URL of the analytics collector (defaults to production). Only override for development/staging.
 - `group`: Optional group context for scoped invitations
+- `googleIosClientId`: Google iOS Client ID for Google Contacts integration (optional)
+- `onEvent`: Callback for analytics events (optional)
+- `segmentation`: Optional segmentation data for analytics
 - `onDismiss`: Callback invoked when the view is dismissed
+- `widgetConfiguration`: Optional pre-fetched configuration for instant rendering (stale-while-revalidate)
+- `deploymentId`: Optional deployment ID associated with the widget configuration
+- `findFriendsConfig`: Optional configuration for the Find Friends feature (see [Find Friends](#find-friends))
+- `inviteContactsConfig`: Optional configuration for the Invite Contacts feature (see [Invite Contacts](#invite-contacts))
+- `incomingInvitationsConfig`: Optional configuration for the Incoming Invitations feature (see [Incoming Invitations](#incoming-invitations))
+- `locale`: Optional locale for internationalization (e.g., "pt-BR", "en-US")
 
 ### VortexClient
 
