@@ -50,6 +50,9 @@ public struct VortexInviteView: View {
     ///   - findFriendsConfig: Optional configuration for the Find Friends feature.
     ///     When provided, enables the Find Friends component to display contacts with
     ///     Connect/Invite buttons based on their membership status.
+    ///   - invitationSuggestionsConfig: Optional configuration for the Invitation Suggestions feature.
+    ///     When provided, enables the Invitation Suggestions component to display suggested
+    ///     contacts with Invite and Dismiss buttons.
     ///   - inviteContactsConfig: Optional configuration for the Invite Contacts feature.
     ///     When provided, enables the Invite Contacts component to display a list of
     ///     contacts that can be invited via SMS.
@@ -71,6 +74,7 @@ public struct VortexInviteView: View {
         widgetConfiguration: WidgetConfiguration? = nil,
         deploymentId: String? = nil,
         findFriendsConfig: FindFriendsConfig? = nil,
+        invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
         incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
         locale: String? = nil
@@ -88,6 +92,7 @@ public struct VortexInviteView: View {
             initialConfiguration: widgetConfiguration,
             initialDeploymentId: deploymentId,
             findFriendsConfig: findFriendsConfig,
+            invitationSuggestionsConfig: invitationSuggestionsConfig,
             inviteContactsConfig: inviteContactsConfig,
             outgoingInvitationsConfig: nil,
             incomingInvitationsConfig: incomingInvitationsConfig,
@@ -318,6 +323,8 @@ public struct VortexInviteView: View {
             return AnyView(EmptyView())
         case "vrtx-find-friends":
             return AnyView(FindFriendsView(block: block, viewModel: viewModel))
+        case "vrtx-invitation-suggestions":
+            return AnyView(InvitationSuggestionsView(block: block, viewModel: viewModel))
         case "vrtx-invite-contacts":
             return AnyView(InviteContactsView(block: block, viewModel: viewModel))
         case "vrtx-outgoing-invitations":

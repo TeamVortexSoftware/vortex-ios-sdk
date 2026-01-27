@@ -297,6 +297,87 @@ FindFriendsConfig(
 )
 ```
 
+### Invitation Suggestions
+
+The Invitation Suggestions component displays a list of suggested contacts provided by your app. Each contact has an "Invite" button and a dismiss (X) button. When the user taps "Invite", an invitation with `targetType: internalId` is created. The dismiss button removes the suggestion from the list.
+
+**Basic Usage:**
+
+```swift
+import VortexSDK
+
+VortexInviteView(
+    componentId: "your-component-id",
+    jwt: jwt,
+    invitationSuggestionsConfig: InvitationSuggestionsConfig(
+        contacts: [
+            InvitationSuggestionContact(
+                internalId: "user-123",
+                name: "Alice Johnson",
+                subtitle: "@alice",
+                avatarUrl: "https://example.com/alice-avatar.jpg"
+            ),
+            InvitationSuggestionContact(
+                internalId: "user-456",
+                name: "Bob Smith",
+                subtitle: "@bob"
+            )
+        ],
+        onInvite: { contact in
+            // Called when user taps Invite
+            // Return true to create an invitation via Vortex API
+            // Return false to cancel
+            print("Inviting \(contact.name)")
+            return true
+        },
+        onDismiss: { contact in
+            // Called when user taps the X button
+            print("Dismissed suggestion for \(contact.name)")
+        },
+        onInvitationCreated: { contact in
+            print("Invitation created for \(contact.name)")
+        },
+        onInvitationFailed: { contact, error in
+            print("Failed to invite \(contact.name): \(error)")
+        }
+    ),
+    onDismiss: { /* ... */ }
+)
+```
+
+**How It Works:**
+
+1. Your app provides a list of suggested contacts with internal IDs
+2. The component displays them with an "Invite" button and a dismiss (X) button
+3. When the user taps "Invite", your `onInvite` callback is called
+4. If `onInvite` returns `true`, the SDK creates an invitation via the Vortex API with `targetType: internalId`
+5. The `onInvitationCreated` or `onInvitationFailed` callback is called based on the result
+6. When the user taps the X button, the `onDismiss` callback is called and the contact is removed from the list
+
+**InvitationSuggestionContact Properties:**
+
+```swift
+InvitationSuggestionContact(
+    internalId: String,          // Required: ID in your platform
+    name: String,                // Required: Display name
+    subtitle: String?,           // Optional: Secondary text (e.g., username)
+    avatarUrl: String?,          // Optional: Avatar image URL (rendered instead of initials if provided)
+    metadata: [String: Any]?     // Optional: Custom metadata
+)
+```
+
+**InvitationSuggestionsConfig Properties:**
+
+```swift
+InvitationSuggestionsConfig(
+    contacts: [InvitationSuggestionContact],                      // Required: List of contacts to display
+    onInvite: (InvitationSuggestionContact) async -> Bool,        // Required: Return true to create invitation
+    onDismiss: (InvitationSuggestionContact) -> Void,             // Required: Called when user dismisses a suggestion
+    onInvitationCreated: ((InvitationSuggestionContact) -> Void)?,  // Called after successful invitation
+    onInvitationFailed: ((InvitationSuggestionContact, Error) -> Void)?  // Called on failure
+)
+```
+
 ### Incoming Invitations
 
 The Incoming Invitations component displays invitations the user has received, with Accept and Delete actions.
@@ -396,6 +477,7 @@ VortexInviteView(
     widgetConfiguration: WidgetConfiguration? = nil,
     deploymentId: String? = nil,
     findFriendsConfig: FindFriendsConfig? = nil,
+    invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
     inviteContactsConfig: InviteContactsConfig? = nil,
     incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
     locale: String? = nil
@@ -415,6 +497,7 @@ VortexInviteView(
 - `widgetConfiguration`: Optional pre-fetched configuration for instant rendering (stale-while-revalidate)
 - `deploymentId`: Optional deployment ID associated with the widget configuration
 - `findFriendsConfig`: Optional configuration for the Find Friends feature (see [Find Friends](#find-friends))
+- `invitationSuggestionsConfig`: Optional configuration for the Invitation Suggestions feature (see [Invitation Suggestions](#invitation-suggestions))
 - `inviteContactsConfig`: Optional configuration for the Invite Contacts feature (see [Invite Contacts](#invite-contacts))
 - `incomingInvitationsConfig`: Optional configuration for the Incoming Invitations feature (see [Incoming Invitations](#incoming-invitations))
 - `locale`: Optional locale for internationalization (e.g., "pt-BR", "en-US")

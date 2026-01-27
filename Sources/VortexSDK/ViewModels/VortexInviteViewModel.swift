@@ -24,6 +24,7 @@ public struct InvitationSentEvent: Equatable {
     public enum InvitationSource: String, Equatable {
         case inviteContacts = "invite_contacts"
         case findFriends = "find_friends"
+        case invitationSuggestions = "invitation_suggestions"
         case emailInvitations = "email_invitations"
         case shareLink = "share_link"
     }
@@ -75,6 +76,11 @@ class VortexInviteViewModel: ObservableObject {
     @Published var findFriendsActionInProgress: String? = nil
     @Published var connectedFindFriendsContactIds: Set<String> = []
     
+    // Invitation Suggestions state
+    @Published var invitationSuggestionsActionInProgress: String? = nil
+    @Published var invitedInvitationSuggestionIds: Set<String> = []
+    @Published var dismissedInvitationSuggestionIds: Set<String> = []
+    
     /// Filtered contacts based on search query
     var filteredContacts: [VortexContact] {
         if contactsSearchQuery.isEmpty {
@@ -113,6 +119,9 @@ class VortexInviteViewModel: ObservableObject {
     
     // Find Friends
     let findFriendsConfig: FindFriendsConfig?
+    
+    // Invitation Suggestions
+    let invitationSuggestionsConfig: InvitationSuggestionsConfig?
     
     // Invite Contacts
     let inviteContactsConfig: InviteContactsConfig?
@@ -476,6 +485,7 @@ class VortexInviteViewModel: ObservableObject {
         initialConfiguration: WidgetConfiguration? = nil,
         initialDeploymentId: String? = nil,
         findFriendsConfig: FindFriendsConfig? = nil,
+        invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
         outgoingInvitationsConfig: OutgoingInvitationsConfig? = nil,
         incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
@@ -492,6 +502,7 @@ class VortexInviteViewModel: ObservableObject {
         self.initialConfiguration = initialConfiguration
         self.initialDeploymentId = initialDeploymentId
         self.findFriendsConfig = findFriendsConfig
+        self.invitationSuggestionsConfig = invitationSuggestionsConfig
         self.inviteContactsConfig = inviteContactsConfig
         self.outgoingInvitationsConfig = outgoingInvitationsConfig
         self.incomingInvitationsConfig = incomingInvitationsConfig
@@ -1874,6 +1885,88 @@ class VortexInviteViewModel: ObservableObject {
             
         } catch {
             findFriendsConfig?.onInvitationFailed?(contact, error)
+        }
+    }
+    
+    // MARK: - Invitation Suggestions
+    
+    /// Handle Invite button tap for a contact in Invitation Suggestions
+    /// Calls the onInvite callback, and if it returns true, creates an invitation with targetType=internalId
+    func handleInvitationSuggestionInvite(_ contact: InvitationSuggestionContact) {
+        guard let config = invitationSuggestionsConfig else { return }
+        
+        invitationSuggestionsActionInProgress = contact.id
+        
+        Task {
+            // Call the customer's onInvite callback
+            let shouldCreateInvitation = await config.onInvite(contact)
+            
+            if shouldCreateInvitation {
+                // Create invitation with targetType = internalId
+                await createInvitationSuggestionInvitation(for: contact)
+            }
+            
+            invitationSuggestionsActionInProgress = nil
+        }
+    }
+    
+    /// Handle Dismiss (X) button tap for a contact in Invitation Suggestions
+    func handleInvitationSuggestionDismiss(_ contact: InvitationSuggestionContact) {
+        // Mark as dismissed so it's removed from the list
+        dismissedInvitationSuggestionIds.insert(contact.id)
+        
+        // Call the customer's onDismiss callback
+        invitationSuggestionsConfig?.onDismiss(contact)
+    }
+    
+    /// Create an invitation for an invitation suggestion with target type = internalId
+    private func createInvitationSuggestionInvitation(for contact: InvitationSuggestionContact) async {
+        guard let jwt = jwt, let widgetConfig = configuration else {
+            invitationSuggestionsConfig?.onInvitationFailed?(contact, VortexError.missingConfiguration)
+            return
+        }
+        
+        // The backend extracts targets from payload fields with type: "internal"
+        // Key must be "internalId" (camelCase) to match React Native SDK
+        // The value is an object { value: internalId, name: contactName } so the backend can populate target_name
+        let payload: [String: Any] = [
+            "internalId": [
+                "type": "internal",
+                "value": [
+                    "value": contact.internalId,
+                    "name": contact.name
+                ]
+            ]
+        ]
+        
+        var groups: [GroupDTO]? = nil
+        if let group = group {
+            groups = [group]
+        }
+        
+        do {
+            _ = try await client.createInvitation(
+                jwt: jwt,
+                widgetConfigurationId: widgetConfig.id,
+                payload: payload,
+                source: "other",
+                groups: groups
+            )
+            
+            // Fire the invitation sent event so other components (like Outgoing Invitations) can refresh
+            invitationSentEvent = InvitationSentEvent(
+                source: .invitationSuggestions,
+                shortLink: ""
+            )
+            
+            // Mark contact as invited so it's removed from the list
+            invitedInvitationSuggestionIds.insert(contact.id)
+            
+            // Notify the customer that the invitation was created
+            invitationSuggestionsConfig?.onInvitationCreated?(contact)
+            
+        } catch {
+            invitationSuggestionsConfig?.onInvitationFailed?(contact, error)
         }
     }
 }
