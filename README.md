@@ -132,19 +132,6 @@ VortexInviteView(
 )
 ```
 
-**Pass Configuration Directly**
-
-If you have a configuration from another source, pass it directly:
-
-```swift
-VortexInviteView(
-    componentId: "your-component-id",
-    jwt: jwt,
-    widgetConfiguration: prefetchedConfig,
-    onDismiss: { /* ... */ }
-)
-```
-
 ### Invite Contacts
 
 The Invite Contacts component displays a list of contacts that can be invited via SMS. Unlike the Contact Import feature (which fetches contacts from the device), Invite Contacts receives a pre-populated list of contacts from your app.
@@ -464,7 +451,6 @@ VortexInviteView(
     googleIosClientId: String? = nil,
     onEvent: ((VortexAnalyticsEvent) -> Void)? = nil,
     onDismiss: (() -> Void)? = nil,
-    widgetConfiguration: WidgetConfiguration? = nil,
     findFriendsConfig: FindFriendsConfig? = nil,
     invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
     inviteContactsConfig: InviteContactsConfig? = nil,
@@ -481,7 +467,6 @@ VortexInviteView(
 - `googleIosClientId`: Google iOS Client ID for Google Contacts integration (optional)
 - `onEvent`: Callback for analytics events (optional)
 - `onDismiss`: Callback invoked when the view is dismissed
-- `widgetConfiguration`: Optional pre-fetched configuration for instant rendering (stale-while-revalidate)
 - `findFriendsConfig`: Optional configuration for the Find Friends feature (see [Find Friends](#find-friends))
 - `invitationSuggestionsConfig`: Optional configuration for the Invitation Suggestions feature (see [Invitation Suggestions](#invitation-suggestions))
 - `inviteContactsConfig`: Optional configuration for the Invite Contacts feature (see [Invite Contacts](#invite-contacts))

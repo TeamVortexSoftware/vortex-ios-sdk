@@ -17,16 +17,7 @@ import GoogleSignIn
 ///    ```swift
 ///    let prefetcher = VortexConfigurationPrefetcher(componentId: "your-id")
 ///    await prefetcher.prefetch(jwt: jwt)
-///    // Later, VortexInviteView will use the cached configuration
-///    ```
-///
-/// 3. **Pass configuration directly**: If you have a configuration from another source:
-///    ```swift
-///    VortexInviteView(
-///        componentId: "your-id",
-///        jwt: jwt,
-///        widgetConfiguration: prefetchedConfig
-///    )
+///    // Later, VortexInviteView will use the cached configuration automatically
 ///    ```
 public struct VortexInviteView: View {
     @StateObject private var viewModel: VortexInviteViewModel
@@ -42,9 +33,6 @@ public struct VortexInviteView: View {
     ///   - googleIosClientId: Google iOS Client ID for Google Contacts integration (optional)
     ///   - onEvent: Callback for analytics events (optional)
     ///   - onDismiss: Callback when the view is dismissed
-    ///   - widgetConfiguration: Optional pre-fetched widget configuration for instant rendering.
-    ///     If provided, the view renders immediately without showing a loading spinner.
-    ///     Fresh configuration is still fetched in the background (stale-while-revalidate).
     ///   - findFriendsConfig: Optional configuration for the Find Friends feature.
     ///     When provided, enables the Find Friends component to display contacts with
     ///     Connect/Invite buttons based on their membership status.
@@ -71,7 +59,6 @@ public struct VortexInviteView: View {
         googleIosClientId: String? = nil,
         onEvent: ((VortexAnalyticsEvent) -> Void)? = nil,
         onDismiss: (() -> Void)? = nil,
-        widgetConfiguration: WidgetConfiguration? = nil,
         findFriendsConfig: FindFriendsConfig? = nil,
         invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
@@ -97,7 +84,6 @@ public struct VortexInviteView: View {
             googleIosClientId: googleIosClientId,
             onEvent: onEvent,
             onDismiss: onDismiss,
-            initialConfiguration: widgetConfiguration,
             findFriendsConfig: findFriendsConfig,
             invitationSuggestionsConfig: invitationSuggestionsConfig,
             inviteContactsConfig: inviteContactsConfig,

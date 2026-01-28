@@ -467,9 +467,6 @@ class VortexInviteViewModel: ObservableObject {
     /// Default production analytics collector URL
     private static let defaultAnalyticsBaseURL = URL(string: "https://collector.vortexsoftware.com")!
     
-    /// Optional initial configuration passed from prefetcher or cache
-    private var initialConfiguration: WidgetConfiguration?
-    
     init(
         componentId: String,
         jwt: String?,
@@ -479,7 +476,6 @@ class VortexInviteViewModel: ObservableObject {
         googleIosClientId: String? = nil,
         onEvent: ((VortexAnalyticsEvent) -> Void)? = nil,
         onDismiss: (() -> Void)?,
-        initialConfiguration: WidgetConfiguration? = nil,
         findFriendsConfig: FindFriendsConfig? = nil,
         invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
@@ -494,7 +490,6 @@ class VortexInviteViewModel: ObservableObject {
         self.onEvent = onEvent
         self.onDismiss = onDismiss
         self.client = VortexClient(baseURL: apiBaseURL)
-        self.initialConfiguration = initialConfiguration
         self.findFriendsConfig = findFriendsConfig
         self.invitationSuggestionsConfig = invitationSuggestionsConfig
         self.inviteContactsConfig = inviteContactsConfig
@@ -716,15 +711,10 @@ class VortexInviteViewModel: ObservableObject {
             return
         }
         
-        // Step 1: Check for initial configuration (passed via init) or cached configuration
+        // Step 1: Check for cached configuration (from prefetcher or previous load)
         var hasCachedConfig = false
         
-        if let initial = initialConfiguration {
-            // Use configuration passed via init (from prefetcher or parent view)
-            configuration = initial
-            deploymentId = initial.deploymentId
-            hasCachedConfig = true
-        } else if let cached = await VortexConfigurationCache.shared.get(componentId, locale: locale) {
+        if let cached = await VortexConfigurationCache.shared.get(componentId, locale: locale) {
             // Use configuration from shared cache (locale-aware)
             configuration = cached.configuration
             deploymentId = cached.deploymentId
