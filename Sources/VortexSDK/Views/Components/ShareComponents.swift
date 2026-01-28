@@ -171,6 +171,23 @@ struct ShareButton: View {
         theme?.buttonTextColor ?? Self.defaultDarkColor
     }
     
+    /// Get textAlign from theme options and map to HorizontalAlignment
+    /// Matches RN SDK behavior: left/start → leading, right/end → trailing, default → center
+    private var buttonAlignment: Alignment {
+        guard let options = theme?.options,
+              let textAlign = options.first(where: { $0.key == "--vrtx-icon-button-text-align" })?.value else {
+            return .center
+        }
+        switch textAlign {
+        case "left", "start":
+            return .leading
+        case "right", "end":
+            return .trailing
+        default:
+            return .center
+        }
+    }
+    
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
@@ -187,7 +204,7 @@ struct ShareButton: View {
                 Text(title)
                     .fontWeight(.medium)
             }
-            .frame(maxWidth: .infinity)
+            .frame(maxWidth: .infinity, alignment: buttonAlignment)
             .padding(.vertical, 12)
             .padding(.horizontal, 16)
             .backgroundStyle(backgroundStyle)
