@@ -275,13 +275,6 @@ VortexInviteView(
                 subtitle: "@bob"
             )
         ],
-        onInvite: { contact in
-            // Called when user taps Invite
-            // Return true to create an invitation via Vortex API
-            // Return false to cancel
-            print("Inviting \(contact.name)")
-            return true
-        },
         onDismiss: { contact in
             // Called when user taps the X button
             print("Dismissed suggestion for \(contact.name)")
@@ -301,10 +294,9 @@ VortexInviteView(
 
 1. Your app provides a list of suggested contacts with internal IDs
 2. The component displays them with an "Invite" button and a dismiss (X) button
-3. When the user taps "Invite", your `onInvite` callback is called
-4. If `onInvite` returns `true`, the SDK creates an invitation via the Vortex API with `targetType: internalId`
-5. The `onInvitationCreated` or `onInvitationFailed` callback is called based on the result
-6. When the user taps the X button, the `onDismiss` callback is called and the contact is removed from the list
+3. When the user taps "Invite", the SDK creates an invitation via the Vortex API with `targetType: internalId`
+4. The `onInvitationCreated` or `onInvitationFailed` callback is called based on the result
+5. When the user taps the X button, the `onDismiss` callback is called and the contact is removed from the list
 
 **InvitationSuggestionContact Properties:**
 
@@ -323,7 +315,6 @@ InvitationSuggestionContact(
 ```swift
 InvitationSuggestionsConfig(
     contacts: [InvitationSuggestionContact],                      // Required: List of contacts to display
-    onInvite: (InvitationSuggestionContact) async -> Bool,        // Required: Return true to create invitation
     onDismiss: (InvitationSuggestionContact) -> Void,             // Required: Called when user dismisses a suggestion
     onInvitationCreated: ((InvitationSuggestionContact) -> Void)?,  // Called after successful invitation
     onInvitationFailed: ((InvitationSuggestionContact, Error) -> Void)?  // Called on failure

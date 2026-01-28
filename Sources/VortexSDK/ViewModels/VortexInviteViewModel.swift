@@ -1941,9 +1941,9 @@ class VortexInviteViewModel: ObservableObject {
     // MARK: - Invitation Suggestions
     
     /// Handle Invite button tap for a contact in Invitation Suggestions
-    /// Calls the onInvite callback, and if it returns true, creates an invitation with targetType=internalId
+    /// Creates an invitation with targetType=internalId
     func handleInvitationSuggestionInvite(_ contact: InvitationSuggestionContact) {
-        guard let config = invitationSuggestionsConfig else { return }
+        guard invitationSuggestionsConfig != nil else { return }
 
         // Track the PYMK invite button click
         trackPymkInvite(suggestionId: contact.id, suggestionName: contact.name)
@@ -1951,13 +1951,8 @@ class VortexInviteViewModel: ObservableObject {
         invitationSuggestionsActionInProgress = contact.id
 
         Task {
-            // Call the customer's onInvite callback
-            let shouldCreateInvitation = await config.onInvite(contact)
-            
-            if shouldCreateInvitation {
-                // Create invitation with targetType = internalId
-                await createInvitationSuggestionInvitation(for: contact)
-            }
+            // Create invitation with targetType = internalId
+            await createInvitationSuggestionInvitation(for: contact)
             
             invitationSuggestionsActionInProgress = nil
         }
