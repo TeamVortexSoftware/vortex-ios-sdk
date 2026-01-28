@@ -360,21 +360,15 @@ struct InviteContactsView: View {
             showContactsList = true
         }) {
             HStack {
-                HStack(spacing: 8) {
-                    Text(inviteYourContactsText)
-                        .font(.system(size: titleFontSize, weight: titleFontWeight))
-                        .foregroundColor(titleColor)
-                    
-                    Text("\(contacts.count)")
-                        .font(.system(size: titleFontSize, weight: titleFontWeight))
-                        .foregroundColor(titleColor)
-                }
+                Text(inviteYourContactsText)
+                    .font(.system(size: titleFontSize, weight: titleFontWeight))
+                    .foregroundColor(titleColor)
                 
                 Spacer()
                 
                 Text("›")
-                    .font(.system(size: 24, weight: .light))
-                    .foregroundColor(secondaryForegroundColor)
+                    .font(.system(size: titleFontSize, weight: titleFontWeight))
+                    .foregroundColor(titleColor)
             }
             .padding(.vertical, 16)
         }
