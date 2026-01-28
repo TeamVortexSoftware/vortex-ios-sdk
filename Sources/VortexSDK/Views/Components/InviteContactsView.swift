@@ -274,6 +274,48 @@ struct InviteContactsView: View {
         viewModel.themeBorder ?? Color(UIColor.separator)
     }
     
+    // MARK: - Title Styles (from block.theme.options)
+    
+    /// Get a theme option value from block.theme.options by key
+    private func getBlockThemeValue(_ key: String) -> String? {
+        guard let options = block.theme?.options else { return nil }
+        return options.first { $0.key == key }?.value
+    }
+    
+    private var titleColor: Color {
+        if let value = getBlockThemeValue("--vrtx-invite-contacts-title-color"),
+           let color = Color(hex: value) {
+            return color
+        }
+        return foregroundColor
+    }
+    
+    private var titleFontSize: CGFloat {
+        if let value = getBlockThemeValue("--vrtx-invite-contacts-title-font-size"),
+           let size = Double(value.replacingOccurrences(of: "px", with: "")) {
+            return CGFloat(size)
+        }
+        return 16
+    }
+    
+    private var titleFontWeight: Font.Weight {
+        if let value = getBlockThemeValue("--vrtx-invite-contacts-title-font-weight") {
+            switch value.lowercased() {
+            case "100", "thin": return .thin
+            case "200", "ultralight": return .ultraLight
+            case "300", "light": return .light
+            case "400", "normal", "regular": return .regular
+            case "500", "medium": return .medium
+            case "600", "semibold": return .semibold
+            case "700", "bold": return .bold
+            case "800", "heavy": return .heavy
+            case "900", "black": return .black
+            default: return .medium
+            }
+        }
+        return .medium
+    }
+    
     var body: some View {
         Group {
             // If no config or empty contacts, render nothing
@@ -320,13 +362,12 @@ struct InviteContactsView: View {
             HStack {
                 HStack(spacing: 8) {
                     Text(inviteYourContactsText)
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundColor(foregroundColor)
+                        .font(.system(size: titleFontSize, weight: titleFontWeight))
+                        .foregroundColor(titleColor)
                     
                     Text("\(contacts.count)")
-                        .font(.system(size: 14))
-                        .foregroundColor(secondaryForegroundColor)
-                        .opacity(0.7)
+                        .font(.system(size: titleFontSize, weight: titleFontWeight))
+                        .foregroundColor(titleColor)
                 }
                 
                 Spacer()
