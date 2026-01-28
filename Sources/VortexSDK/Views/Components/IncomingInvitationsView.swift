@@ -7,6 +7,7 @@ struct IncomingInvitationsView: View {
     let config: IncomingInvitationsConfig?
     let client: VortexClient?
     let jwt: String?
+    @ObservedObject var viewModel: VortexInviteViewModel
     
     @State private var invitations: [IncomingInvitationItem] = []
     @State private var isLoading = true
@@ -288,7 +289,10 @@ struct IncomingInvitationsView: View {
     
     private func handleAccept(_ invitation: IncomingInvitationItem) async {
         actionInProgress = invitation.id
-        
+
+        // Track the accept button click
+        viewModel.trackInboundInvitationAccept(invitationId: invitation.id, inviterName: invitation.name)
+
         // Call the callback if provided
         var shouldProceed = true
         if let onAccept = config?.onAccept {
@@ -325,7 +329,10 @@ struct IncomingInvitationsView: View {
     
     private func handleDelete(_ invitation: IncomingInvitationItem) async {
         actionInProgress = invitation.id
-        
+
+        // Track the delete button click
+        viewModel.trackInboundInvitationDelete(invitationId: invitation.id, inviterName: invitation.name)
+
         // Call the callback if provided
         var shouldProceed = true
         if let onDelete = config?.onDelete {

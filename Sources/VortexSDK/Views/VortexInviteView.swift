@@ -349,7 +349,8 @@ public struct VortexInviteView: View {
                 theme: block.theme,
                 config: viewModel.incomingInvitationsConfig,
                 client: viewModel.client,
-                jwt: viewModel.jwt
+                jwt: viewModel.jwt,
+                viewModel: viewModel
             ))
         
         // MARK: - Content Elements (fully supported)
