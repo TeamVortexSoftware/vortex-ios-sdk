@@ -619,6 +619,41 @@ class VortexInviteViewModel: ObservableObject {
         ])
     }
 
+    // MARK: - Invitation Action Events
+
+    /// Track inbound invitation accept button click event
+    /// - Parameters:
+    ///   - invitationId: The ID of the invitation being accepted
+    ///   - inviterName: The name of the person who sent the invitation
+    func trackInboundInvitationAccept(invitationId: String, inviterName: String) {
+        trackEvent(.inboundInvitationAcceptClicked, payload: [
+            "invitationId": invitationId,
+            "inviterName": inviterName
+        ])
+    }
+
+    /// Track inbound invitation delete button click event
+    /// - Parameters:
+    ///   - invitationId: The ID of the invitation being deleted
+    ///   - inviterName: The name of the person who sent the invitation
+    func trackInboundInvitationDelete(invitationId: String, inviterName: String) {
+        trackEvent(.inboundInvitationDeleteClicked, payload: [
+            "invitationId": invitationId,
+            "inviterName": inviterName
+        ])
+    }
+
+    /// Track outbound invitation delete button click event
+    /// - Parameters:
+    ///   - invitationId: The ID of the invitation being deleted/cancelled
+    ///   - inviteeName: The name of the recipient of the invitation
+    func trackOutboundInvitationDelete(invitationId: String, inviteeName: String) {
+        trackEvent(.outboundInvitationDeleteClicked, payload: [
+            "invitationId": invitationId,
+            "inviteeName": inviteeName
+        ])
+    }
+
     // MARK: - Deprecated/Removed Events
 
     // trackEmailValidationError is not used - validation errors should be tracked via

@@ -248,12 +248,15 @@ struct OutgoingInvitationsView: View {
     
     private func cancelInvitation(_ item: OutgoingInvitationItem) async {
         actionInProgress = item.id
-        
+
+        // Track the cancel/delete button click
+        viewModel.trackOutboundInvitationDelete(invitationId: item.id, inviteeName: item.name)
+
         guard let jwt = jwt else {
             actionInProgress = nil
             return
         }
-        
+
         do {
             try await client.revokeInvitation(jwt: jwt, invitationId: item.id)
             await config?.onCancel?(item.invitation)
