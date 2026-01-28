@@ -172,7 +172,7 @@ public enum VortexEventName: String, CaseIterable, Sendable {
     /// Emitted when a sharing destination button is clicked.
     case sharingDestinationButtonClicked = "sharingDestination_button_clicked"
 
-    // MARK: - Inbound Invitation Events (requested by Mixerbox)
+    // MARK: - Inbound Invitation Events
 
     /// Emitted when accept button is clicked on an inbound invitation.
     case inboundInvitationAcceptClicked = "inboundInvitationAccept_button_clicked"
@@ -180,12 +180,12 @@ public enum VortexEventName: String, CaseIterable, Sendable {
     /// Emitted when delete button is clicked on an inbound invitation.
     case inboundInvitationDeleteClicked = "inboundInvitationDelete_button_clicked"
 
-    // MARK: - Outbound Invitation Events (requested by Mixerbox)
+    // MARK: - Outbound Invitation Events
 
     /// Emitted when delete button is clicked on an outbound invitation.
     case outboundInvitationDeleteClicked = "outboundInvitationDelete_button_clicked"
 
-    // MARK: - People You May Know (PYMK) Events (requested by Mixerbox)
+    // MARK: - People You May Know (PYMK) Events
 
     /// Emitted when invite button is clicked on a PYMK suggestion.
     case pymkInviteClicked = "pymkInvite_button_clicked"
@@ -193,7 +193,7 @@ public enum VortexEventName: String, CaseIterable, Sendable {
     /// Emitted when delete button is clicked on a PYMK suggestion.
     case pymkDeleteClicked = "pymkDelete_button_clicked"
 
-    // MARK: - Find Friends Events (requested by Mixerbox)
+    // MARK: - Find Friends Events
 
     /// Emitted when invite button is clicked in Find Friends.
     case findFriendsInviteClicked = "findFriendsInvite_button_clicked"
