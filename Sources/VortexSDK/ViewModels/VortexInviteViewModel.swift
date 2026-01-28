@@ -654,6 +654,43 @@ class VortexInviteViewModel: ObservableObject {
         ])
     }
 
+    // MARK: - PYMK (People You May Know) Events
+
+    /// Track PYMK invite button click event
+    /// - Parameters:
+    ///   - suggestionId: The ID of the suggestion being invited
+    ///   - suggestionName: The name of the person being invited
+    func trackPymkInvite(suggestionId: String, suggestionName: String) {
+        trackEvent(.pymkInviteClicked, payload: [
+            "suggestionId": suggestionId,
+            "suggestionName": suggestionName
+        ])
+    }
+
+    /// Track PYMK delete/dismiss button click event
+    /// - Parameters:
+    ///   - suggestionId: The ID of the suggestion being dismissed
+    ///   - suggestionName: The name of the person being dismissed
+    func trackPymkDelete(suggestionId: String, suggestionName: String) {
+        trackEvent(.pymkDeleteClicked, payload: [
+            "suggestionId": suggestionId,
+            "suggestionName": suggestionName
+        ])
+    }
+
+    // MARK: - Find Friends Events
+
+    /// Track find friends invite button click event
+    /// - Parameters:
+    ///   - contactId: The ID of the contact being invited
+    ///   - contactName: The name of the contact being invited
+    func trackFindFriendsInvite(contactId: String, contactName: String) {
+        trackEvent(.findFriendsInviteClicked, payload: [
+            "contactId": contactId,
+            "contactName": contactName
+        ])
+    }
+
     // MARK: - Deprecated/Removed Events
 
     // trackEmailValidationError is not used - validation errors should be tracked via
@@ -1849,9 +1886,12 @@ class VortexInviteViewModel: ObservableObject {
     /// Creates an invitation with targetType=internalId
     func handleFindFriendsConnect(_ contact: FindFriendsContact) {
         guard findFriendsConfig != nil else { return }
-        
+
+        // Track the find friends invite button click
+        trackFindFriendsInvite(contactId: contact.id, contactName: contact.name)
+
         findFriendsActionInProgress = contact.id
-        
+
         Task {
             await createInternalIdInvitation(for: contact)
             findFriendsActionInProgress = nil
@@ -1914,9 +1954,12 @@ class VortexInviteViewModel: ObservableObject {
     /// Calls the onInvite callback, and if it returns true, creates an invitation with targetType=internalId
     func handleInvitationSuggestionInvite(_ contact: InvitationSuggestionContact) {
         guard let config = invitationSuggestionsConfig else { return }
-        
+
+        // Track the PYMK invite button click
+        trackPymkInvite(suggestionId: contact.id, suggestionName: contact.name)
+
         invitationSuggestionsActionInProgress = contact.id
-        
+
         Task {
             // Call the customer's onInvite callback
             let shouldCreateInvitation = await config.onInvite(contact)
@@ -1932,9 +1975,12 @@ class VortexInviteViewModel: ObservableObject {
     
     /// Handle Dismiss (X) button tap for a contact in Invitation Suggestions
     func handleInvitationSuggestionDismiss(_ contact: InvitationSuggestionContact) {
+        // Track the PYMK delete/dismiss button click
+        trackPymkDelete(suggestionId: contact.id, suggestionName: contact.name)
+
         // Mark as dismissed so it's removed from the list
         dismissedInvitationSuggestionIds.insert(contact.id)
-        
+
         // Call the customer's onDismiss callback
         invitationSuggestionsConfig?.onDismiss(contact)
     }

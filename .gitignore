@@ -1,3 +1,4 @@
 /.build/
 /.output.txt
 /widget-config.json
+.DS_Store
