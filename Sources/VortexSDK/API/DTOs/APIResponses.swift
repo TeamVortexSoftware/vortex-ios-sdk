@@ -132,8 +132,21 @@ public struct MatchFingerprintRequest: Codable, Sendable {
 public struct DeferredLinkContext: Codable, Sendable {
     public let invitationId: String
     public let inviterId: String?
-    public let groupId: String?
     public let metadata: [String: AnyCodable]?
+    
+    /// Scope identifier from the invitation (e.g., team ID, project ID)
+    public var scope: String? { groupId }
+    
+    /// Type of the scope (e.g., "team", "project")
+    public var scopeType: String? { groupType }
+    
+    // Internal: maps from API's "groupId" and "groupType" fields
+    private let groupId: String?
+    private let groupType: String?
+    
+    private enum CodingKeys: String, CodingKey {
+        case invitationId, inviterId, groupId, groupType, metadata
+    }
 }
 
 /// Response from fingerprint matching endpoint

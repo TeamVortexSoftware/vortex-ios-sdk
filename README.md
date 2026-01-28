@@ -58,7 +58,7 @@ struct ContentView: View {
 }
 ```
 
-### With Group Context
+### With Scope Context
 
 ```swift
 import SwiftUI
@@ -76,15 +76,11 @@ struct TeamView: View {
             VortexInviteView(
                 componentId: "your-component-id",
                 jwt: authToken,
-                group: GroupDTO(
-                    id: team.id,
-                    groupId: team.id,
-                    type: "team",
-                    name: team.name
-                ),
                 onDismiss: {
                     showInviteForm = false
-                }
+                },
+                scope: team.id,
+                scopeType: "team"
             )
         }
     }
@@ -494,48 +490,6 @@ VortexInviteView(
 - `scope`: Scope identifier for scoping invitations (e.g., team ID, project ID). Used with `scopeType`.
 - `scopeType`: Type of the scope (e.g., "team", "project"). Used with `scope`.
 
-### VortexClient
-
-Low-level API client for direct backend communication.
-
-```swift
-let client = VortexClient(
-    baseURL: URL(string: "https://client-api.vortexsoftware.com")!
-)
-
-// Fetch configuration
-let config = try await client.getWidgetConfiguration(
-    componentId: "component-id",
-    jwt: "jwt-token"
-)
-
-// Create invitation
-let response = try await client.createInvitation(
-    jwt: "jwt-token",
-    widgetConfigurationId: config.id,
-    payload: ["invitee_email": ["value": "user@example.com", "type": "email"]],
-    groups: [GroupDTO(id: nil, groupId: "team-123", type: "team", name: "Engineering")]
-)
-
-// Get shareable link
-let linkResponse = try await client.getShareableLink(
-    jwt: "jwt-token",
-    widgetConfigurationId: config.id,
-    groups: [GroupDTO(id: nil, groupId: "team-123", type: "team", name: "Engineering")]
-)
-```
-
-### GroupDTO
-
-```swift
-struct GroupDTO {
-    let id: String?
-    let groupId: String?
-    let type: String
-    let name: String
-}
-```
-
 ## Deferred Deep Linking
 
 Deferred deep linking allows your app to retrieve invitation context even when a user installs the app after clicking an invitation link. When a user clicks an invitation link but doesn't have the app installed, they're redirected to the App Store. After installation, the SDK can match the device fingerprint to retrieve the original invitation context.
@@ -556,7 +510,7 @@ class AuthManager: ObservableObject {
                 print("Found pending invitation!")
                 print("Invitation ID: \(context.invitationId)")
                 print("Inviter ID: \(context.inviterId ?? "N/A")")
-                print("Group ID: \(context.groupId ?? "N/A")")
+                print("Scope: \(context.scope ?? "N/A")")
                 // Handle the invitation (e.g., show UI, auto-join group, etc.)
             }
         } catch {
@@ -583,7 +537,8 @@ struct MatchFingerprintResponse {
 struct DeferredLinkContext {
     let invitationId: String    // The original invitation ID
     let inviterId: String?      // ID of the user who sent the invitation
-    let groupId: String?        // Group/team ID if applicable
+    var scope: String?          // Scope identifier (e.g., team ID, project ID)
+    var scopeType: String?      // Type of the scope (e.g., "team", "project")
     let metadata: [String: AnyCodable]?  // Additional metadata
 }
 ```
