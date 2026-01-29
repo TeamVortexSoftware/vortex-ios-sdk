@@ -193,7 +193,7 @@ struct ShareButton: View {
             HStack(spacing: 8) {
                 if isLoading {
                     ProgressView()
-                        .tint(foregroundColor)
+                        .progressViewStyle(CircularProgressViewStyle(tint: foregroundColor))
                         .frame(width: 24, height: 18)
                 } else {
                     // Use width: 24, height: 18 to match RN SDK's buttonIconContainer

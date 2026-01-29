@@ -148,8 +148,10 @@ public struct VortexInviteView: View {
             .cornerRadius(20, corners: [.topLeft, .topRight])
         }
         .ignoresSafeArea()
-        .task {
-            await viewModel.loadConfiguration()
+        .onAppear {
+            Task {
+                await viewModel.loadConfiguration()
+            }
         }
     }
     
@@ -180,12 +182,19 @@ public struct VortexInviteView: View {
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
             
-            Button("Retry") {
+            Button(action: {
                 Task {
                     await viewModel.loadConfiguration()
                 }
+            }) {
+                Text("Retry")
+                    .fontWeight(.semibold)
+                    .padding(.horizontal, 20)
+                    .padding(.vertical, 10)
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
             }
-            .buttonStyle(.borderedProminent)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding()
@@ -433,15 +442,10 @@ public struct VortexInviteView: View {
             
             // Email input
             VStack(alignment: .leading, spacing: 8) {
-                TextField("Enter email addresses", text: $viewModel.emailInput)
-                    .textFieldStyle(.roundedBorder)
-                    .keyboardType(.emailAddress)
-                    .textContentType(.emailAddress)
-                    .autocapitalization(.none)
-                    .disableAutocorrection(true)
-                    .onSubmit {
-                        viewModel.addEmailFromInput()
-                    }
+                EmailInputField(
+                    text: $viewModel.emailInput,
+                    onCommit: { viewModel.addEmailFromInput() }
+                )
                 
                 Text("Press return to add each email")
                     .font(.caption)
@@ -786,9 +790,11 @@ public struct VortexInviteView: View {
             .cornerRadius(10)
         }
         .padding(.horizontal)
-        .task {
-            // Fetch shareable link when QR code view appears
-            await viewModel.fetchShareableLinkForQrCode()
+        .onAppear {
+            Task {
+                // Fetch shareable link when QR code view appears
+                await viewModel.fetchShareableLinkForQrCode()
+            }
         }
     }
     
@@ -827,5 +833,22 @@ public struct VortexInviteView: View {
         .background(Color.green.opacity(0.1))
         .cornerRadius(8)
         .padding(.horizontal)
+    }
+}
+
+// MARK: - Email Input Field (iOS 14 compatible)
+
+/// A text field for email input that supports onCommit on iOS 14+
+private struct EmailInputField: View {
+    @Binding var text: String
+    let onCommit: () -> Void
+    
+    var body: some View {
+        TextField("Enter email addresses", text: $text, onCommit: onCommit)
+            .textFieldStyle(RoundedBorderTextFieldStyle())
+            .keyboardType(.emailAddress)
+            .textContentType(.emailAddress)
+            .autocapitalization(.none)
+            .disableAutocorrection(true)
     }
 }

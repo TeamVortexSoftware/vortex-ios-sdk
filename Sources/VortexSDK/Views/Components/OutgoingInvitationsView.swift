@@ -73,23 +73,29 @@ struct OutgoingInvitationsView: View {
             }
         }
         .padding(.horizontal, 16)
-        .task {
-            await loadInvitations()
+        .onAppear {
+            Task {
+                await loadInvitations()
+            }
         }
         .onChange(of: viewModel.invitationSentEvent) { _ in
             Task {
                 await loadInvitations()
             }
         }
-        .alert(cancelConfirmTitle, isPresented: $showingCancelConfirmation, presenting: invitationToCancel) { item in
-            Button(dismissButtonText, role: .cancel) { }
-            Button(confirmButtonText, role: .destructive) {
-                Task {
-                    await cancelInvitation(item)
-                }
-            }
-        } message: { item in
-            Text(cancelConfirmMessage.replacingOccurrences(of: "{name}", with: item.name))
+        .alert(isPresented: $showingCancelConfirmation) {
+            Alert(
+                title: Text(cancelConfirmTitle),
+                message: Text(cancelConfirmMessage.replacingOccurrences(of: "{name}", with: invitationToCancel?.name ?? "")),
+                primaryButton: .destructive(Text(confirmButtonText)) {
+                    if let item = invitationToCancel {
+                        Task {
+                            await cancelInvitation(item)
+                        }
+                    }
+                },
+                secondaryButton: .cancel(Text(dismissButtonText))
+            )
         }
     }
     
@@ -160,15 +166,19 @@ struct OutgoingInvitationsView: View {
     @ViewBuilder
     private func avatarView(for item: OutgoingInvitationItem) -> some View {
         if let avatarUrl = item.avatarUrl, let url = URL(string: avatarUrl) {
-            AsyncImage(url: url) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
+            if #available(iOS 15.0, *) {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    initialsView(for: item.name)
+                }
+                .frame(width: 44, height: 44)
+                .clipShape(Circle())
+            } else {
                 initialsView(for: item.name)
             }
-            .frame(width: 44, height: 44)
-            .clipShape(Circle())
         } else {
             initialsView(for: item.name)
         }

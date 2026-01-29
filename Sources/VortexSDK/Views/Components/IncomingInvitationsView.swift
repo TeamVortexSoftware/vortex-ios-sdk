@@ -43,20 +43,24 @@ struct IncomingInvitationsView: View {
             }
         }
         .padding(.horizontal, 16)
-        .task {
-            await loadInvitations()
-        }
-        .alert(alertTitle, isPresented: $showingAlert) {
-            Button(cancelButtonText, role: .cancel) { }
-            Button(confirmButtonText) {
-                if let action = alertAction {
-                    Task {
-                        await action()
-                    }
-                }
+        .onAppear {
+            Task {
+                await loadInvitations()
             }
-        } message: {
-            Text(alertMessage)
+        }
+        .alert(isPresented: $showingAlert) {
+            Alert(
+                title: Text(alertTitle),
+                message: Text(alertMessage),
+                primaryButton: .default(Text(confirmButtonText)) {
+                    if let action = alertAction {
+                        Task {
+                            await action()
+                        }
+                    }
+                },
+                secondaryButton: .cancel(Text(cancelButtonText))
+            )
         }
     }
     
@@ -193,15 +197,19 @@ struct IncomingInvitationsView: View {
     @ViewBuilder
     private func avatarView(for invitation: IncomingInvitationItem) -> some View {
         if let avatarUrl = invitation.avatarUrl, let url = URL(string: avatarUrl) {
-            AsyncImage(url: url) { image in
-                image
-                    .resizable()
-                    .aspectRatio(contentMode: .fill)
-            } placeholder: {
+            if #available(iOS 15.0, *) {
+                AsyncImage(url: url) { image in
+                    image
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                } placeholder: {
+                    initialsView(for: invitation.name)
+                }
+                .frame(width: 44, height: 44)
+                .clipShape(Circle())
+            } else {
                 initialsView(for: invitation.name)
             }
-            .frame(width: 44, height: 44)
-            .clipShape(Circle())
         } else {
             initialsView(for: invitation.name)
         }
