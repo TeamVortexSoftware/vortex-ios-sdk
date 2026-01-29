@@ -107,23 +107,30 @@ struct ImageView: View {
     
     var body: some View {
         if let src = block.attributes?["src"]?.stringValue, let url = URL(string: src) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .empty:
-                    ProgressView()
-                        .frame(maxWidth: .infinity)
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                case .failure:
-                    Image(systemName: "photo")
-                        .foregroundColor(.secondary)
-                @unknown default:
-                    EmptyView()
+            if #available(iOS 15.0, *) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .empty:
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fit)
+                    case .failure:
+                        Image(systemName: "photo")
+                            .foregroundColor(.secondary)
+                    @unknown default:
+                        EmptyView()
+                    }
                 }
+                .padding(.horizontal)
+            } else {
+                // Fallback for iOS 14
+                Image(systemName: "photo")
+                    .foregroundColor(.secondary)
+                    .padding(.horizontal)
             }
-            .padding(.horizontal)
         }
     }
 }

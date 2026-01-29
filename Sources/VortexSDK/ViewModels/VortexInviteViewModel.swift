@@ -1,6 +1,8 @@
 import SwiftUI
 import Contacts
+#if canImport(GoogleSignIn)
 import GoogleSignIn
+#endif
 
 // MARK: - Invitation Sent Event
 
@@ -417,7 +419,9 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     var isGoogleContactsEnabled: Bool {
-        enabledComponents.contains("vortex.components.importcontacts.providers.google")
+        // Google Contacts requires iOS 15+ (GoogleSignIn SDK requirement)
+        guard #available(iOS 15.0, *) else { return false }
+        return enabledComponents.contains("vortex.components.importcontacts.providers.google")
     }
     
     var isEmailInvitationsEnabled: Bool {
@@ -1461,64 +1465,72 @@ class VortexInviteViewModel: ObservableObject {
     /// Sign in with Google and get access token
     @MainActor
     private func signInWithGoogle(clientId: String, presentingVC: UIViewController) async throws -> String {
-        // Configure GoogleSignIn with the client ID
-        GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientId)
-        
-        // Define the contacts scope
-        let contactsScope = "https://www.googleapis.com/auth/contacts.readonly"
-        
-        // Try silent sign-in first (uses cached credentials)
-        do {
-            if GIDSignIn.sharedInstance.hasPreviousSignIn() {
-                let user = try await GIDSignIn.sharedInstance.restorePreviousSignIn()
-                
-                // Check if we have the contacts scope
-                let grantedScopes = user.grantedScopes ?? []
-                if grantedScopes.contains(contactsScope) {
-                    // Refresh tokens if needed
-                    try await user.refreshTokensIfNeeded()
-                    guard let accessToken = user.accessToken.tokenString as String? else {
-                        throw GoogleContactsError.noAccessToken
+        #if canImport(GoogleSignIn)
+        if #available(iOS 15.0, *) {
+            // Configure GoogleSignIn with the client ID
+            GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientId)
+            
+            // Define the contacts scope
+            let contactsScope = "https://www.googleapis.com/auth/contacts.readonly"
+            
+            // Try silent sign-in first (uses cached credentials)
+            do {
+                if GIDSignIn.sharedInstance.hasPreviousSignIn() {
+                    let user = try await GIDSignIn.sharedInstance.restorePreviousSignIn()
+                    
+                    // Check if we have the contacts scope
+                    let grantedScopes = user.grantedScopes ?? []
+                    if grantedScopes.contains(contactsScope) {
+                        // Refresh tokens if needed
+                        try await user.refreshTokensIfNeeded()
+                        guard let accessToken = user.accessToken.tokenString as String? else {
+                            throw GoogleContactsError.noAccessToken
+                        }
+                        return accessToken
+                    } else {
+                        // Need to request additional scope - addScopes is on GIDGoogleUser in v7.x
+                        let result = try await user.addScopes([contactsScope], presenting: presentingVC)
+                        guard let accessToken = result.user.accessToken.tokenString as String? else {
+                            throw GoogleContactsError.noAccessToken
+                        }
+                        return accessToken
                     }
-                    return accessToken
-                } else {
-                    // Need to request additional scope - addScopes is on GIDGoogleUser in v7.x
-                    let result = try await user.addScopes([contactsScope], presenting: presentingVC)
-                    guard let accessToken = result.user.accessToken.tokenString as String? else {
-                        throw GoogleContactsError.noAccessToken
-                    }
-                    return accessToken
                 }
-            }
-        } catch {
-        }
-        
-        // Interactive sign-in
-        do {
-            let result = try await GIDSignIn.sharedInstance.signIn(
-                withPresenting: presentingVC,
-                hint: nil,
-                additionalScopes: [contactsScope]
-            )
-            
-            guard let accessToken = result.user.accessToken.tokenString as String? else {
-                throw GoogleContactsError.noAccessToken
+            } catch {
             }
             
-            return accessToken
-            
-        } catch let error as GIDSignInError {
-            switch error.code {
-            case .canceled:
-                throw GoogleContactsError.signInCancelled
-            case .hasNoAuthInKeychain:
+            // Interactive sign-in
+            do {
+                let result = try await GIDSignIn.sharedInstance.signIn(
+                    withPresenting: presentingVC,
+                    hint: nil,
+                    additionalScopes: [contactsScope]
+                )
+                
+                guard let accessToken = result.user.accessToken.tokenString as String? else {
+                    throw GoogleContactsError.noAccessToken
+                }
+                
+                return accessToken
+                
+            } catch let error as GIDSignInError {
+                switch error.code {
+                case .canceled:
+                    throw GoogleContactsError.signInCancelled
+                case .hasNoAuthInKeychain:
+                    throw GoogleContactsError.signInFailed(error)
+                default:
+                    throw GoogleContactsError.signInFailed(error)
+                }
+            } catch {
                 throw GoogleContactsError.signInFailed(error)
-            default:
-                throw GoogleContactsError.signInFailed(error)
             }
-        } catch {
-            throw GoogleContactsError.signInFailed(error)
+        } else {
+            throw GoogleContactsError.signInUnavailable
         }
+        #else
+        throw GoogleContactsError.signInUnavailable
+        #endif
     }
     
     /// Fetch contacts from Google People API

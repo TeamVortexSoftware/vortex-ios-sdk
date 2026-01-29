@@ -8,9 +8,11 @@ The Vortex iOS SDK provides a SwiftUI component for rendering customizable invit
 
 ## Requirements
 
-- iOS 15.0+
+- iOS 14.0+
 - Swift 5.9+
 - Xcode 14.0+
+
+> **Note:** Google Contacts integration requires iOS 15.0+. On iOS 14, all features except Google Contacts are available.
 
 ## Installation
 

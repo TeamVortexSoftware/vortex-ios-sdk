@@ -402,17 +402,21 @@ private struct FindFriendsContactItemView: View {
     @ViewBuilder
     private var avatarView: some View {
         if let avatarUrl = contact.avatarUrl, let url = URL(string: avatarUrl) {
-            AsyncImage(url: url) { phase in
-                switch phase {
-                case .success(let image):
-                    image
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 44, height: 44)
-                        .clipShape(Circle())
-                default:
-                    initialsView
+            if #available(iOS 15.0, *) {
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 44, height: 44)
+                            .clipShape(Circle())
+                    default:
+                        initialsView
+                    }
                 }
+            } else {
+                initialsView
             }
         } else {
             initialsView
