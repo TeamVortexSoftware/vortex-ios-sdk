@@ -369,6 +369,7 @@ struct InviteContactsView: View {
                 Text("›")
                     .font(.system(size: titleFontSize, weight: titleFontWeight))
                     .foregroundColor(titleColor)
+                    .opacity(0.75)
             }
             .padding(.vertical, 16)
         }
