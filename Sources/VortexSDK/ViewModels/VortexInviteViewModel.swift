@@ -814,7 +814,7 @@ class VortexInviteViewModel: ObservableObject {
                 valueObject["name"] = name
             }
             let smsTarget: [String: Any] = [
-                "type": "sms",
+                "type": "phone",
                 "value": [valueObject]
             ]
             let payload: [String: Any] = [
