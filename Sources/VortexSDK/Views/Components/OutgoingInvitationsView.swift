@@ -251,7 +251,7 @@ struct OutgoingInvitationsView: View {
             id: invitation.id,
             name: name,
             subtitle: subtitle,
-            avatarUrl: invitation.avatarUrl,
+            avatarUrl: target?.targetAvatarUrl,
             invitation: invitation
         )
     }
