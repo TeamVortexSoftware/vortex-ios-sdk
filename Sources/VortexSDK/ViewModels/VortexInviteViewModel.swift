@@ -1917,14 +1917,18 @@ class VortexInviteViewModel: ObservableObject {
         
         // The backend extracts targets from payload fields with type: "internal"
         // Key must be "internalId" (camelCase) to match React Native SDK
-        // The value is an object { value: internalId, name: contactName } so the backend can populate target_name
+        // The value is an object { value: internalId, name: contactName, avatarUrl?: string } so the backend can populate target fields
+        var targetValue: [String: Any] = [
+            "value": contact.internalId,
+            "name": contact.name
+        ]
+        if let avatarUrl = contact.avatarUrl {
+            targetValue["avatarUrl"] = avatarUrl
+        }
         let payload: [String: Any] = [
             "internalId": [
                 "type": "internal",
-                "value": [
-                    "value": contact.internalId,
-                    "name": contact.name
-                ]
+                "value": targetValue
             ]
         ]
         
@@ -2001,14 +2005,18 @@ class VortexInviteViewModel: ObservableObject {
         
         // The backend extracts targets from payload fields with type: "internal"
         // Key must be "internalId" (camelCase) to match React Native SDK
-        // The value is an object { value: internalId, name: contactName } so the backend can populate target_name
+        // The value is an object { value: internalId, name: contactName, avatarUrl?: string } so the backend can populate target fields
+        var targetValue: [String: Any] = [
+            "value": contact.internalId,
+            "name": contact.name
+        ]
+        if let avatarUrl = contact.avatarUrl {
+            targetValue["avatarUrl"] = avatarUrl
+        }
         let payload: [String: Any] = [
             "internalId": [
                 "type": "internal",
-                "value": [
-                    "value": contact.internalId,
-                    "name": contact.name
-                ]
+                "value": targetValue
             ]
         ]
         
@@ -2022,7 +2030,6 @@ class VortexInviteViewModel: ObservableObject {
                 jwt: jwt,
                 widgetConfigurationId: widgetConfig.id,
                 payload: payload,
-                source: "other",
                 groups: groups,
                 metadata: unfurlConfig?.toMetadata()
             )
