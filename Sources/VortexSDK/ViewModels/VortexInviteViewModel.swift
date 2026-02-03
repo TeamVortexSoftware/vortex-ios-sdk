@@ -2030,6 +2030,7 @@ class VortexInviteViewModel: ObservableObject {
                 jwt: jwt,
                 widgetConfigurationId: widgetConfig.id,
                 payload: payload,
+                source: "internal",
                 groups: groups,
                 metadata: unfurlConfig?.toMetadata()
             )
