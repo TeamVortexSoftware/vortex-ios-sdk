@@ -174,6 +174,7 @@ public struct InvitationTarget: Codable, Sendable {
     public let targetType: String
     public let targetValue: String
     public let targetName: String?
+    public let targetAvatarUrl: String?
 }
 
 /// Individual outgoing invitation from the API
