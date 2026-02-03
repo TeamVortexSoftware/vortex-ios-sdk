@@ -134,6 +134,9 @@ class VortexInviteViewModel: ObservableObject {
     // Incoming Invitations
     let incomingInvitationsConfig: IncomingInvitationsConfig?
     
+    // Unfurl configuration for Open Graph metadata
+    private let unfurlConfig: UnfurlConfig?
+    
     // MARK: - Internal Events
     
     /// Publisher that fires when an invitation is created/sent from any subcomponent.
@@ -485,7 +488,8 @@ class VortexInviteViewModel: ObservableObject {
         inviteContactsConfig: InviteContactsConfig? = nil,
         outgoingInvitationsConfig: OutgoingInvitationsConfig? = nil,
         incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
-        locale: String? = nil
+        locale: String? = nil,
+        unfurlConfig: UnfurlConfig? = nil
     ) {
         self.componentId = componentId
         self.jwt = jwt
@@ -500,6 +504,7 @@ class VortexInviteViewModel: ObservableObject {
         self.outgoingInvitationsConfig = outgoingInvitationsConfig
         self.incomingInvitationsConfig = incomingInvitationsConfig
         self.locale = locale
+        self.unfurlConfig = unfurlConfig
         
         // Initialize analytics with separate collector URL (defaults to production)
         self.sessionId = UUID().uuidString
@@ -783,7 +788,8 @@ class VortexInviteViewModel: ObservableObject {
             let response = try await client.getShareableLink(
                 jwt: jwt,
                 widgetConfigurationId: config.id,
-                groups: groups
+                groups: groups,
+                metadata: unfurlConfig?.toMetadata()
             )
             shareableLink = response.data.invitation.shortLink
         } catch {
@@ -829,7 +835,7 @@ class VortexInviteViewModel: ObservableObject {
                 groups: groups,
                 targets: nil,
                 templateVariables: nil,
-                metadata: nil
+                metadata: unfurlConfig?.toMetadata()
             )
 
             // Track the SMS invitation
@@ -1610,7 +1616,8 @@ class VortexInviteViewModel: ObservableObject {
                 jwt: jwt,
                 widgetConfigurationId: config.id,
                 payload: payload,
-                groups: groups
+                groups: groups,
+                metadata: unfurlConfig?.toMetadata()
             )
             
             // Mark as invited
@@ -1751,7 +1758,8 @@ class VortexInviteViewModel: ObservableObject {
                 jwt: jwt,
                 widgetConfigurationId: config.id,
                 payload: payload,
-                groups: groups
+                groups: groups,
+                metadata: unfurlConfig?.toMetadata()
             )
             
             // Mark as invited
@@ -1850,7 +1858,8 @@ class VortexInviteViewModel: ObservableObject {
                     jwt: jwt,
                     widgetConfigurationId: config.id,
                     payload: payload,
-                    groups: groups
+                    groups: groups,
+                    metadata: unfurlConfig?.toMetadata()
                 )
             }
             
@@ -1930,7 +1939,8 @@ class VortexInviteViewModel: ObservableObject {
                 widgetConfigurationId: widgetConfig.id,
                 payload: payload,
                 source: "other",
-                groups: groups
+                groups: groups,
+                metadata: unfurlConfig?.toMetadata()
             )
             
             // Fire the invitation sent event so other components (like Outgoing Invitations) can refresh
@@ -2013,7 +2023,8 @@ class VortexInviteViewModel: ObservableObject {
                 widgetConfigurationId: widgetConfig.id,
                 payload: payload,
                 source: "other",
-                groups: groups
+                groups: groups,
+                metadata: unfurlConfig?.toMetadata()
             )
             
             // Fire the invitation sent event so other components (like Outgoing Invitations) can refresh

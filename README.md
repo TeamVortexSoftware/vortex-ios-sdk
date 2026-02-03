@@ -450,7 +450,8 @@ VortexInviteView(
     incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
     locale: String? = nil,
     scope: String? = nil,
-    scopeType: String? = nil
+    scopeType: String? = nil,
+    unfurlConfig: UnfurlConfig? = nil
 )
 ```
 
@@ -467,6 +468,7 @@ VortexInviteView(
 - `locale`: Optional BCP 47 language code for internationalization (e.g., "pt-BR", "en-US")
 - `scope`: Scope identifier for scoping invitations (e.g., team ID, project ID). Used with `scopeType`.
 - `scopeType`: Type of the scope (e.g., "team", "project"). Used with `scope`.
+- `unfurlConfig`: Optional configuration for Open Graph unfurl metadata (see [Unfurl Configuration](#unfurl-configuration)).
 
 ## Deferred Deep Linking
 
@@ -556,6 +558,44 @@ class AppViewModel: ObservableObject {
     }
 }
 ```
+
+## Unfurl Configuration
+
+When invitation links are shared on social platforms (iMessage, Facebook, Twitter, etc.), the `UnfurlConfig` allows you to customize the Open Graph metadata that appears in the link preview card.
+
+### Usage
+
+```swift
+VortexInviteView(
+    componentId: "your-component-id",
+    jwt: authToken,
+    onDismiss: { showInviteForm = false },
+    unfurlConfig: UnfurlConfig(
+        title: "Join our team!",
+        description: "You've been invited to collaborate",
+        image: "https://example.com/preview.png",
+        siteName: "My App",
+        type: "website"
+    )
+)
+```
+
+### UnfurlConfig Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `title` | `String?` | The title shown in the link preview (`og:title`) |
+| `description` | `String?` | The description shown in the link preview (`og:description`) |
+| `image` | `String?` | URL to the image shown in the link preview (`og:image`). Must be a valid URL. |
+| `siteName` | `String?` | The site name shown in the link preview (`og:site_name`) |
+| `type` | `String?` | The Open Graph type (`og:type`). Defaults to "website" if not provided. |
+
+### Priority Chain
+
+The backend uses this priority for unfurl values:
+1. **Invitation metadata** (values from `UnfurlConfig`) - highest priority
+2. **Domain profile unfurlData** - fallback from account settings in Vortex dashboard
+3. **Hardcoded defaults** - last resort
 
 ## Features
 
