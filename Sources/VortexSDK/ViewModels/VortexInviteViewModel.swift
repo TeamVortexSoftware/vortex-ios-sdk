@@ -831,7 +831,7 @@ class VortexInviteViewModel: ObservableObject {
                 jwt: jwt,
                 widgetConfigurationId: config.id,
                 payload: payload,
-                source: "sms",
+                source: "phone",
                 groups: groups,
                 targets: nil,
                 templateVariables: nil,
@@ -1942,7 +1942,7 @@ class VortexInviteViewModel: ObservableObject {
                 jwt: jwt,
                 widgetConfigurationId: widgetConfig.id,
                 payload: payload,
-                source: "other",
+                source: "internal",
                 groups: groups,
                 metadata: unfurlConfig?.toMetadata()
             )
