@@ -372,6 +372,7 @@ struct InviteContactsView: View {
                     .opacity(0.75)
             }
             .padding(.vertical, 16)
+            .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())
         .padding(.horizontal)
@@ -422,9 +423,9 @@ struct InviteContactsView: View {
             showContactsList = false
             searchQuery = ""
         }) {
-            HStack(spacing: 4) {
+            HStack(alignment: .center, spacing: 4) {
                 Text("‹")
-                    .font(.system(size: 24, weight: .light))
+                    .font(.system(size: 20, weight: .regular))
                     .foregroundColor(secondaryForegroundColor)
                 
                 Text(backButtonText)
