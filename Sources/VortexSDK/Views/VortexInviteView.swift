@@ -51,6 +51,8 @@ public struct VortexInviteView: View {
     ///     Used together with `scopeType` to create group context for API calls.
     ///   - scopeType: Type of the scope (e.g., "team", "project").
     ///     Used together with `scope` to create group context for API calls.
+    ///   - unfurlConfig: Optional configuration for Open Graph unfurl metadata when sharing links.
+    ///     Customizes the preview card shown on social platforms (iMessage, Facebook, Twitter, etc.).
     public init(
         componentId: String,
         jwt: String?,
@@ -65,7 +67,8 @@ public struct VortexInviteView: View {
         incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
         locale: String? = nil,
         scope: String? = nil,
-        scopeType: String? = nil
+        scopeType: String? = nil,
+        unfurlConfig: UnfurlConfig? = nil
     ) {
         // Convert scope/scopeType to GroupDTO for API calls
         let effectiveGroup: GroupDTO? = {
@@ -89,7 +92,8 @@ public struct VortexInviteView: View {
             inviteContactsConfig: inviteContactsConfig,
             outgoingInvitationsConfig: nil,
             incomingInvitationsConfig: incomingInvitationsConfig,
-            locale: locale
+            locale: locale,
+            unfurlConfig: unfurlConfig
         ))
     }
     

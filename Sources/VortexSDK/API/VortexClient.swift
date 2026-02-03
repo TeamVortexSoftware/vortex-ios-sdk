@@ -202,12 +202,14 @@ public class VortexClient {
     ///   - widgetConfigurationId: ID of the widget configuration
     ///   - groups: Associated groups
     ///   - templateVariables: Optional template variables
+    ///   - metadata: Optional metadata (e.g., unfurl parameters)
     /// - Returns: Shareable link response
     public func getShareableLink(
         jwt: String,
         widgetConfigurationId: String,
         groups: [GroupDTO]? = nil,
-        templateVariables: [String: String]? = nil
+        templateVariables: [String: String]? = nil,
+        metadata: [String: Any]? = nil
     ) async throws -> ShareableLinkResponse {
         let url = baseURL.appendingPathComponent("/api/v1/invitations/generate-shareable-link-invite")
         
@@ -240,6 +242,10 @@ public class VortexClient {
         
         if let templateVariables = templateVariables {
             body["templateVariables"] = templateVariables
+        }
+        
+        if let metadata = metadata {
+            body["metadata"] = metadata
         }
         
         let bodyData = try JSONSerialization.data(withJSONObject: body)
