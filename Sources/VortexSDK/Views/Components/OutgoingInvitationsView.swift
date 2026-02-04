@@ -53,10 +53,8 @@ struct OutgoingInvitationsView: View {
                     .font(.subheadline)
                     .frame(maxWidth: .infinity, minHeight: 120)
             } else if invitations.isEmpty {
-                Text("No outgoing invitations")
-                    .foregroundColor(.secondary)
-                    .font(.subheadline)
-                    .frame(maxWidth: .infinity, minHeight: 60)
+                // No-op: render nothing (0 height) when no invitations
+                EmptyView()
             } else {
                 VStack(alignment: .leading, spacing: 0) {
                     if let title = blockTitle, !title.isEmpty {
