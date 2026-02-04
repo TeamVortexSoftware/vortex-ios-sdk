@@ -743,12 +743,6 @@ public struct VortexInviteView: View {
     
     private var qrCodeView: some View {
         VStack(spacing: 20) {
-            // Title (matching RN SDK)
-            Text("Scan QR Code to Join")
-                .font(.system(size: 18, weight: .bold))
-                .foregroundColor(Color(UIColor.label))
-                .padding(.top, 16)
-            
             // QR Code container
             VStack(spacing: 20) {
                 if viewModel.loadingQrCode {
@@ -756,9 +750,6 @@ public struct VortexInviteView: View {
                     VStack(spacing: 12) {
                         ProgressView()
                             .scaleEffect(1.5)
-                        Text("Generating QR Code...")
-                            .font(.system(size: 14))
-                            .foregroundColor(.secondary)
                     }
                     .frame(width: 250, height: 250)
                 } else if let link = viewModel.shareableLink, let qrImage = generateQRCode(from: link) {
@@ -768,22 +759,11 @@ public struct VortexInviteView: View {
                         .resizable()
                         .scaledToFit()
                         .frame(width: 250, height: 250)
-                    
-                    // Helper text (matching RN SDK)
-                    Text("Have someone scan this code with their phone camera to receive the invitation link")
-                        .font(.system(size: 14))
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .lineSpacing(4)
-                        .padding(.horizontal, 20)
                 } else {
                     // Error state
                     VStack(spacing: 12) {
                         Image(systemName: "qrcode")
                             .font(.system(size: 50))
-                            .foregroundColor(.secondary)
-                        Text("QR Code not available")
-                            .font(.system(size: 14))
                             .foregroundColor(.secondary)
                     }
                     .frame(width: 250, height: 250)
