@@ -51,13 +51,3 @@ jobs:
       
       - name: Delete release branch
         run: git push origin --delete "${{ github.event.pull_request.head.ref }}" || true
-
-  trigger-bump:
-    needs: create-release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Trigger develop bump
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          event-type: bump-develop
-          client-payload: '{"version": "${{ needs.create-release.outputs.version }}"}'

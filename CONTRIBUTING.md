@@ -50,17 +50,11 @@ Developer: Reviews & merges PR to main
 [GitHub Action: release.yml]
     ├── Creates git tag 1.0.3
     ├── Creates GitHub Release with auto-generated notes
-    ├── Deletes release/1.0.3 branch
-    └── Triggers bump-develop workflow
+    └── Deletes release/1.0.3 branch
            │
            ▼
-[GitHub Action: bump-develop.yml]
-    ├── Merges main into develop
-    ├── Updates VortexSDK.swift to 1.0.4-dev
-    └── Creates PR to develop
-           │
-           ▼
-Developer: Merges bump PR to develop
+Developer: ./scripts/post-release.sh 1.0.4-dev
+    └── Bumps develop to next -dev version
 ```
 
 ### Step-by-Step
@@ -93,24 +87,18 @@ After merging, the `release.yml` workflow automatically:
 - Creates a GitHub Release with auto-generated release notes
 - Deletes the `release/1.0.3` branch
 
-#### 4. Automatic Version Bump
+#### 4. Bump Develop Version
 
-The `bump-develop.yml` workflow automatically:
-- Creates a PR to `develop` that bumps the version to `1.0.4-dev`
-- Merges `main` into `develop` to sync the release commit
-
-#### 5. Merge the Bump PR
-
-- Review and merge the auto-created bump PR to `develop`
-- Development continues on the new version
-
-### Manual Fallback
-
-If the automated bump fails, use the manual script:
+After the release is created, bump develop to the next version:
 
 ```bash
 ./scripts/post-release.sh 1.0.4-dev
 ```
+
+This script:
+- Switches to `develop` and syncs with `main`
+- Updates `VortexSDK.swift` to the next `-dev` version
+- Commits and pushes to `develop`
 
 ## Files Updated During Release
 
@@ -124,7 +112,6 @@ If the automated bump fails, use the manual script:
 | Workflow | Trigger | Purpose |
 |----------|---------|---------|
 | `release.yml` | PR merged to `main` from `release/*` | Creates tag + GitHub Release |
-| `bump-develop.yml` | Triggered by `release.yml` | Bumps develop to next `-dev` version |
 
 ## Troubleshooting
 
@@ -136,9 +123,9 @@ gh auth status
 gh auth login
 ```
 
-### Version bump PR not created
+### Forgot to bump develop
 
-Check the GitHub Actions logs. You can manually run:
+After a release, run:
 ```bash
 ./scripts/post-release.sh X.Y.Z-dev
 ```
