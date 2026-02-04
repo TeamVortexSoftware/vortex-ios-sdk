@@ -20,7 +20,7 @@ public class VortexClient {
     public init(
         baseURL: URL,
         clientName: String = "VortexSDK-iOS",
-        clientVersion: String = "1.0.0",
+        clientVersion: String = VortexSDKInfo.version,
         sessionId: String = UUID().uuidString
     ) {
         self.baseURL = baseURL
