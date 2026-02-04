@@ -36,7 +36,7 @@ struct ShareOptionsView: View {
         case "copyLink":
             ShareButton(
                 icon: .link,
-                title: viewModel.copySuccess ? "✓ Copied!" : customLabel(for: "copyLink", default: "Copy Link"),
+                title: viewModel.copySuccess ? "✓ Copied!" : customLabel(for: "mobile.copyLink", default: "Copy Link"),
                 isLoading: viewModel.loadingCopy,
                 theme: block.theme
             ) {
@@ -45,7 +45,7 @@ struct ShareOptionsView: View {
         case "nativeShareSheet":
             ShareButton(
                 icon: .share,
-                title: viewModel.shareSuccess ? "✓ Shared!" : customLabel(for: "nativeShareSheet", default: "Share Invitation"),
+                title: viewModel.shareSuccess ? "✓ Shared!" : customLabel(for: "mobile.nativeShareSheet", default: "Share Invitation"),
                 isLoading: viewModel.loadingShare,
                 theme: block.theme
             ) {
@@ -54,7 +54,7 @@ struct ShareOptionsView: View {
         case "sms":
             ShareButton(
                 icon: .sms,
-                title: customLabel(for: "sms", default: "Share via SMS"),
+                title: customLabel(for: "mobile.sms", default: "Share via SMS"),
                 theme: block.theme
             ) {
                 viewModel.shareViaSms()
@@ -62,7 +62,7 @@ struct ShareOptionsView: View {
         case "qrCode":
             ShareButton(
                 icon: .qrCode,
-                title: customLabel(for: "qrCode", default: "Show QR Code"),
+                title: customLabel(for: "mobile.qrCode", default: "Show QR Code"),
                 theme: block.theme
             ) {
                 viewModel.showQrCode()
@@ -70,7 +70,7 @@ struct ShareOptionsView: View {
         case "line":
             ShareButton(
                 icon: .line,
-                title: customLabel(for: "line", default: "Share via LINE"),
+                title: customLabel(for: "mobile.line", default: "Share via LINE"),
                 theme: block.theme
             ) {
                 viewModel.shareViaLine()
@@ -78,7 +78,7 @@ struct ShareOptionsView: View {
         case "lineLiff":
             ShareButton(
                 icon: .line,
-                title: customLabel(for: "lineLiff", default: "Share via LINE (LIFF)"),
+                title: customLabel(for: "mobile.lineLiff", default: "Share via LINE (LIFF)"),
                 theme: block.theme
             ) {
                 viewModel.shareViaLineLiff()
@@ -86,7 +86,7 @@ struct ShareOptionsView: View {
         case "email":
             ShareButton(
                 icon: .email,
-                title: customLabel(for: "email", default: "Share via Email"),
+                title: customLabel(for: "mobile.email", default: "Share via Email"),
                 theme: block.theme
             ) {
                 viewModel.shareViaEmail()
@@ -94,7 +94,7 @@ struct ShareOptionsView: View {
         case "twitterDms":
             ShareButton(
                 icon: .xTwitter,
-                title: customLabel(for: "twitterDms", default: "Share via X"),
+                title: customLabel(for: "mobile.twitterDms", default: "Share via X"),
                 theme: block.theme
             ) {
                 viewModel.shareViaTwitter()
@@ -102,7 +102,7 @@ struct ShareOptionsView: View {
         case "instagramDms":
             ShareButton(
                 icon: .instagram,
-                title: customLabel(for: "instagramDms", default: "Share via Instagram"),
+                title: customLabel(for: "mobile.instagramDms", default: "Share via Instagram"),
                 theme: block.theme
             ) {
                 viewModel.shareViaInstagram()
@@ -110,7 +110,7 @@ struct ShareOptionsView: View {
         case "whatsApp":
             ShareButton(
                 icon: .whatsapp,
-                title: customLabel(for: "whatsApp", default: "Share via WhatsApp"),
+                title: customLabel(for: "mobile.whatsApp", default: "Share via WhatsApp"),
                 theme: block.theme
             ) {
                 viewModel.shareViaWhatsApp()
@@ -118,7 +118,7 @@ struct ShareOptionsView: View {
         case "facebookMessenger":
             ShareButton(
                 icon: .facebookMessenger,
-                title: customLabel(for: "facebookMessenger", default: "Share via Messenger"),
+                title: customLabel(for: "mobile.facebookMessenger", default: "Share via Messenger"),
                 theme: block.theme
             ) {
                 viewModel.shareViaFacebookMessenger()
@@ -126,7 +126,7 @@ struct ShareOptionsView: View {
         case "telegram":
             ShareButton(
                 icon: .telegram,
-                title: customLabel(for: "telegram", default: "Share via Telegram"),
+                title: customLabel(for: "mobile.telegram", default: "Share via Telegram"),
                 theme: block.theme
             ) {
                 viewModel.shareViaTelegram()
@@ -134,7 +134,7 @@ struct ShareOptionsView: View {
         case "discord":
             ShareButton(
                 icon: .discord,
-                title: customLabel(for: "discord", default: "Share via Discord"),
+                title: customLabel(for: "mobile.discord", default: "Share via Discord"),
                 theme: block.theme
             ) {
                 viewModel.shareViaDiscord()
