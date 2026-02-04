@@ -64,15 +64,17 @@ public struct UnfurlConfig {
         self.type = type
     }
     
-    /// Convert the config to metadata dictionary with unfurl-prefixed keys.
+    /// Convert the config to metadata dictionary with nested unfurlConfig object.
     /// Used internally when creating invitations.
-    internal func toMetadata() -> [String: String] {
-        var result: [String: String] = [:]
-        if let title = title { result["unfurlTitle"] = title }
-        if let description = description { result["unfurlDescription"] = description }
-        if let image = image { result["unfurlImage"] = image }
-        if let siteName = siteName { result["unfurlSiteName"] = siteName }
-        if let type = type { result["unfurlType"] = type }
-        return result
+    internal func toMetadata() -> [String: Any] {
+        var unfurlConfig: [String: String] = [:]
+        if let title = title { unfurlConfig["title"] = title }
+        if let description = description { unfurlConfig["description"] = description }
+        if let image = image { unfurlConfig["image"] = image }
+        if let siteName = siteName { unfurlConfig["siteName"] = siteName }
+        if let type = type { unfurlConfig["type"] = type }
+        
+        guard !unfurlConfig.isEmpty else { return [:] }
+        return ["unfurlConfig": unfurlConfig]
     }
 }
