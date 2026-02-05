@@ -4,7 +4,7 @@ Configuration-driven invitation forms for native iOS apps.
 
 ## Overview
 
-The Vortex iOS SDK provides a SwiftUI component for rendering customizable invitation forms in your iOS applications. The SDK fetches configuration from your Vortex backend and dynamically renders the appropriate UI.
+The Vortex iOS SDK provides a SwiftUI component for rendering customizable invitation forms in your iOS applications. The SDK fetches configuration from the [Vortex](https://vortexsoftware.com) platform and dynamically renders the appropriate UI.
 
 ## Requirements
 
@@ -630,7 +630,7 @@ See the [demo app](../vortex-ios-demo) for complete integration examples.
 
 ## Configuration
 
-The SDK automatically fetches and caches widget configuration from your Vortex backend. The configuration determines:
+The SDK automatically fetches and caches widget configuration from the Vortex platform. The configuration determines:
 - Available invitation methods
 - Form fields and validation
 - UI theme and styling
