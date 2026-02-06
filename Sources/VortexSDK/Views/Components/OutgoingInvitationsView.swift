@@ -36,7 +36,7 @@ struct OutgoingInvitationsView: View {
     @ObservedObject var viewModel: VortexInviteViewModel
     
     @State private var invitations: [OutgoingInvitationItem] = []
-    @State private var isLoading = false
+    @State private var isLoading = true
     @State private var error: String?
     @State private var actionInProgress: String?
     @State private var showingCancelConfirmation = false
@@ -74,6 +74,13 @@ struct OutgoingInvitationsView: View {
         .onAppear {
             Task {
                 await loadInvitations()
+            }
+        }
+        .onChange(of: jwt) { newJwt in
+            if newJwt != nil && invitations.isEmpty {
+                Task {
+                    await loadInvitations()
+                }
             }
         }
         .onChange(of: viewModel.invitationSentEvent) { _ in
