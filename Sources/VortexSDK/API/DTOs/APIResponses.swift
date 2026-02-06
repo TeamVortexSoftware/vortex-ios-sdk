@@ -214,6 +214,10 @@ public struct IncomingInvitation: Codable, Sendable {
     public let createdAt: String?
     public let source: String?
     public let deliveryType: String?
+    // Creator fields (the person who sent the invitation)
+    public let creatorName: String?
+    public let creatorAvatarUrl: String?
+    public let creatorId: String?
 }
 
 // MARK: - AnyCodable

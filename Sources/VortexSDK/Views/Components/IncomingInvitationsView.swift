@@ -251,13 +251,27 @@ struct IncomingInvitationsView: View {
                     return status != "accepted" && status != "accepted_elsewhere"
                 }
                 let mappedInvitations = pendingInvitations.map { inv -> IncomingInvitationItem in
-                    let name = inv.senderIdentifier ?? "Unknown"
-                    let subtitle = inv.targets?.first?.targetValue
+                    // For internal invitations, use creatorName and creatorIdentifierValue as subtitle
+                    let isInternal = inv.source?.lowercased() == "internal"
+                    let name: String
+                    let subtitle: String?
+                    let avatar: String?
+                    
+                    if isInternal {
+                        name = inv.creatorName ?? "Unknown"
+                        subtitle = inv.creatorId
+                        avatar = inv.creatorAvatarUrl ?? inv.avatarUrl
+                    } else {
+                        name = inv.creatorName ?? "Unknown"
+                        subtitle = inv.senderIdentifier
+                        avatar = inv.creatorAvatarUrl ?? inv.avatarUrl
+                    }
+                    
                     return IncomingInvitationItem(
                         id: inv.id,
                         name: name,
                         subtitle: subtitle,
-                        avatarUrl: inv.avatarUrl,
+                        avatarUrl: avatar,
                         isVortexInvitation: true,
                         metadata: nil
                     )
