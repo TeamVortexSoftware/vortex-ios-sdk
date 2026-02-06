@@ -382,6 +382,11 @@ public class VortexClient {
             throw VortexError.httpError(statusCode: httpResponse.statusCode)
         }
         
+        // Debug: Print raw JSON response
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("[VortexSDK] Raw incoming invitations response: \(jsonString)")
+        }
+        
         let decoder = JSONDecoder()
         let invitationsResponse = try decoder.decode(IncomingInvitationsResponse.self, from: data)
         return invitationsResponse.data.invitations
