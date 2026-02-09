@@ -107,6 +107,24 @@ class VortexInviteViewModel: ObservableObject {
         }
     }
     
+    // MARK: - Localization
+    
+    /// Look up a localized string from the widget configuration's localizedStrings dictionary.
+    /// Falls back to the English key if no translation is available.
+    /// - Parameter key: The English text to translate (used as both key and fallback)
+    /// - Returns: The translated string, or the original English key if no translation exists
+    func localizedString(_ key: String) -> String {
+        if let localizedStrings = configuration?.configuration.localizedStrings {
+            if let translated = localizedStrings[key] {
+                return translated
+            }
+            #if DEBUG
+            print("[VortexSDK] i18n: No translation found for \"\(key)\", using English fallback")
+            #endif
+        }
+        return key
+    }
+    
     // MARK: - Private Properties
     
     private let componentId: String

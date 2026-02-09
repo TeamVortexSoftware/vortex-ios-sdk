@@ -107,6 +107,8 @@ struct ContactRowView: View {
     let isLoading: Bool
     let errorMessage: String?
     let onInvite: () -> Void
+    /// Localized strings lookup function (falls back to English key)
+    var localizedString: (String) -> String = { $0 }
     
     var body: some View {
         HStack(spacing: 12) {
@@ -133,7 +135,7 @@ struct ContactRowView: View {
             
             // Invite button, Invited status, or Error with Retry
             if isInvited {
-                Text("✓ Invited!")
+                Text(localizedString("✓ Invited!"))
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
             } else if errorMessage != nil {
@@ -143,7 +145,7 @@ struct ContactRowView: View {
                         ProgressView()
                             .frame(width: 60)
                     } else {
-                        Text("Retry")
+                        Text(localizedString("Retry"))
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.red)
                     }
@@ -164,7 +166,7 @@ struct ContactRowView: View {
                         ProgressView()
                             .frame(width: 60)
                     } else {
-                        Text("Invite")
+                        Text(localizedString("Invite"))
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.primary)
                     }

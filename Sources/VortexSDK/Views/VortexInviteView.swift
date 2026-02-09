@@ -166,7 +166,7 @@ public struct VortexInviteView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text("Loading...")
+            Text(viewModel.localizedString("Loading..."))
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -178,7 +178,7 @@ public struct VortexInviteView: View {
                 .font(.system(size: 50))
                 .foregroundColor(.red)
             
-            Text("Error")
+            Text(viewModel.localizedString("Error"))
                 .font(.title2)
                 .fontWeight(.bold)
             
@@ -192,7 +192,7 @@ public struct VortexInviteView: View {
                     await viewModel.loadConfiguration()
                 }
             }) {
-                Text("Retry")
+                Text(viewModel.localizedString("Retry"))
                     .fontWeight(.semibold)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
@@ -449,10 +449,11 @@ public struct VortexInviteView: View {
             VStack(alignment: .leading, spacing: 8) {
                 EmailInputField(
                     text: $viewModel.emailInput,
+                    placeholder: viewModel.localizedString("Enter email addresses"),
                     onCommit: { viewModel.addEmailFromInput() }
                 )
                 
-                Text("Press return to add each email")
+                Text(viewModel.localizedString("Press return to add each email"))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -473,7 +474,9 @@ public struct VortexInviteView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     } else {
-                        Text("Send Invitation\(viewModel.emails.count > 1 || (viewModel.emails.count == 1 && !viewModel.hasValidEmailInput) ? "s" : "")")
+                        Text(viewModel.emails.count > 1 || (viewModel.emails.count == 1 && !viewModel.hasValidEmailInput)
+                            ? viewModel.localizedString("Send Invitations")
+                            : viewModel.localizedString("Send Invitation"))
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -492,7 +495,7 @@ public struct VortexInviteView: View {
     private var contactsPickerView: some View {
         VStack(spacing: 16) {
             // Title (matching RN SDK)
-            Text("Add from Contacts")
+            Text(viewModel.localizedString("Add from Contacts"))
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(Color(UIColor.label))
                 .padding(.top, 16)
@@ -501,7 +504,7 @@ public struct VortexInviteView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField("Search contacts...", text: $viewModel.contactsSearchQuery)
+                TextField(viewModel.localizedString("Search contacts..."), text: $viewModel.contactsSearchQuery)
                     .textFieldStyle(.plain)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
@@ -523,7 +526,7 @@ public struct VortexInviteView: View {
                 VStack(spacing: 12) {
                     ProgressView()
                         .scaleEffect(1.5)
-                    Text("Loading contacts...")
+                    Text(viewModel.localizedString("Loading contacts..."))
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                 }
@@ -536,7 +539,7 @@ public struct VortexInviteView: View {
                         .font(.system(size: 50))
                         .foregroundColor(.red)
                     
-                    Text("Unable to Access Contacts")
+                    Text(viewModel.localizedString("Unable to Access Contacts"))
                         .font(.headline)
                         .foregroundColor(.primary)
                     
@@ -559,7 +562,7 @@ public struct VortexInviteView: View {
                         
                         HStack(spacing: 12) {
                             Button(action: { viewModel.openSettings() }) {
-                                Text("Open Settings")
+                                Text(viewModel.localizedString("Open Settings"))
                                     .fontWeight(.medium)
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -570,7 +573,7 @@ public struct VortexInviteView: View {
                             Button(action: {
                                 Task { await viewModel.retryFetchContacts() }
                             }) {
-                                Text("Retry")
+                                Text(viewModel.localizedString("Retry"))
                                     .fontWeight(.medium)
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -583,7 +586,7 @@ public struct VortexInviteView: View {
                         Button(action: {
                             Task { await viewModel.retryFetchContacts() }
                         }) {
-                            Text("Try Again")
+                            Text(viewModel.localizedString("Try Again"))
                                 .fontWeight(.medium)
                                 .padding()
                                 .background(Color(UIColor.secondarySystemBackground))
@@ -600,8 +603,8 @@ public struct VortexInviteView: View {
                         .font(.system(size: 40))
                         .foregroundColor(.secondary)
                     Text(viewModel.contactsSearchQuery.isEmpty 
-                         ? "No contacts with email addresses found" 
-                         : "No contacts match your search")
+                         ? viewModel.localizedString("No contacts with email addresses found") 
+                         : viewModel.localizedString("No contacts match your search"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -620,7 +623,8 @@ public struct VortexInviteView: View {
                                 errorMessage: viewModel.failedContactIds[contact.id],
                                 onInvite: {
                                     Task { await viewModel.inviteContact(contact) }
-                                }
+                                },
+                                localizedString: viewModel.localizedString
                             )
                             Divider()
                                 .padding(.leading, 16)
@@ -636,7 +640,7 @@ public struct VortexInviteView: View {
     private var googleContactsPickerView: some View {
         VStack(spacing: 16) {
             // Title (matching RN SDK)
-            Text("Add from Google Contacts")
+            Text(viewModel.localizedString("Add from Google Contacts"))
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(Color(UIColor.label))
                 .padding(.top, 16)
@@ -645,7 +649,7 @@ public struct VortexInviteView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField("Search contacts...", text: $viewModel.googleContactsSearchQuery)
+                TextField(viewModel.localizedString("Search contacts..."), text: $viewModel.googleContactsSearchQuery)
                     .textFieldStyle(.plain)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
@@ -667,7 +671,7 @@ public struct VortexInviteView: View {
                 VStack(spacing: 12) {
                     ProgressView()
                         .scaleEffect(1.5)
-                    Text("Loading Google contacts...")
+                    Text(viewModel.localizedString("Loading Google contacts..."))
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                 }
@@ -680,7 +684,7 @@ public struct VortexInviteView: View {
                         .font(.system(size: 50))
                         .foregroundColor(.red)
                     
-                    Text("Unable to Access Google Contacts")
+                    Text(viewModel.localizedString("Unable to Access Google Contacts"))
                         .font(.headline)
                         .foregroundColor(.primary)
                     
@@ -693,7 +697,7 @@ public struct VortexInviteView: View {
                     Button(action: {
                         Task { await viewModel.retryFetchGoogleContacts() }
                     }) {
-                        Text("Try Again")
+                        Text(viewModel.localizedString("Try Again"))
                             .fontWeight(.medium)
                             .padding()
                             .background(Color(UIColor.secondarySystemBackground))
@@ -709,8 +713,8 @@ public struct VortexInviteView: View {
                         .font(.system(size: 40))
                         .foregroundColor(.secondary)
                     Text(viewModel.googleContactsSearchQuery.isEmpty 
-                         ? "No Google contacts with email addresses found" 
-                         : "No contacts match your search")
+                         ? viewModel.localizedString("No contacts with email addresses found") 
+                         : viewModel.localizedString("No contacts match your search"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -729,7 +733,8 @@ public struct VortexInviteView: View {
                                 errorMessage: viewModel.failedGoogleContactIds[contact.id],
                                 onInvite: {
                                     Task { await viewModel.inviteGoogleContact(contact) }
-                                }
+                                },
+                                localizedString: viewModel.localizedString
                             )
                             Divider()
                                 .padding(.leading, 16)
@@ -811,7 +816,7 @@ public struct VortexInviteView: View {
         HStack {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundColor(.green)
-            Text("Invitation sent successfully!")
+            Text(viewModel.localizedString("Invitation sent successfully!"))
                 .foregroundColor(.green)
         }
         .padding()
@@ -826,10 +831,11 @@ public struct VortexInviteView: View {
 /// A text field for email input that supports onCommit on iOS 14+
 private struct EmailInputField: View {
     @Binding var text: String
+    var placeholder: String = "Enter email addresses"
     let onCommit: () -> Void
     
     var body: some View {
-        TextField("Enter email addresses", text: $text, onCommit: onCommit)
+        TextField(placeholder, text: $text, onCommit: onCommit)
             .textFieldStyle(RoundedBorderTextFieldStyle())
             .keyboardType(.emailAddress)
             .textContentType(.emailAddress)

@@ -25,6 +25,11 @@ public struct WidgetConfiguration: Codable, Sendable {
 public struct WidgetConfigurationConfiguration: Codable, Sendable {
     public let meta: WidgetConfigurationMeta
     public let props: [String: ConfigurationProperty]
+    /// Localized strings for SDK-side UI text translation.
+    /// Contains English-key → translated-value pairs for the requested locale.
+    /// Used for hardcoded UI strings that can't be translated server-side via the element tree.
+    /// Only present when a non-default locale is requested and translations exist.
+    public let localizedStrings: [String: String]?
 }
 
 /// Metadata about the widget configuration
