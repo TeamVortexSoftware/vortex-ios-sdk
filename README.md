@@ -408,6 +408,77 @@ IncomingInvitationsConfig(
 | Vortex (`isVortexInvitation == true`) | SDK calls Vortex API, removes from list | Cancels the action |
 | Internal (`isVortexInvitation == false`) | Removes from list (no API call) | Keeps in list |
 
+### Outgoing Invitations
+
+The Outgoing Invitations component displays invitations the user has sent, with a Cancel action.
+
+**Basic Usage:**
+
+```swift
+import VortexSDK
+
+VortexInviteView(
+    componentId: "your-component-id",
+    jwt: jwt,
+    outgoingInvitationsConfig: OutgoingInvitationsConfig(
+        onCancel: { invitation in
+            // Handle cancellation (return true to proceed with API call)
+            return true
+        }
+    ),
+    onDismiss: { /* ... */ }
+)
+```
+
+**With Internal Invitations:**
+
+You can merge your app's outgoing invitations with Vortex API invitations:
+
+```swift
+OutgoingInvitationsConfig(
+    internalInvitations: [
+        OutgoingInvitationItem(
+            id: "internal-1",
+            name: "Bob Smith",
+            subtitle: "user-12345",  // e.g., user ID or other identifier
+            avatarUrl: "https://example.com/avatar.jpg"
+        )
+    ],
+    onCancel: { invitation in
+        if invitation.isVortexInvitation {
+            // Vortex invitation: return true to let SDK call the Vortex API
+            return true
+        } else {
+            // Internal/app invitation: handle it yourself
+            await myAPI.cancelInvitation(invitation.id)
+            return true  // Return true to remove from list
+        }
+    }
+)
+```
+
+**Identifying Invitation Source:**
+
+Use the `isVortexInvitation` property to determine where an invitation came from:
+- `true`: Fetched from the Vortex API — the SDK will handle cancel API calls
+- `false`: Provided by your app via `internalInvitations` — your app must handle the action
+
+**OutgoingInvitationsConfig Properties:**
+
+```swift
+OutgoingInvitationsConfig(
+    internalInvitations: [OutgoingInvitationItem]?,  // App-provided invitations (isVortexInvitation = false)
+    onCancel: ((OutgoingInvitationItem) async -> Bool)?  // Called when user cancels
+)
+```
+
+**Callback Return Values:**
+
+| Invitation Source | Return `true` | Return `false` |
+|-------------------|---------------|----------------|
+| Vortex (`isVortexInvitation == true`) | SDK calls Vortex API, removes from list | Cancels the action |
+| Internal (`isVortexInvitation == false`) | Removes from list (no API call) | Keeps in list |
+
 ## Authentication
 
 The SDK requires a JWT token for authentication. You should obtain this token from your backend server:
@@ -448,6 +519,7 @@ VortexInviteView(
     invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
     inviteContactsConfig: InviteContactsConfig? = nil,
     incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
+    outgoingInvitationsConfig: OutgoingInvitationsConfig? = nil,
     locale: String? = nil,
     scope: String? = nil,
     scopeType: String? = nil,
@@ -465,6 +537,7 @@ VortexInviteView(
 - `invitationSuggestionsConfig`: Optional configuration for the Invitation Suggestions feature (see [Invitation Suggestions](#invitation-suggestions))
 - `inviteContactsConfig`: Optional configuration for the Invite Contacts feature (see [Invite Contacts](#invite-contacts))
 - `incomingInvitationsConfig`: Optional configuration for the Incoming Invitations feature (see [Incoming Invitations](#incoming-invitations))
+- `outgoingInvitationsConfig`: Optional configuration for the Outgoing Invitations feature (see [Outgoing Invitations](#outgoing-invitations))
 - `locale`: Optional BCP 47 language code for internationalization (e.g., "pt-BR", "en-US")
 - `scope`: Scope identifier for scoping invitations (e.g., team ID, project ID). Used with `scopeType`.
 - `scopeType`: Type of the scope (e.g., "team", "project"). Used with `scope`.

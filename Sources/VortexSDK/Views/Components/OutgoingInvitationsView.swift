@@ -1,29 +1,5 @@
 import SwiftUI
 
-// MARK: - Outgoing Invitations Configuration
-
-/// Configuration for OutgoingInvitationsView component
-public struct OutgoingInvitationsConfig {
-    /// Optional callback when user confirms "Cancel" on an invitation.
-    /// Called after the API revocation succeeds.
-    public var onCancel: ((OutgoingInvitation) async -> Void)?
-    
-    public init(onCancel: ((OutgoingInvitation) async -> Void)? = nil) {
-        self.onCancel = onCancel
-    }
-}
-
-// MARK: - Invitation Item for Display
-
-/// Display model for an outgoing invitation
-struct OutgoingInvitationItem: Identifiable {
-    let id: String
-    let name: String
-    let subtitle: String?
-    let avatarUrl: String?
-    let invitation: OutgoingInvitation
-}
-
 // MARK: - Outgoing Invitations View
 
 /// Displays outgoing invitations with cancel functionality
@@ -36,6 +12,7 @@ struct OutgoingInvitationsView: View {
     @ObservedObject var viewModel: VortexInviteViewModel
     
     @State private var invitations: [OutgoingInvitationItem] = []
+    @State private var vortexInvitationMap: [String: OutgoingInvitation] = [:]
     @State private var isLoading = true
     @State private var error: String?
     @State private var actionInProgress: String?
@@ -208,36 +185,45 @@ struct OutgoingInvitationsView: View {
     // MARK: - Actions
     
     private func loadInvitations() async {
-        print("[VortexSDK] OutgoingInvitationsView.loadInvitations() called")
-        
-        guard let jwt = jwt else {
-            print("[VortexSDK] OutgoingInvitationsView: No JWT provided, authentication required")
-            error = "Authentication required"
-            return
-        }
-        
-        print("[VortexSDK] OutgoingInvitationsView: JWT present (length: \(jwt.count)), fetching invitations from API...")
         isLoading = true
         error = nil
         
-        do {
-            print("[VortexSDK] OutgoingInvitationsView: Calling client.getOutgoingInvitations()...")
-            let fetched = try await client.getOutgoingInvitations(jwt: jwt)
-            print("[VortexSDK] OutgoingInvitationsView: Successfully fetched \(fetched.count) invitations")
-            // Filter out shareable link invitations (targetType "share")
-            let filtered = fetched.filter { invitation in
-                guard let targetType = invitation.targets?.first?.targetType else { return true }
-                return targetType != "share"
-            }
-            invitations = filtered.map { mapToDisplayItem($0) }.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-        } catch let fetchError {
-            print("[VortexSDK] OutgoingInvitationsView: Failed to load invitations")
-            print("[VortexSDK] OutgoingInvitationsView: Error type: \(type(of: fetchError))")
-            print("[VortexSDK] OutgoingInvitationsView: Error details: \(fetchError)")
-            print("[VortexSDK] OutgoingInvitationsView: Error localizedDescription: \(fetchError.localizedDescription)")
-            self.error = "Failed to load invitations"
+        var allInvitations: [OutgoingInvitationItem] = []
+        var invitationMap: [String: OutgoingInvitation] = [:]
+        
+        // Add internal invitations from config
+        if let internalInvitations = config?.internalInvitations {
+            allInvitations.append(contentsOf: internalInvitations)
         }
         
+        // Fetch from API if we have jwt
+        if let jwt = jwt {
+            do {
+                let fetched = try await client.getOutgoingInvitations(jwt: jwt)
+                // Filter out shareable link invitations (targetType "share")
+                let filtered = fetched.filter { invitation in
+                    guard let targetType = invitation.targets?.first?.targetType else { return true }
+                    return targetType != "share"
+                }
+                for invitation in filtered {
+                    let item = mapToDisplayItem(invitation)
+                    allInvitations.append(item)
+                    invitationMap[item.id] = invitation
+                }
+            } catch {
+                // Silently fail - just show internal invitations if any
+                #if DEBUG
+                print("[VortexSDK] Failed to fetch outgoing invitations: \(error)")
+                #endif
+                // Only show error if we have no internal invitations
+                if allInvitations.isEmpty {
+                    self.error = "Failed to load invitations"
+                }
+            }
+        }
+        
+        invitations = allInvitations.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        vortexInvitationMap = invitationMap
         isLoading = false
     }
     
@@ -257,7 +243,8 @@ struct OutgoingInvitationsView: View {
             name: name,
             subtitle: subtitle,
             avatarUrl: target?.targetAvatarUrl,
-            invitation: invitation
+            isVortexInvitation: true,
+            metadata: nil
         )
     }
     
@@ -267,14 +254,38 @@ struct OutgoingInvitationsView: View {
         // Track the cancel/delete button click
         viewModel.trackOutboundInvitationDelete(invitationId: item.id, inviteeName: item.name)
 
+        // Check if this is an internal (non-Vortex) invitation
+        if !item.isVortexInvitation {
+            // For internal invitations, call the callback and let the app handle it
+            if let onCancel = config?.onCancel {
+                let shouldRemove = await onCancel(item)
+                if shouldRemove {
+                    withAnimation(.easeOut(duration: 0.2)) {
+                        invitations.removeAll { $0.id == item.id }
+                    }
+                }
+            }
+            actionInProgress = nil
+            return
+        }
+
+        // For Vortex invitations, call the API
         guard let jwt = jwt else {
             actionInProgress = nil
             return
         }
 
+        // If callback is provided, let it decide whether to proceed
+        if let onCancel = config?.onCancel {
+            let shouldProceed = await onCancel(item)
+            if !shouldProceed {
+                actionInProgress = nil
+                return
+            }
+        }
+
         do {
             try await client.revokeInvitation(jwt: jwt, invitationId: item.id)
-            await config?.onCancel?(item.invitation)
         } catch {
             actionInProgress = nil
             return

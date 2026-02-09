@@ -65,6 +65,7 @@ public struct VortexInviteView: View {
         invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
         incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
+        outgoingInvitationsConfig: OutgoingInvitationsConfig? = nil,
         locale: String? = nil,
         scope: String? = nil,
         scopeType: String? = nil,
@@ -90,7 +91,7 @@ public struct VortexInviteView: View {
             findFriendsConfig: findFriendsConfig,
             invitationSuggestionsConfig: invitationSuggestionsConfig,
             inviteContactsConfig: inviteContactsConfig,
-            outgoingInvitationsConfig: nil,
+            outgoingInvitationsConfig: outgoingInvitationsConfig,
             incomingInvitationsConfig: incomingInvitationsConfig,
             locale: locale,
             unfurlConfig: unfurlConfig
