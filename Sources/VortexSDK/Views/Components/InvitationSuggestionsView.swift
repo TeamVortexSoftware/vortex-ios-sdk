@@ -106,7 +106,7 @@ struct InvitationSuggestionsView: View {
     
     private var emptyView: some View {
         VStack {
-            Text(viewModel.invitationSuggestionsConfig?.emptyStateMessage ?? "No suggestions available")
+            Text(block.settings?.customizations?["emptyStateMessage"]?.textContent ?? viewModel.invitationSuggestionsConfig?.emptyStateMessage ?? "No suggestions available")
                 .font(.system(size: 14))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

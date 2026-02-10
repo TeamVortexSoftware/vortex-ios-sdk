@@ -260,6 +260,16 @@ struct InviteContactsView: View {
         block.settings?.customizations?["emptyStateMessage"]?.textContent ?? "No contacts to invite"
     }
     
+    /// Empty search state message (from widget configuration)
+    private var emptySearchState: String {
+        block.settings?.customizations?["emptySearchState"]?.textContent ?? "No contacts match your search"
+    }
+    
+    /// Search placeholder text (from widget configuration)
+    private var searchPlaceholderText: String {
+        block.settings?.customizations?["searchPlaceholder"]?.textContent ?? "Search contacts..."
+    }
+    
     // MARK: - Theme Colors
     
     private var foregroundColor: Color {
@@ -389,7 +399,7 @@ struct InviteContactsView: View {
             searchBoxView
             
             if filteredContacts.isEmpty {
-                Text(searchQuery.isEmpty ? emptyStateMessage : "No contacts match your search")
+                Text(searchQuery.isEmpty ? emptyStateMessage : emptySearchState)
                     .font(.system(size: 14))
                     .foregroundColor(secondaryForegroundColor)
                     .padding(16)
@@ -443,7 +453,7 @@ struct InviteContactsView: View {
     
     private var searchBoxView: some View {
         HStack {
-            TextField("Search contacts...", text: $searchQuery)
+            TextField(searchPlaceholderText, text: $searchQuery)
                 .font(.system(size: 16))
                 .foregroundColor(foregroundColor)
                 .autocapitalization(.none)
