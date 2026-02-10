@@ -78,6 +78,12 @@ class VortexInviteViewModel: ObservableObject {
     @Published var findFriendsActionInProgress: String? = nil
     @Published var connectedFindFriendsContactIds: Set<String> = []
     
+    // Search Box state
+    @Published var searchBoxQuery: String = ""
+    @Published var searchBoxResults: [FindFriendsContact]? = nil
+    @Published var searchBoxIsSearching: Bool = false
+    @Published var searchBoxActionInProgress: String? = nil
+    
     // Invitation Suggestions state
     @Published var invitationSuggestionsActionInProgress: String? = nil
     @Published var invitedInvitationSuggestionIds: Set<String> = []
@@ -127,6 +133,9 @@ class VortexInviteViewModel: ObservableObject {
     
     // Invite Contacts
     let inviteContactsConfig: InviteContactsConfig?
+    
+    // Search Box
+    let searchBoxConfig: SearchBoxConfig?
     
     // Outgoing Invitations
     let outgoingInvitationsConfig: OutgoingInvitationsConfig?
@@ -524,6 +533,7 @@ class VortexInviteViewModel: ObservableObject {
         findFriendsConfig: FindFriendsConfig? = nil,
         invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
+        searchBoxConfig: SearchBoxConfig? = nil,
         outgoingInvitationsConfig: OutgoingInvitationsConfig? = nil,
         incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
         locale: String? = nil,
@@ -539,6 +549,7 @@ class VortexInviteViewModel: ObservableObject {
         self.findFriendsConfig = findFriendsConfig
         self.invitationSuggestionsConfig = invitationSuggestionsConfig
         self.inviteContactsConfig = inviteContactsConfig
+        self.searchBoxConfig = searchBoxConfig
         self.outgoingInvitationsConfig = outgoingInvitationsConfig
         self.incomingInvitationsConfig = incomingInvitationsConfig
         self.locale = locale
@@ -2087,6 +2098,100 @@ class VortexInviteViewModel: ObservableObject {
             
         } catch {
             invitationSuggestionsConfig?.onInvitationFailed?(contact, error)
+        }
+    }
+    
+    // MARK: - Search Box
+    
+    /// Handle search button tap in Search Box
+    func handleSearchBoxSearch() {
+        guard let config = searchBoxConfig, !searchBoxQuery.trimmingCharacters(in: .whitespaces).isEmpty else { return }
+        
+        searchBoxIsSearching = true
+        
+        Task {
+            do {
+                let results = await config.onSearch(searchBoxQuery.trimmingCharacters(in: .whitespaces))
+                searchBoxResults = results
+            }
+            searchBoxIsSearching = false
+        }
+    }
+    
+    /// Handle Connect button tap for a contact in Search Box results
+    func handleSearchBoxConnect(_ contact: FindFriendsContact) {
+        guard searchBoxConfig != nil else { return }
+        
+        searchBoxActionInProgress = contact.id
+        
+        Task {
+            await performSearchBoxConnect(contact)
+            searchBoxActionInProgress = nil
+        }
+    }
+    
+    /// Perform the search box connect action
+    private func performSearchBoxConnect(_ contact: FindFriendsContact) async {
+        guard let config = searchBoxConfig else { return }
+        
+        // If onConnect is provided, call it first
+        if let onConnect = config.onConnect {
+            let shouldCreateInvitation = await onConnect(contact)
+            guard shouldCreateInvitation else { return }
+        }
+        
+        // Remove the connected contact from the search results list
+        searchBoxResults?.removeAll { $0.id == contact.id }
+        
+        // Create invitation via backend
+        await createSearchBoxInvitation(for: contact)
+    }
+    
+    /// Create an invitation for a search box result with target type = internalId
+    private func createSearchBoxInvitation(for contact: FindFriendsContact) async {
+        guard let jwt = jwt, let widgetConfig = configuration else {
+            searchBoxConfig?.onInvitationError?(contact, VortexError.missingConfiguration)
+            return
+        }
+        
+        var targetValue: [String: Any] = [
+            "value": contact.internalId,
+            "name": contact.name
+        ]
+        if let avatarUrl = contact.avatarUrl {
+            targetValue["avatarUrl"] = avatarUrl
+        }
+        let payload: [String: Any] = [
+            "internalId": [
+                "type": "internal",
+                "value": targetValue
+            ]
+        ]
+        
+        var groups: [GroupDTO]? = nil
+        if let group = group {
+            groups = [group]
+        }
+        
+        do {
+            _ = try await client.createInvitation(
+                jwt: jwt,
+                widgetConfigurationId: widgetConfig.id,
+                payload: payload,
+                source: "internal",
+                groups: groups,
+                metadata: unfurlConfig?.toMetadata()
+            )
+            
+            invitationSentEvent = InvitationSentEvent(
+                source: .findFriends,
+                shortLink: ""
+            )
+            
+            searchBoxConfig?.onInvitationCreated?(contact)
+            
+        } catch {
+            searchBoxConfig?.onInvitationError?(contact, error)
         }
     }
 }

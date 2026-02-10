@@ -323,6 +323,72 @@ InvitationSuggestionsConfig(
 )
 ```
 
+### Search Box
+
+The Search Box component displays a search input with a search button. When the user taps the search button, your app's `onSearch` callback is invoked to return matching contacts. The results are rendered below the search box with "Connect" buttons, identical to the Find Friends component.
+
+**Basic Usage:**
+
+```swift
+import VortexSDK
+
+VortexInviteView(
+    componentId: "your-component-id",
+    jwt: jwt,
+    searchBoxConfig: SearchBoxConfig(
+        onSearch: { query in
+            // Return matching contacts from your backend or local data
+            let results = await myAPI.searchUsers(query: query)
+            return results.map { user in
+                FindFriendsContact(
+                    internalId: user.id,
+                    name: user.displayName,
+                    subtitle: "@\(user.username)",
+                    avatarUrl: user.avatarUrl
+                )
+            }
+        },
+        onConnect: { contact in
+            // Called when user taps "Connect" on a search result
+            // Return true to create an invitation via the Vortex backend
+            return true
+        },
+        onInvitationCreated: { contact in
+            print("Invitation created for \(contact.name)")
+        },
+        onInvitationError: { contact, error in
+            print("Failed to invite \(contact.name): \(error)")
+        }
+    ),
+    onDismiss: { /* ... */ }
+)
+```
+
+**How It Works:**
+
+1. The component renders a search text field with a configurable placeholder and a search button
+2. An optional title can be displayed above the search box (configured in the widget editor)
+3. When the user taps the search button, your `onSearch` callback is called with the query string
+4. Your callback returns a list of `FindFriendsContact` objects (the same type used by Find Friends)
+5. The matching contacts are rendered below the search box with a "Connect" button next to each
+6. If the search returns no results, a configurable "no results" message is displayed
+7. When the user taps "Connect", the `onConnect` callback is called. If it returns `true`, the SDK creates an invitation via the Vortex API and the contact is removed from the list
+
+**SearchBoxConfig Properties:**
+
+```swift
+SearchBoxConfig(
+    onSearch: (String) async -> [FindFriendsContact],              // Required: Search callback
+    onConnect: ((FindFriendsContact) async -> Bool)?,              // Optional: Called on Connect tap (return true to create invitation)
+    onInvitationCreated: ((FindFriendsContact) -> Void)?,          // Optional: Called after successful invitation
+    onInvitationError: ((FindFriendsContact, Error) -> Void)?,     // Optional: Called on failure
+    connectButtonText: String?,                                     // Optional: Custom Connect button text
+    noResultsMessage: String?                                       // Optional: Custom no-results message
+)
+```
+
+> **Note:** The placeholder text, connect button text, no-results message, and title are all configurable from the widget editor. Values provided in `SearchBoxConfig` serve as fallback defaults.
+
 ### Incoming Invitations
 
 The Incoming Invitations component displays invitations the user has received, with Accept and Delete actions.
@@ -518,6 +584,7 @@ VortexInviteView(
     findFriendsConfig: FindFriendsConfig? = nil,
     invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
     inviteContactsConfig: InviteContactsConfig? = nil,
+    searchBoxConfig: SearchBoxConfig? = nil,
     incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
     outgoingInvitationsConfig: OutgoingInvitationsConfig? = nil,
     locale: String? = nil,
@@ -536,6 +603,7 @@ VortexInviteView(
 - `findFriendsConfig`: Optional configuration for the Find Friends feature (see [Find Friends](#find-friends))
 - `invitationSuggestionsConfig`: Optional configuration for the Invitation Suggestions feature (see [Invitation Suggestions](#invitation-suggestions))
 - `inviteContactsConfig`: Optional configuration for the Invite Contacts feature (see [Invite Contacts](#invite-contacts))
+- `searchBoxConfig`: Optional configuration for the Search Box feature (see [Search Box](#search-box))
 - `incomingInvitationsConfig`: Optional configuration for the Incoming Invitations feature (see [Incoming Invitations](#incoming-invitations))
 - `outgoingInvitationsConfig`: Optional configuration for the Outgoing Invitations feature (see [Outgoing Invitations](#outgoing-invitations))
 - `locale`: Optional BCP 47 language code for internationalization (e.g., "pt-BR", "en-US")

@@ -43,6 +43,9 @@ public struct VortexInviteView: View {
     ///   - inviteContactsConfig: Optional configuration for the Invite Contacts feature.
     ///     When provided, enables the Invite Contacts component to display a list of
     ///     contacts that can be invited via SMS.
+    ///   - searchBoxConfig: Optional configuration for the Search Box feature.
+    ///     When provided, enables the Search Box component with a search input,
+    ///     search button, and results list with Connect buttons.
     ///   - incomingInvitationsConfig: Optional configuration for the Incoming Invitations feature.
     ///     When provided, enables the Incoming Invitations component to display invitations
     ///     the user has received with Accept/Delete actions.
@@ -65,6 +68,7 @@ public struct VortexInviteView: View {
         findFriendsConfig: FindFriendsConfig? = nil,
         invitationSuggestionsConfig: InvitationSuggestionsConfig? = nil,
         inviteContactsConfig: InviteContactsConfig? = nil,
+        searchBoxConfig: SearchBoxConfig? = nil,
         incomingInvitationsConfig: IncomingInvitationsConfig? = nil,
         outgoingInvitationsConfig: OutgoingInvitationsConfig? = nil,
         locale: String? = nil,
@@ -92,6 +96,7 @@ public struct VortexInviteView: View {
             findFriendsConfig: findFriendsConfig,
             invitationSuggestionsConfig: invitationSuggestionsConfig,
             inviteContactsConfig: inviteContactsConfig,
+            searchBoxConfig: searchBoxConfig,
             outgoingInvitationsConfig: outgoingInvitationsConfig,
             incomingInvitationsConfig: incomingInvitationsConfig,
             locale: locale,
@@ -349,6 +354,8 @@ public struct VortexInviteView: View {
             return AnyView(InvitationSuggestionsView(block: block, viewModel: viewModel))
         case "vrtx-invite-contacts":
             return AnyView(InviteContactsView(block: block, viewModel: viewModel))
+        case "vrtx-search-box":
+            return AnyView(SearchBoxView(block: block, viewModel: viewModel))
         case "vrtx-outgoing-invitations":
             return AnyView(OutgoingInvitationsView(
                 block: block,
