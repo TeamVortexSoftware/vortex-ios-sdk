@@ -90,27 +90,27 @@ struct IncomingInvitationsView: View {
     }
     
     private var acceptConfirmTitle: String {
-        block.settings?.customizations?["acceptConfirmTitle"]?.textContent ?? "Accept Invitation"
+        block.settings?.customizations?["mobile.acceptConfirmTitle"]?.textContent ?? "Accept Invitation"
     }
     
     private var acceptConfirmMessage: String {
-        block.settings?.customizations?["acceptConfirmMessage"]?.textContent ?? "Accept invitation from {name}?"
+        block.settings?.customizations?["mobile.acceptConfirmMessage"]?.textContent ?? "Accept invitation from {name}?"
     }
     
     private var deleteConfirmTitle: String {
-        block.settings?.customizations?["deleteConfirmTitle"]?.textContent ?? "Delete Invitation"
+        block.settings?.customizations?["mobile.deleteConfirmTitle"]?.textContent ?? "Delete Invitation"
     }
     
     private var deleteConfirmMessage: String {
-        block.settings?.customizations?["deleteConfirmMessage"]?.textContent ?? "Delete invitation from {name}?"
+        block.settings?.customizations?["mobile.deleteConfirmMessage"]?.textContent ?? "Delete invitation from {name}?"
     }
     
     private var confirmButtonText: String {
-        block.settings?.customizations?["confirmButtonText"]?.textContent ?? "Confirm"
+        block.settings?.customizations?["mobile.confirmButtonText"]?.textContent ?? "Confirm"
     }
     
     private var cancelButtonText: String {
-        block.settings?.customizations?["cancelButtonText"]?.textContent ?? "Cancel"
+        block.settings?.customizations?["mobile.cancelButtonText"]?.textContent ?? "Cancel"
     }
     
     // MARK: - Invitation Row

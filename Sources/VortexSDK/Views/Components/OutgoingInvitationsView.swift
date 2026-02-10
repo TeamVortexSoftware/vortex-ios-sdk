@@ -217,7 +217,7 @@ struct OutgoingInvitationsView: View {
                 #endif
                 // Only show error if we have no internal invitations
                 if allInvitations.isEmpty {
-                    self.error = block.settings?.customizations?["errorMessage"]?.textContent ?? "Failed to load invitations"
+                    self.error = block.settings?.customizations?["mobile.errorMessage"]?.textContent ?? "Failed to load invitations"
                 }
             }
         }
@@ -234,7 +234,7 @@ struct OutgoingInvitationsView: View {
         let targetValue = target?.targetValue
         
         // Use targetName as display name if available, otherwise fall back to targetValue
-        let unknownFallback = block.settings?.customizations?["unknownName"]?.textContent ?? "Unknown"
+        let unknownFallback = block.settings?.customizations?["mobile.unknownName"]?.textContent ?? "Unknown"
         let name = targetName ?? targetValue ?? invitation.senderIdentifier ?? unknownFallback
         // Show the phone number / email / identifier as subtitle
         let subtitle = targetValue ?? invitation.senderIdentifier
@@ -471,19 +471,19 @@ struct OutgoingInvitationsView: View {
     }
     
     private var cancelConfirmTitle: String {
-        block.settings?.customizations?["cancelConfirmTitle"]?.textContent ?? "Cancel Invitation"
+        block.settings?.customizations?["mobile.cancelConfirmTitle"]?.textContent ?? "Cancel Invitation"
     }
     
     private var cancelConfirmMessage: String {
-        block.settings?.customizations?["cancelConfirmMessage"]?.textContent ?? "Cancel invitation to {name}?"
+        block.settings?.customizations?["mobile.cancelConfirmMessage"]?.textContent ?? "Cancel invitation to {name}?"
     }
     
     private var confirmButtonText: String {
-        block.settings?.customizations?["confirmButtonText"]?.textContent ?? "Confirm"
+        block.settings?.customizations?["mobile.confirmButtonText"]?.textContent ?? "Confirm"
     }
     
     private var dismissButtonText: String {
-        block.settings?.customizations?["dismissButtonText"]?.textContent ?? "Keep"
+        block.settings?.customizations?["mobile.dismissButtonText"]?.textContent ?? "Keep"
     }
     
     // Helper to convert font weight string to Font.Weight
