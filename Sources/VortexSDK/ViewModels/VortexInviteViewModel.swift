@@ -484,6 +484,22 @@ class VortexInviteViewModel: ObservableObject {
         return findBlock(in: root, withSubtype: "vrtx-email-invitations")
     }
     
+    /// Find the contacts import block from the form structure
+    var contactsImportBlock: ElementNode? {
+        guard let root = formStructure else { return nil }
+        return findBlock(in: root, withSubtype: "vrtx-contacts-import")
+    }
+    
+    /// Read a customization label from any element block, falling back to a default
+    func customLabel(from block: ElementNode?, key: String, default defaultValue: String) -> String {
+        block?.settings?.customizations?[key]?.textContent ?? defaultValue
+    }
+    
+    /// Read a customization label from the root element (vrtx-root)
+    func rootLabel(key: String, default defaultValue: String) -> String {
+        formStructure?.settings?.customizations?[key]?.textContent ?? defaultValue
+    }
+    
     /// Recursively find a block by subtype in the element tree
     private func findBlock(in node: ElementNode, withSubtype subtype: String) -> ElementNode? {
         if node.subtype == subtype {

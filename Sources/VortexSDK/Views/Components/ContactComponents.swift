@@ -4,6 +4,11 @@ struct ContactsImportView: View {
     let block: ElementNode
     @ObservedObject var viewModel: VortexInviteViewModel
     
+    /// Get custom label from settings.customizations, or use default
+    private func customLabel(for key: String, default defaultLabel: String) -> String {
+        block.settings?.customizations?[key]?.textContent ?? defaultLabel
+    }
+    
     var body: some View {
         VStack(spacing: 12) {
             // Section label from block attributes
@@ -20,7 +25,7 @@ struct ContactsImportView: View {
             if viewModel.isNativeContactsEnabled {
                 ShareButton(
                     icon: .importContacts,
-                    title: "Add from Contacts",
+                    title: customLabel(for: "importContacts.title", default: "Add from Contacts"),
                     theme: block.theme
                 ) {
                     viewModel.selectFromContacts()
@@ -31,7 +36,7 @@ struct ContactsImportView: View {
             if viewModel.isGoogleContactsEnabled {
                 ShareButton(
                     icon: .google,
-                    title: "Add from Google Contacts",
+                    title: customLabel(for: "google.title", default: "Add from Google Contacts"),
                     theme: block.theme
                 ) {
                     viewModel.selectFromGoogleContacts()
@@ -107,6 +112,9 @@ struct ContactRowView: View {
     let isLoading: Bool
     let errorMessage: String?
     let onInvite: () -> Void
+    var inviteLabel: String = "Invite"
+    var invitedLabel: String = "✓ Invited!"
+    var retryLabel: String = "Retry"
     
     var body: some View {
         HStack(spacing: 12) {
@@ -133,7 +141,7 @@ struct ContactRowView: View {
             
             // Invite button, Invited status, or Error with Retry
             if isInvited {
-                Text("✓ Invited!")
+                Text(invitedLabel)
                     .font(.system(size: 13, weight: .semibold))
                     .foregroundColor(.secondary)
             } else if errorMessage != nil {
@@ -143,7 +151,7 @@ struct ContactRowView: View {
                         ProgressView()
                             .frame(width: 60)
                     } else {
-                        Text("Retry")
+                        Text(retryLabel)
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.red)
                     }
@@ -164,7 +172,7 @@ struct ContactRowView: View {
                         ProgressView()
                             .frame(width: 60)
                     } else {
-                        Text("Invite")
+                        Text(inviteLabel)
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(.primary)
                     }

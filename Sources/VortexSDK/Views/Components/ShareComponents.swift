@@ -36,7 +36,7 @@ struct ShareOptionsView: View {
         case "copyLink":
             ShareButton(
                 icon: .link,
-                title: viewModel.copySuccess ? "✓ Copied!" : customLabel(for: "mobile.copyLink", default: "Copy Link"),
+                title: viewModel.copySuccess ? customLabel(for: "mobile.copyLink.successText", default: "✓ Copied!") : customLabel(for: "mobile.copyLink", default: "Copy Link"),
                 isLoading: viewModel.loadingCopy,
                 theme: block.theme
             ) {
@@ -45,7 +45,7 @@ struct ShareOptionsView: View {
         case "nativeShareSheet":
             ShareButton(
                 icon: .share,
-                title: viewModel.shareSuccess ? "✓ Shared!" : customLabel(for: "mobile.nativeShareSheet", default: "Share Invitation"),
+                title: viewModel.shareSuccess ? customLabel(for: "mobile.nativeShareSheet.successText", default: "✓ Shared!") : customLabel(for: "mobile.nativeShareSheet", default: "Share Invitation"),
                 isLoading: viewModel.loadingShare,
                 theme: block.theme
             ) {

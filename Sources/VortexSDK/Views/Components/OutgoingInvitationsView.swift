@@ -217,7 +217,7 @@ struct OutgoingInvitationsView: View {
                 #endif
                 // Only show error if we have no internal invitations
                 if allInvitations.isEmpty {
-                    self.error = "Failed to load invitations"
+                    self.error = block.settings?.customizations?["errorMessage"]?.textContent ?? "Failed to load invitations"
                 }
             }
         }
@@ -234,7 +234,8 @@ struct OutgoingInvitationsView: View {
         let targetValue = target?.targetValue
         
         // Use targetName as display name if available, otherwise fall back to targetValue
-        let name = targetName ?? targetValue ?? invitation.senderIdentifier ?? "Unknown"
+        let unknownFallback = block.settings?.customizations?["unknownName"]?.textContent ?? "Unknown"
+        let name = targetName ?? targetValue ?? invitation.senderIdentifier ?? unknownFallback
         // Show the phone number / email / identifier as subtitle
         let subtitle = targetValue ?? invitation.senderIdentifier
         

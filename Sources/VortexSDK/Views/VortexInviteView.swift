@@ -186,7 +186,7 @@ public struct VortexInviteView: View {
         VStack(spacing: 16) {
             ProgressView()
                 .scaleEffect(1.5)
-            Text("Loading...")
+            Text(viewModel.rootLabel(key: "loadingText", default: "Loading..."))
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -198,7 +198,7 @@ public struct VortexInviteView: View {
                 .font(.system(size: 50))
                 .foregroundColor(.red)
             
-            Text("Error")
+            Text(viewModel.rootLabel(key: "errorTitle", default: "Error"))
                 .font(.title2)
                 .fontWeight(.bold)
             
@@ -212,7 +212,7 @@ public struct VortexInviteView: View {
                     await viewModel.loadConfiguration()
                 }
             }) {
-                Text("Retry")
+                Text(viewModel.rootLabel(key: "retryButton", default: "Retry"))
                     .fontWeight(.semibold)
                     .padding(.horizontal, 20)
                     .padding(.vertical, 10)
@@ -471,10 +471,11 @@ public struct VortexInviteView: View {
             VStack(alignment: .leading, spacing: 8) {
                 EmailInputField(
                     text: $viewModel.emailInput,
-                    onCommit: { viewModel.addEmailFromInput() }
+                    onCommit: { viewModel.addEmailFromInput() },
+                    placeholder: viewModel.customLabel(from: viewModel.emailInvitationsBlock, key: "mobile.placeholder", default: "Enter email addresses")
                 )
                 
-                Text("Press return to add each email")
+                Text(viewModel.customLabel(from: viewModel.emailInvitationsBlock, key: "mobile.hint", default: "Press return to add each email"))
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
@@ -495,7 +496,10 @@ public struct VortexInviteView: View {
                         ProgressView()
                             .progressViewStyle(CircularProgressViewStyle(tint: .white))
                     } else {
-                        Text("Send Invitation\(viewModel.emails.count > 1 || (viewModel.emails.count == 1 && !viewModel.hasValidEmailInput) ? "s" : "")")
+                        let isPlural = viewModel.emails.count > 1 || (viewModel.emails.count == 1 && !viewModel.hasValidEmailInput)
+                        Text(isPlural
+                            ? viewModel.customLabel(from: viewModel.emailInvitationsBlock, key: "mobile.sendButtonPlural", default: "Send Invitations")
+                            : viewModel.customLabel(from: viewModel.emailInvitationsBlock, key: "mobile.sendButton", default: "Send Invitation"))
                     }
                 }
                 .frame(maxWidth: .infinity)
@@ -512,9 +516,10 @@ public struct VortexInviteView: View {
     // MARK: - Contacts Picker View
     
     private var contactsPickerView: some View {
-        VStack(spacing: 16) {
+        let ciBlock = viewModel.contactsImportBlock
+        return VStack(spacing: 16) {
             // Title (matching RN SDK)
-            Text("Add from Contacts")
+            Text(viewModel.customLabel(from: ciBlock, key: "importContacts.title", default: "Add from Contacts"))
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(Color(UIColor.label))
                 .padding(.top, 16)
@@ -523,7 +528,7 @@ public struct VortexInviteView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField("Search contacts...", text: $viewModel.contactsSearchQuery)
+                TextField(viewModel.customLabel(from: ciBlock, key: "searchPlaceholder", default: "Search contacts..."), text: $viewModel.contactsSearchQuery)
                     .textFieldStyle(.plain)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
@@ -545,7 +550,7 @@ public struct VortexInviteView: View {
                 VStack(spacing: 12) {
                     ProgressView()
                         .scaleEffect(1.5)
-                    Text("Loading contacts...")
+                    Text(viewModel.customLabel(from: ciBlock, key: "importContacts.loadingText", default: "Loading contacts..."))
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                 }
@@ -558,7 +563,7 @@ public struct VortexInviteView: View {
                         .font(.system(size: 50))
                         .foregroundColor(.red)
                     
-                    Text("Unable to Access Contacts")
+                    Text(viewModel.customLabel(from: ciBlock, key: "importContacts.errorTitle", default: "Unable to Access Contacts"))
                         .font(.headline)
                         .foregroundColor(.primary)
                     
@@ -581,7 +586,7 @@ public struct VortexInviteView: View {
                         
                         HStack(spacing: 12) {
                             Button(action: { viewModel.openSettings() }) {
-                                Text("Open Settings")
+                                Text(viewModel.customLabel(from: ciBlock, key: "openSettingsButton", default: "Open Settings"))
                                     .fontWeight(.medium)
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -592,7 +597,7 @@ public struct VortexInviteView: View {
                             Button(action: {
                                 Task { await viewModel.retryFetchContacts() }
                             }) {
-                                Text("Retry")
+                                Text(viewModel.customLabel(from: ciBlock, key: "retryButton", default: "Retry"))
                                     .fontWeight(.medium)
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -605,7 +610,7 @@ public struct VortexInviteView: View {
                         Button(action: {
                             Task { await viewModel.retryFetchContacts() }
                         }) {
-                            Text("Try Again")
+                            Text(viewModel.customLabel(from: ciBlock, key: "tryAgainButton", default: "Try Again"))
                                 .fontWeight(.medium)
                                 .padding()
                                 .background(Color(UIColor.secondarySystemBackground))
@@ -622,8 +627,8 @@ public struct VortexInviteView: View {
                         .font(.system(size: 40))
                         .foregroundColor(.secondary)
                     Text(viewModel.contactsSearchQuery.isEmpty 
-                         ? "No contacts with email addresses found" 
-                         : "No contacts match your search")
+                         ? viewModel.customLabel(from: ciBlock, key: "emptyState", default: "No contacts with email addresses found")
+                         : viewModel.customLabel(from: ciBlock, key: "emptySearchState", default: "No contacts match your search"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -642,7 +647,10 @@ public struct VortexInviteView: View {
                                 errorMessage: viewModel.failedContactIds[contact.id],
                                 onInvite: {
                                     Task { await viewModel.inviteContact(contact) }
-                                }
+                                },
+                                inviteLabel: viewModel.customLabel(from: ciBlock, key: "inviteButton", default: "Invite"),
+                                invitedLabel: viewModel.customLabel(from: ciBlock, key: "invitedStatus", default: "✓ Invited!"),
+                                retryLabel: viewModel.customLabel(from: ciBlock, key: "retryButton", default: "Retry")
                             )
                             Divider()
                                 .padding(.leading, 16)
@@ -656,9 +664,10 @@ public struct VortexInviteView: View {
     // MARK: - Google Contacts Picker View
     
     private var googleContactsPickerView: some View {
-        VStack(spacing: 16) {
+        let ciBlock = viewModel.contactsImportBlock
+        return VStack(spacing: 16) {
             // Title (matching RN SDK)
-            Text("Add from Google Contacts")
+            Text(viewModel.customLabel(from: ciBlock, key: "google.title", default: "Add from Google Contacts"))
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(Color(UIColor.label))
                 .padding(.top, 16)
@@ -667,7 +676,7 @@ public struct VortexInviteView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField("Search contacts...", text: $viewModel.googleContactsSearchQuery)
+                TextField(viewModel.customLabel(from: ciBlock, key: "searchPlaceholder", default: "Search contacts..."), text: $viewModel.googleContactsSearchQuery)
                     .textFieldStyle(.plain)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
@@ -689,7 +698,7 @@ public struct VortexInviteView: View {
                 VStack(spacing: 12) {
                     ProgressView()
                         .scaleEffect(1.5)
-                    Text("Loading Google contacts...")
+                    Text(viewModel.customLabel(from: ciBlock, key: "google.loadingText", default: "Loading Google contacts..."))
                         .font(.system(size: 14))
                         .foregroundColor(.secondary)
                 }
@@ -702,7 +711,7 @@ public struct VortexInviteView: View {
                         .font(.system(size: 50))
                         .foregroundColor(.red)
                     
-                    Text("Unable to Access Google Contacts")
+                    Text(viewModel.customLabel(from: ciBlock, key: "google.errorTitle", default: "Unable to Access Google Contacts"))
                         .font(.headline)
                         .foregroundColor(.primary)
                     
@@ -715,7 +724,7 @@ public struct VortexInviteView: View {
                     Button(action: {
                         Task { await viewModel.retryFetchGoogleContacts() }
                     }) {
-                        Text("Try Again")
+                        Text(viewModel.customLabel(from: ciBlock, key: "tryAgainButton", default: "Try Again"))
                             .fontWeight(.medium)
                             .padding()
                             .background(Color(UIColor.secondarySystemBackground))
@@ -731,8 +740,8 @@ public struct VortexInviteView: View {
                         .font(.system(size: 40))
                         .foregroundColor(.secondary)
                     Text(viewModel.googleContactsSearchQuery.isEmpty 
-                         ? "No Google contacts with email addresses found" 
-                         : "No contacts match your search")
+                         ? viewModel.customLabel(from: ciBlock, key: "emptyState", default: "No Google contacts with email addresses found")
+                         : viewModel.customLabel(from: ciBlock, key: "emptySearchState", default: "No contacts match your search"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -751,7 +760,10 @@ public struct VortexInviteView: View {
                                 errorMessage: viewModel.failedGoogleContactIds[contact.id],
                                 onInvite: {
                                     Task { await viewModel.inviteGoogleContact(contact) }
-                                }
+                                },
+                                inviteLabel: viewModel.customLabel(from: ciBlock, key: "inviteButton", default: "Invite"),
+                                invitedLabel: viewModel.customLabel(from: ciBlock, key: "invitedStatus", default: "✓ Invited!"),
+                                retryLabel: viewModel.customLabel(from: ciBlock, key: "retryButton", default: "Retry")
                             )
                             Divider()
                                 .padding(.leading, 16)
@@ -833,7 +845,7 @@ public struct VortexInviteView: View {
         HStack {
             Image(systemName: "checkmark.circle.fill")
                 .foregroundColor(.green)
-            Text("Invitation sent successfully!")
+            Text(viewModel.customLabel(from: viewModel.emailInvitationsBlock, key: "mobile.successMessage", default: "Invitation sent successfully!"))
                 .foregroundColor(.green)
         }
         .padding()
@@ -849,9 +861,10 @@ public struct VortexInviteView: View {
 private struct EmailInputField: View {
     @Binding var text: String
     let onCommit: () -> Void
+    var placeholder: String = "Enter email addresses"
     
     var body: some View {
-        TextField("Enter email addresses", text: $text, onCommit: onCommit)
+        TextField(placeholder, text: $text, onCommit: onCommit)
             .textFieldStyle(RoundedBorderTextFieldStyle())
             .keyboardType(.emailAddress)
             .textContentType(.emailAddress)
