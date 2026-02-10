@@ -38,67 +38,30 @@ Sources/VortexSDK/VortexSDK.swift → VortexSDKInfo.version
 ### Overview
 
 ```
-Developer: ./scripts/prepare-release.sh 1.0.3
+Developer: ./scripts/release.sh 1.0.3 1.0.4-dev
     │
-    ▼
-[Branch release/1.0.3 created + PR opened]
-    │
-    ▼
-Developer: Reviews & merges PR to main
-    │
-    ▼
-[GitHub Action: release.yml]
+    ├── Bumps version to 1.0.3 on develop
+    ├── FF-only merges develop → main
     ├── Creates git tag 1.0.3
     ├── Creates GitHub Release with auto-generated notes
-    └── Deletes release/1.0.3 branch
-           │
-           ▼
-Developer: ./scripts/post-release.sh 1.0.4-dev
-    └── Bumps develop to next -dev version
+    └── Bumps develop to 1.0.4-dev
 ```
 
 ### Step-by-Step
 
-#### 1. Prepare the Release
-
-From the `develop` branch:
+From the `develop` branch, run:
 
 ```bash
-./scripts/prepare-release.sh 1.0.3
+./scripts/release.sh 1.0.3 1.0.4-dev
 ```
 
-This script:
-- Creates a `release/1.0.3` branch
-- Updates `VortexSDK.swift` version to `1.0.3` (removes `-dev`)
-- Updates `README.md` with the new version
-- Commits and pushes the branch
-- Creates a PR to `main` via `gh` CLI
-
-#### 2. Review and Merge
-
-- Review the PR in GitHub
-- Ensure CI passes
-- Merge the PR to `main`
-
-#### 3. Automatic Release (GitHub Actions)
-
-After merging, the `release.yml` workflow automatically:
-- Creates a git tag (e.g., `1.0.3`)
-- Creates a GitHub Release with auto-generated release notes
-- Deletes the `release/1.0.3` branch
-
-#### 4. Bump Develop Version
-
-After the release is created, bump develop to the next version:
-
-```bash
-./scripts/post-release.sh 1.0.4-dev
-```
-
-This script:
-- Switches to `develop` and syncs with `main`
-- Updates `VortexSDK.swift` to the next `-dev` version
-- Commits and pushes to `develop`
+This single script:
+1. Bumps the version to `1.0.3` on `develop` and pushes
+2. Temporarily disables branch protection on `main`
+3. Fast-forward merges `develop` into `main` (preserving commit SHAs)
+4. Re-enables branch protection on `main`
+5. Creates a git tag and GitHub Release
+6. Bumps `develop` to `1.0.4-dev` and pushes
 
 ## Files Updated During Release
 
@@ -107,27 +70,14 @@ This script:
 | `Sources/VortexSDK/VortexSDK.swift` | `VortexSDKInfo.version` |
 | `README.md` | Version in installation instructions |
 
-## GitHub Actions
-
-| Workflow | Trigger | Purpose |
-|----------|---------|---------|
-| `release.yml` | PR merged to `main` from `release/*` | Creates tag + GitHub Release |
-
 ## Troubleshooting
 
-### PR creation fails
+### `gh` CLI not authenticated
 
 Ensure `gh` CLI is authenticated:
 ```bash
 gh auth status
 gh auth login
-```
-
-### Forgot to bump develop
-
-After a release, run:
-```bash
-./scripts/post-release.sh X.Y.Z-dev
 ```
 
 ### Tag already exists
