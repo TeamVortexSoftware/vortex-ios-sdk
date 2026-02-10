@@ -13,7 +13,7 @@ struct SearchBoxView: View {
     
     /// Placeholder text from block settings customizations
     private var placeholder: String {
-        block.settings?.customizations?["placeholder"]?.textContent ?? "Search..."
+        block.settings?.customizations?["searchPlaceholder"]?.textContent ?? "Search..."
     }
     
     /// Connect button text from block settings customizations
