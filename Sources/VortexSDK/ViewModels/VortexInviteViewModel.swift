@@ -247,6 +247,44 @@ class VortexInviteViewModel: ObservableObject {
         return Color(hex: hexColor)
     }
 
+    /// Get the form title from widget configuration (mobile-specific key takes priority)
+    var configFormTitle: String? {
+        return formStructure?.settings?.customizations?["mobile.formTitle"]?.textContent
+            ?? formStructure?.settings?.customizations?["formTitle"]?.textContent
+    }
+
+    /// Helper to get a value from the root element's theme options
+    private func getRootThemeOption(_ key: String) -> String? {
+        guard let options = formStructure?.theme?.options else { return nil }
+        return options.first(where: { $0.key == key })?.value
+    }
+
+    /// Get form title style from root element's theme options (--vrtx-form-title-*)
+    var formTitleColor: Color? {
+        guard let hex = getRootThemeOption("--vrtx-form-title-color"), !hex.isEmpty else { return nil }
+        return Color(hex: hex)
+    }
+
+    var formTitleFontSize: CGFloat? {
+        guard let str = getRootThemeOption("--vrtx-form-title-font-size"), !str.isEmpty else { return nil }
+        // Strip "px" suffix if present
+        let cleaned = str.replacingOccurrences(of: "px", with: "")
+        guard let val = Double(cleaned) else { return nil }
+        return CGFloat(val)
+    }
+
+    var formTitleFontWeight: Font.Weight? {
+        guard let str = getRootThemeOption("--vrtx-form-title-font-weight"), !str.isEmpty else { return nil }
+        switch str {
+        case "bold", "700": return .bold
+        case "600": return .semibold
+        case "500": return .medium
+        case "400", "normal": return .regular
+        case "300": return .light
+        default: return nil
+        }
+    }
+
     /// Get the surface foreground color from theme (for heading text)
     /// Priority: 1) New --vrtx-root-color, 2) Legacy --color-surface-foreground
     var surfaceForegroundColor: Color? {

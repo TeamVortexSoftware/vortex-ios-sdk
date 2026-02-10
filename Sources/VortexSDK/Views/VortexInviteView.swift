@@ -19,6 +19,7 @@ import GoogleSignIn
 ///    await prefetcher.prefetch(jwt: jwt)
 ///    // Later, VortexInviteView will use the cached configuration automatically
 ///    ```
+
 public struct VortexInviteView: View {
     @StateObject private var viewModel: VortexInviteViewModel
     
@@ -121,11 +122,25 @@ public struct VortexInviteView: View {
                         VortexIcon(
                             name: viewModel.currentView == .main ? .close : .arrowBack,
                             size: 24,
-                            color: Color(red: 0x66/255, green: 0x66/255, blue: 0x66/255)
+                            color: (viewModel.formTitleColor ?? Color(red: 0x1a/255, green: 0x1a/255, blue: 0x1a/255)).opacity(0.75)
                         )
                         .frame(width: 44, height: 44)
                     }
-                    Spacer()
+                    if let resolvedTitle = viewModel.configFormTitle {
+                        Text(resolvedTitle)
+                            .font(.system(
+                                size: viewModel.formTitleFontSize ?? 17,
+                                weight: viewModel.formTitleFontWeight ?? .semibold
+                            ))
+                            .foregroundColor(viewModel.formTitleColor ?? Color(red: 0x1a/255, green: 0x1a/255, blue: 0x1a/255))
+                            .frame(maxWidth: .infinity)
+                            .multilineTextAlignment(.center)
+                        // Empty spacer to balance the header
+                        Color.clear
+                            .frame(width: 44, height: 44)
+                    } else {
+                        Spacer()
+                    }
                 }
                 .padding(.horizontal, 8)
                 .padding(.vertical, 4)
