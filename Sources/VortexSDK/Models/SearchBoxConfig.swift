@@ -1,46 +1,59 @@
 import Foundation
 
+// MARK: - Search Box Types
+
+/// A contact returned from the Search Box search callback.
+/// Provided by the customer via searchBoxConfig.onSearch.
+public struct SearchBoxContact: Identifiable, Sendable {
+    /// Internal ID of the contact in the customer's platform
+    public let internalId: String
+    /// Display name of the contact
+    public let name: String
+    /// Optional subtitle (e.g., username, email, or app-specific info)
+    public let subtitle: String?
+    /// Avatar/profile image URL (optional)
+    public let avatarUrl: String?
+    /// Optional metadata for app-specific data
+    public let metadata: [String: Any]?
+    
+    /// Identifiable conformance - uses internalId
+    public var id: String { internalId }
+    
+    public init(
+        internalId: String,
+        name: String,
+        subtitle: String? = nil,
+        avatarUrl: String? = nil,
+        metadata: [String: Any]? = nil
+    ) {
+        self.internalId = internalId
+        self.name = name
+        self.subtitle = subtitle
+        self.avatarUrl = avatarUrl
+        self.metadata = metadata
+    }
+}
+
 /// Configuration for the Search Box feature.
 /// Passed to VortexInviteView to enable and configure the Search Box component.
 ///
 /// The customer provides an `onSearch` callback that returns matching contacts.
-/// When the user taps "Connect", the SDK creates an invitation with target type = internalId.
+/// When the user taps "Connect", the SDK creates an invitation with target type = internalId
+/// via the Vortex backend, identical to the Find Friends component behavior.
 public struct SearchBoxConfig {
     /// Called when the user taps the search button.
     /// The customer implements this callback to perform the search and return matching contacts.
-    public let onSearch: (String) async -> [FindFriendsContact]
-    
-    /// Called when user taps "Connect" on a search result contact.
-    /// If the callback returns true, the SDK will create an invitation via the Vortex backend.
-    public let onConnect: ((FindFriendsContact) async -> Bool)?
+    public let onSearch: (String) async -> [SearchBoxContact]
     
     /// Optional: Called after an invitation is successfully created.
-    public let onInvitationCreated: ((FindFriendsContact) -> Void)?
-    
-    /// Optional: Called if creating the invitation fails.
-    public let onInvitationError: ((FindFriendsContact, Error) -> Void)?
-    
-    /// Optional: Custom text for the "Connect" button.
-    /// Defaults to "Connect".
-    public let connectButtonText: String?
-    
-    /// Optional: Custom message shown when search returns no results.
-    /// Defaults to "No results found".
-    public let noResultsMessage: String?
+    /// Use this to trigger in-app notifications or update your UI.
+    public let onInvitationCreated: ((SearchBoxContact) -> Void)?
     
     public init(
-        onSearch: @escaping (String) async -> [FindFriendsContact],
-        onConnect: ((FindFriendsContact) async -> Bool)? = nil,
-        onInvitationCreated: ((FindFriendsContact) -> Void)? = nil,
-        onInvitationError: ((FindFriendsContact, Error) -> Void)? = nil,
-        connectButtonText: String? = nil,
-        noResultsMessage: String? = nil
+        onSearch: @escaping (String) async -> [SearchBoxContact],
+        onInvitationCreated: ((SearchBoxContact) -> Void)? = nil
     ) {
         self.onSearch = onSearch
-        self.onConnect = onConnect
         self.onInvitationCreated = onInvitationCreated
-        self.onInvitationError = onInvitationError
-        self.connectButtonText = connectButtonText
-        self.noResultsMessage = noResultsMessage
     }
 }

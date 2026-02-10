@@ -80,7 +80,7 @@ class VortexInviteViewModel: ObservableObject {
     
     // Search Box state
     @Published var searchBoxQuery: String = ""
-    @Published var searchBoxResults: [FindFriendsContact]? = nil
+    @Published var searchBoxResults: [SearchBoxContact]? = nil
     @Published var searchBoxIsSearching: Bool = false
     @Published var searchBoxActionInProgress: String? = nil
     
@@ -2119,7 +2119,7 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     /// Handle Connect button tap for a contact in Search Box results
-    func handleSearchBoxConnect(_ contact: FindFriendsContact) {
+    func handleSearchBoxConnect(_ contact: SearchBoxContact) {
         guard searchBoxConfig != nil else { return }
         
         searchBoxActionInProgress = contact.id
@@ -2131,26 +2131,16 @@ class VortexInviteViewModel: ObservableObject {
     }
     
     /// Perform the search box connect action
-    private func performSearchBoxConnect(_ contact: FindFriendsContact) async {
-        guard let config = searchBoxConfig else { return }
+    private func performSearchBoxConnect(_ contact: SearchBoxContact) async {
+        guard searchBoxConfig != nil else { return }
         
-        // If onConnect is provided, call it first
-        if let onConnect = config.onConnect {
-            let shouldCreateInvitation = await onConnect(contact)
-            guard shouldCreateInvitation else { return }
-        }
-        
-        // Remove the connected contact from the search results list
-        searchBoxResults?.removeAll { $0.id == contact.id }
-        
-        // Create invitation via backend
+        // Create invitation via backend (identical to Find Friends behavior)
         await createSearchBoxInvitation(for: contact)
     }
     
     /// Create an invitation for a search box result with target type = internalId
-    private func createSearchBoxInvitation(for contact: FindFriendsContact) async {
+    private func createSearchBoxInvitation(for contact: SearchBoxContact) async {
         guard let jwt = jwt, let widgetConfig = configuration else {
-            searchBoxConfig?.onInvitationError?(contact, VortexError.missingConfiguration)
             return
         }
         
@@ -2188,10 +2178,14 @@ class VortexInviteViewModel: ObservableObject {
                 shortLink: ""
             )
             
+            // Remove the connected contact from the search results list
+            searchBoxResults?.removeAll { $0.id == contact.id }
+            
+            // Notify the customer that the invitation was created
             searchBoxConfig?.onInvitationCreated?(contact)
             
         } catch {
-            searchBoxConfig?.onInvitationError?(contact, error)
+            // Invitation creation failed - contact remains in the list
         }
     }
 }

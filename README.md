@@ -340,7 +340,7 @@ VortexInviteView(
             // Return matching contacts from your backend or local data
             let results = await myAPI.searchUsers(query: query)
             return results.map { user in
-                FindFriendsContact(
+                SearchBoxContact(
                     internalId: user.id,
                     name: user.displayName,
                     subtitle: "@\(user.username)",
@@ -348,16 +348,8 @@ VortexInviteView(
                 )
             }
         },
-        onConnect: { contact in
-            // Called when user taps "Connect" on a search result
-            // Return true to create an invitation via the Vortex backend
-            return true
-        },
         onInvitationCreated: { contact in
             print("Invitation created for \(contact.name)")
-        },
-        onInvitationError: { contact, error in
-            print("Failed to invite \(contact.name): \(error)")
         }
     ),
     onDismiss: { /* ... */ }
@@ -369,25 +361,21 @@ VortexInviteView(
 1. The component renders a search text field with a configurable placeholder and a search button
 2. An optional title can be displayed above the search box (configured in the widget editor)
 3. When the user taps the search button, your `onSearch` callback is called with the query string
-4. Your callback returns a list of `FindFriendsContact` objects (the same type used by Find Friends)
+4. Your callback returns a list of `SearchBoxContact` objects
 5. The matching contacts are rendered below the search box with a "Connect" button next to each
 6. If the search returns no results, a configurable "no results" message is displayed
-7. When the user taps "Connect", the `onConnect` callback is called. If it returns `true`, the SDK creates an invitation via the Vortex API and the contact is removed from the list
+7. When the user taps "Connect", the SDK creates an invitation via the Vortex API with `targetType: internalId` and the contact is removed from the list (identical to Find Friends behavior)
 
 **SearchBoxConfig Properties:**
 
 ```swift
 SearchBoxConfig(
-    onSearch: (String) async -> [FindFriendsContact],              // Required: Search callback
-    onConnect: ((FindFriendsContact) async -> Bool)?,              // Optional: Called on Connect tap (return true to create invitation)
-    onInvitationCreated: ((FindFriendsContact) -> Void)?,          // Optional: Called after successful invitation
-    onInvitationError: ((FindFriendsContact, Error) -> Void)?,     // Optional: Called on failure
-    connectButtonText: String?,                                     // Optional: Custom Connect button text
-    noResultsMessage: String?                                       // Optional: Custom no-results message
+    onSearch: (String) async -> [SearchBoxContact],              // Required: Search callback
+    onInvitationCreated: ((SearchBoxContact) -> Void)?           // Optional: Called after successful invitation
 )
 ```
 
-> **Note:** The placeholder text, connect button text, no-results message, and title are all configurable from the widget editor. Values provided in `SearchBoxConfig` serve as fallback defaults.
+> **Note:** The placeholder text, connect button text, no-results message, and title are all configurable from the widget editor.
 
 ### Incoming Invitations
 

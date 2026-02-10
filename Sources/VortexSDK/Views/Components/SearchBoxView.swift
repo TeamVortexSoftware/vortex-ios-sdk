@@ -16,18 +16,14 @@ struct SearchBoxView: View {
         block.settings?.customizations?["placeholder"]?.textContent ?? "Search..."
     }
     
-    /// Connect button text from block settings or config
+    /// Connect button text from block settings customizations
     private var connectButtonText: String {
-        block.settings?.customizations?["connectButton"]?.textContent
-            ?? viewModel.searchBoxConfig?.connectButtonText
-            ?? "Connect"
+        block.settings?.customizations?["connectButton"]?.textContent ?? "Connect"
     }
     
-    /// No results message from block settings or config
+    /// No results message from block settings customizations
     private var noResultsMessage: String {
-        block.settings?.customizations?["noResultsMessage"]?.textContent
-            ?? viewModel.searchBoxConfig?.noResultsMessage
-            ?? "No results found"
+        block.settings?.customizations?["noResultsMessage"]?.textContent ?? "No results found"
     }
     
     /// Primary color from theme or default blue
@@ -153,25 +149,41 @@ struct SearchBoxView: View {
     
     // MARK: - Search Row
     
+    @ViewBuilder
     private var searchRow: some View {
-        HStack(spacing: 8) {
-            // Search text field
-            TextField(placeholder, text: $viewModel.searchBoxQuery, onCommit: {
-                viewModel.handleSearchBoxSearch()
-            })
-            .font(.system(size: 16))
-            .foregroundColor(foregroundColor)
-            .padding(.horizontal, 12)
-            .frame(height: 44)
-            .overlay(
-                RoundedRectangle(cornerRadius: 8)
-                    .stroke(borderColor, lineWidth: 1)
+        if #available(iOS 15.0, *) {
+            SearchRowFocusable(
+                placeholder: placeholder,
+                query: $viewModel.searchBoxQuery,
+                foregroundColor: foregroundColor,
+                borderColor: borderColor,
+                isSearching: viewModel.searchBoxIsSearching,
+                isDisabled: viewModel.searchBoxQuery.trimmingCharacters(in: .whitespaces).isEmpty,
+                searchButtonForegroundColor: searchButtonForegroundColor,
+                searchButtonBackgroundValue: searchButtonBackgroundValue,
+                defaultPrimaryBackground: defaultPrimaryBackground,
+                parseGradient: parseSearchButtonLinearGradient,
+                onCommit: { viewModel.handleSearchBoxSearch() }
             )
-            
-            // Search button
-            searchButton
+            .padding(.bottom, 12)
+        } else {
+            HStack(spacing: 8) {
+                TextField(placeholder, text: $viewModel.searchBoxQuery, onCommit: {
+                    viewModel.handleSearchBoxSearch()
+                })
+                .font(.system(size: 16))
+                .foregroundColor(foregroundColor)
+                .padding(.horizontal, 12)
+                .frame(height: 44)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(borderColor, lineWidth: 1)
+                )
+                
+                searchButton
+            }
+            .padding(.bottom, 12)
         }
-        .padding(.bottom, 12)
     }
     
     // MARK: - Search Button
@@ -248,27 +260,7 @@ struct SearchBoxView: View {
     
     // MARK: - Search Button Gradient Parsing
     
-    private struct SearchButtonParsedGradient {
-        let colors: [Color]
-        let stops: [CGFloat]
-        let angle: Double
-        
-        var startPoint: UnitPoint {
-            let radians = (angle - 90) * .pi / 180
-            let x = 0.5 - cos(radians) * 0.5
-            let y = 0.5 + sin(radians) * 0.5
-            return UnitPoint(x: x, y: y)
-        }
-        
-        var endPoint: UnitPoint {
-            let radians = (angle - 90) * .pi / 180
-            let x = 0.5 + cos(radians) * 0.5
-            let y = 0.5 - sin(radians) * 0.5
-            return UnitPoint(x: x, y: y)
-        }
-    }
-    
-    private func parseSearchButtonLinearGradient(_ gradientString: String) -> SearchButtonParsedGradient? {
+    private func parseSearchButtonLinearGradient(_ gradientString: String) -> SearchButtonGradient? {
         guard gradientString.contains("linear-gradient") else { return nil }
         
         var angle: Double = 180
@@ -309,14 +301,14 @@ struct SearchBoxView: View {
         }
         
         guard colors.count >= 2 else { return nil }
-        return SearchButtonParsedGradient(colors: colors, stops: stops, angle: angle)
+        return SearchButtonGradient(colors: colors, stops: stops, angle: angle)
     }
 }
 
 // MARK: - Contact Item View
 
 private struct SearchBoxContactItemView: View {
-    let contact: FindFriendsContact
+    let contact: SearchBoxContact
     let block: ElementNode
     @ObservedObject var viewModel: VortexInviteViewModel
     let connectButtonText: String
@@ -658,5 +650,110 @@ private struct SearchBoxContactItemView: View {
             return 1
         }
         return CGFloat(width)
+    }
+}
+
+// MARK: - Search Row with Focus Management (iOS 15+)
+
+/// A self-contained search row that uses @FocusState to prevent the TextField from
+/// automatically regaining focus when other parts of the form change (e.g., when an
+/// outgoing invitation is removed after cancellation, causing a re-render that
+/// restores focus to the previously-focused text field).
+///
+/// The key technique: after the user taps the search button (or presses Return),
+/// we explicitly set `isFieldFocused = false` so the field is no longer the
+/// "last focused" element. This prevents SwiftUI's focus restoration from
+/// scrolling back to the search box when unrelated UI changes occur.
+@available(iOS 15.0, *)
+private struct SearchRowFocusable: View {
+    let placeholder: String
+    @Binding var query: String
+    let foregroundColor: Color
+    let borderColor: Color
+    let isSearching: Bool
+    let isDisabled: Bool
+    let searchButtonForegroundColor: Color
+    let searchButtonBackgroundValue: String?
+    let defaultPrimaryBackground: Color
+    let parseGradient: (String) -> SearchButtonGradient?
+    let onCommit: () -> Void
+    
+    @FocusState private var isFieldFocused: Bool
+    
+    var body: some View {
+        HStack(spacing: 8) {
+            TextField(placeholder, text: $query)
+                .focused($isFieldFocused)
+                .font(.system(size: 16))
+                .foregroundColor(foregroundColor)
+                .padding(.horizontal, 12)
+                .frame(height: 44)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 8)
+                        .stroke(borderColor, lineWidth: 1)
+                )
+                .submitLabel(.search)
+                .onSubmit {
+                    isFieldFocused = false
+                    onCommit()
+                }
+            
+            Button(action: {
+                isFieldFocused = false
+                onCommit()
+            }) {
+                Group {
+                    if isSearching {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle())
+                            .scaleEffect(0.8)
+                    } else {
+                        Image(systemName: "magnifyingglass")
+                            .font(.system(size: 18, weight: .medium))
+                    }
+                }
+                .foregroundColor(searchButtonForegroundColor)
+                .frame(width: 44, height: 44)
+                .background(searchButtonBg)
+                .cornerRadius(8)
+            }
+            .disabled(isSearching || isDisabled)
+        }
+    }
+    
+    @ViewBuilder
+    private var searchButtonBg: some View {
+        if let value = searchButtonBackgroundValue, let gradient = parseGradient(value) {
+            LinearGradient(
+                stops: zip(gradient.colors, gradient.stops).map { Gradient.Stop(color: $0, location: $1) },
+                startPoint: gradient.startPoint,
+                endPoint: gradient.endPoint
+            )
+        } else if let value = searchButtonBackgroundValue, let color = Color(hex: value) {
+            color
+        } else {
+            defaultPrimaryBackground
+        }
+    }
+}
+
+/// Shared gradient result type used by SearchRowFocusable
+private struct SearchButtonGradient {
+    let colors: [Color]
+    let stops: [CGFloat]
+    let angle: Double
+    
+    var startPoint: UnitPoint {
+        let radians = (angle - 90) * .pi / 180
+        let x = 0.5 - cos(radians) * 0.5
+        let y = 0.5 + sin(radians) * 0.5
+        return UnitPoint(x: x, y: y)
+    }
+    
+    var endPoint: UnitPoint {
+        let radians = (angle - 90) * .pi / 180
+        let x = 0.5 + cos(radians) * 0.5
+        let y = 0.5 - sin(radians) * 0.5
+        return UnitPoint(x: x, y: y)
     }
 }
