@@ -4,11 +4,6 @@ struct ContactsImportView: View {
     let block: ElementNode
     @ObservedObject var viewModel: VortexInviteViewModel
     
-    /// Get custom label from settings.customizations, or use default
-    private func customLabel(for key: String, default defaultLabel: String) -> String {
-        block.settings?.customizations?[key]?.textContent ?? defaultLabel
-    }
-    
     var body: some View {
         VStack(spacing: 12) {
             // Section label from block attributes
@@ -25,7 +20,7 @@ struct ContactsImportView: View {
             if viewModel.isNativeContactsEnabled {
                 ShareButton(
                     icon: .importContacts,
-                    title: customLabel(for: "importContacts.title", default: "Add from Contacts"),
+                    title: viewModel.customLabel(from: block, key: "importContacts.title", default: "Add from Contacts"),
                     theme: block.theme
                 ) {
                     viewModel.selectFromContacts()
@@ -36,7 +31,7 @@ struct ContactsImportView: View {
             if viewModel.isGoogleContactsEnabled {
                 ShareButton(
                     icon: .google,
-                    title: customLabel(for: "google.title", default: "Add from Google Contacts"),
+                    title: viewModel.customLabel(from: block, key: "google.title", default: "Add from Google Contacts"),
                     theme: block.theme
                 ) {
                     viewModel.selectFromGoogleContacts()
