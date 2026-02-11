@@ -528,7 +528,7 @@ public struct VortexInviteView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField(viewModel.customLabel(from: ciBlock, key: "searchPlaceholder", default: "Search contacts..."), text: $viewModel.contactsSearchQuery)
+                TextField(viewModel.customLabel(from: ciBlock, key: "importContacts.searchPlaceholder", default: "Search contacts..."), text: $viewModel.contactsSearchQuery)
                     .textFieldStyle(.plain)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
@@ -586,7 +586,7 @@ public struct VortexInviteView: View {
                         
                         HStack(spacing: 12) {
                             Button(action: { viewModel.openSettings() }) {
-                                Text(viewModel.customLabel(from: ciBlock, key: "openSettingsButton", default: "Open Settings"))
+                                Text(viewModel.customLabel(from: ciBlock, key: "importContacts.openSettingsButton", default: "Open Settings"))
                                     .fontWeight(.medium)
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -597,7 +597,7 @@ public struct VortexInviteView: View {
                             Button(action: {
                                 Task { await viewModel.retryFetchContacts() }
                             }) {
-                                Text(viewModel.customLabel(from: ciBlock, key: "retryButton", default: "Retry"))
+                                Text(viewModel.customLabel(from: ciBlock, key: "importContacts.retryButton", default: "Retry"))
                                     .fontWeight(.medium)
                                     .frame(maxWidth: .infinity)
                                     .padding()
@@ -610,7 +610,7 @@ public struct VortexInviteView: View {
                         Button(action: {
                             Task { await viewModel.retryFetchContacts() }
                         }) {
-                            Text(viewModel.customLabel(from: ciBlock, key: "tryAgainButton", default: "Try Again"))
+                            Text(viewModel.customLabel(from: ciBlock, key: "importContacts.tryAgainButton", default: "Try Again"))
                                 .fontWeight(.medium)
                                 .padding()
                                 .background(Color(UIColor.secondarySystemBackground))
@@ -627,8 +627,8 @@ public struct VortexInviteView: View {
                         .font(.system(size: 40))
                         .foregroundColor(.secondary)
                     Text(viewModel.contactsSearchQuery.isEmpty 
-                         ? viewModel.customLabel(from: ciBlock, key: "emptyState", default: "No contacts with email addresses found")
-                         : viewModel.customLabel(from: ciBlock, key: "emptySearchState", default: "No contacts match your search"))
+                         ? viewModel.customLabel(from: ciBlock, key: "importContacts.emptyState", default: "No contacts with email addresses found")
+                         : viewModel.customLabel(from: ciBlock, key: "importContacts.emptySearchState", default: "No contacts match your search"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -648,9 +648,9 @@ public struct VortexInviteView: View {
                                 onInvite: {
                                     Task { await viewModel.inviteContact(contact) }
                                 },
-                                inviteLabel: viewModel.customLabel(from: ciBlock, key: "inviteButton", default: "Invite"),
-                                invitedLabel: viewModel.customLabel(from: ciBlock, key: "invitedStatus", default: "✓ Invited!"),
-                                retryLabel: viewModel.customLabel(from: ciBlock, key: "retryButton", default: "Retry")
+                                inviteLabel: viewModel.customLabel(from: ciBlock, key: "importContacts.inviteButton", default: "Invite"),
+                                invitedLabel: viewModel.customLabel(from: ciBlock, key: "importContacts.invitedStatus", default: "✓ Invited!"),
+                                retryLabel: viewModel.customLabel(from: ciBlock, key: "importContacts.retryButton", default: "Retry")
                             )
                             Divider()
                                 .padding(.leading, 16)
@@ -676,7 +676,7 @@ public struct VortexInviteView: View {
             HStack {
                 Image(systemName: "magnifyingglass")
                     .foregroundColor(.secondary)
-                TextField(viewModel.customLabel(from: ciBlock, key: "searchPlaceholder", default: "Search contacts..."), text: $viewModel.googleContactsSearchQuery)
+                TextField(viewModel.customLabel(from: ciBlock, key: "google.searchPlaceholder", default: "Search contacts..."), text: $viewModel.googleContactsSearchQuery)
                     .textFieldStyle(.plain)
                     .autocapitalization(.none)
                     .disableAutocorrection(true)
@@ -724,7 +724,7 @@ public struct VortexInviteView: View {
                     Button(action: {
                         Task { await viewModel.retryFetchGoogleContacts() }
                     }) {
-                        Text(viewModel.customLabel(from: ciBlock, key: "tryAgainButton", default: "Try Again"))
+                        Text(viewModel.customLabel(from: ciBlock, key: "google.tryAgainButton", default: "Try Again"))
                             .fontWeight(.medium)
                             .padding()
                             .background(Color(UIColor.secondarySystemBackground))
@@ -740,8 +740,8 @@ public struct VortexInviteView: View {
                         .font(.system(size: 40))
                         .foregroundColor(.secondary)
                     Text(viewModel.googleContactsSearchQuery.isEmpty 
-                         ? viewModel.customLabel(from: ciBlock, key: "emptyState", default: "No Google contacts with email addresses found")
-                         : viewModel.customLabel(from: ciBlock, key: "emptySearchState", default: "No contacts match your search"))
+                         ? viewModel.customLabel(from: ciBlock, key: "google.emptyState", default: "No Google contacts with email addresses found")
+                         : viewModel.customLabel(from: ciBlock, key: "google.emptySearchState", default: "No contacts match your search"))
                         .font(.subheadline)
                         .foregroundColor(.secondary)
                         .multilineTextAlignment(.center)
@@ -761,9 +761,9 @@ public struct VortexInviteView: View {
                                 onInvite: {
                                     Task { await viewModel.inviteGoogleContact(contact) }
                                 },
-                                inviteLabel: viewModel.customLabel(from: ciBlock, key: "inviteButton", default: "Invite"),
-                                invitedLabel: viewModel.customLabel(from: ciBlock, key: "invitedStatus", default: "✓ Invited!"),
-                                retryLabel: viewModel.customLabel(from: ciBlock, key: "retryButton", default: "Retry")
+                                inviteLabel: viewModel.customLabel(from: ciBlock, key: "google.inviteButton", default: "Invite"),
+                                invitedLabel: viewModel.customLabel(from: ciBlock, key: "google.invitedStatus", default: "✓ Invited!"),
+                                retryLabel: viewModel.customLabel(from: ciBlock, key: "google.retryButton", default: "Retry")
                             )
                             Divider()
                                 .padding(.leading, 16)
