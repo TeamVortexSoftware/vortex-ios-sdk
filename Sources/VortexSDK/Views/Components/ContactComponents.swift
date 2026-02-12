@@ -44,7 +44,7 @@ struct ContactsImportView: View {
             if viewModel.isEmailInvitationsEnabled {
                 ShareButton(
                     icon: .email,
-                    title: "Add by Email",
+                    title: viewModel.emailInvitationsBlock?.attributes?["label"]?.stringValue ?? "Add by Email",
                     theme: block.theme
                 ) {
                     viewModel.currentView = .emailEntry
