@@ -406,7 +406,7 @@ VortexInviteView(
 
 **With Internal Invitations:**
 
-You can merge your app's invitations with Vortex API invitations. The SDK deduplicates by `userId` — if an API invitation and an internal invitation share the same `userId`, the API one is kept (since it supports server-side accept/delete).
+You can merge your app's invitations with Vortex API invitations. The SDK deduplicates by `inviterId` — if an API invitation and an internal invitation share the same `inviterId`, the API one is kept (since it supports server-side accept/delete).
 
 ```swift
 IncomingInvitationsConfig(
@@ -414,7 +414,7 @@ IncomingInvitationsConfig(
         IncomingInvitationItem(
             id: "internal-1",
             name: "Alice Johnson",
-            userId: "user-123",  // Used for deduplication against API invitations
+            inviterId: "user-123",  // Used for deduplication against API invitations
             avatarUrl: "https://example.com/avatar.jpg",
             metadata: ["inviter_handle": "@alice"]  // Custom metadata
         )
@@ -456,7 +456,7 @@ Use the `isVortexInvitation` property to determine where an invitation came from
 IncomingInvitationItem(
     id: String,                  // Unique identifier
     name: String,                // Display name of the sender
-    userId: String?,             // User ID for deduplication (creatorId for incoming)
+    inviterId: String?,           // Inviter's user ID for deduplication (creatorId for incoming)
     avatarUrl: String?,          // Avatar image URL
     isVortexInvitation: Bool,    // Source: true = Vortex API, false = your app
     metadata: [String: Any]?     // Custom metadata
@@ -505,7 +505,7 @@ VortexInviteView(
 
 **With Internal Invitations:**
 
-You can merge your app's outgoing invitations with Vortex API invitations. The SDK deduplicates by `userId` — if an API invitation and an internal invitation share the same `userId`, the API one is kept (since it supports server-side revocation).
+You can merge your app's outgoing invitations with Vortex API invitations. The SDK deduplicates by `inviteeId` — if an API invitation and an internal invitation share the same `inviteeId`, the API one is kept (since it supports server-side revocation).
 
 ```swift
 OutgoingInvitationsConfig(
@@ -513,7 +513,7 @@ OutgoingInvitationsConfig(
         OutgoingInvitationItem(
             id: "internal-1",
             name: "Bob Smith",
-            userId: "user-12345",  // Used for deduplication against API invitations
+            inviteeId: "user-12345",  // Used for deduplication against API invitations
             avatarUrl: "https://example.com/avatar.jpg",
             metadata: ["invitee_handle": "@bob"]  // Custom metadata
         )
@@ -547,7 +547,7 @@ Use the `isVortexInvitation` property to determine where an invitation came from
 OutgoingInvitationItem(
     id: String,                  // Unique identifier
     name: String,                // Display name of the invitee
-    userId: String?,             // User ID for deduplication (targetValue for outgoing)
+    inviteeId: String?,           // Invitee's user ID for deduplication (targetValue for outgoing)
     avatarUrl: String?,          // Avatar image URL
     isVortexInvitation: Bool,    // Source: true = Vortex API, false = your app
     metadata: [String: Any]?     // Custom metadata
@@ -791,7 +791,7 @@ The backend uses this priority for unfurl values:
 - Customizable UI based on widget configuration
 - Deferred deep linking via fingerprint matching
 - Invitation metadata support (custom data attached to invitations)
-- Deduplication of internal and API invitations by `userId`
+- Deduplication of internal and API invitations by `inviterId`/`inviteeId`
 - Custom subtitle rendering via `getSubtitle` callback
 
 ## Examples
