@@ -5,8 +5,8 @@ import Foundation
 /// A contact in the Find Friends list.
 /// Provided by the customer via findFriendsConfig.contacts.
 public struct FindFriendsContact: Identifiable, Sendable {
-    /// Internal ID of the contact in the customer's platform
-    public let internalId: String
+    /// The user ID that identifies this contact in the customer's platform
+    public let userId: String
     /// Display name of the contact
     public let name: String
     /// Optional subtitle (e.g., username, email, or app-specific info)
@@ -16,17 +16,17 @@ public struct FindFriendsContact: Identifiable, Sendable {
     /// Optional metadata for app-specific data
     public let metadata: [String: Any]?
     
-    /// Identifiable conformance - uses internalId
-    public var id: String { internalId }
+    /// Identifiable conformance - uses userId
+    public var id: String { userId }
     
     public init(
-        internalId: String,
+        userId: String,
         name: String,
         subtitle: String? = nil,
         avatarUrl: String? = nil,
         metadata: [String: Any]? = nil
     ) {
-        self.internalId = internalId
+        self.userId = userId
         self.name = name
         self.subtitle = subtitle
         self.avatarUrl = avatarUrl
@@ -37,11 +37,11 @@ public struct FindFriendsContact: Identifiable, Sendable {
 /// Configuration for the Find Friends feature.
 /// Passed to VortexInviteView to enable and configure the Find Friends component.
 ///
-/// The customer provides a list of contacts with internal IDs. When the user taps "Connect",
-/// the SDK creates an invitation with target type = internalId via the Vortex backend.
+/// The customer provides a list of contacts with user IDs. When the user taps "Connect",
+/// the SDK creates an invitation via the Vortex backend.
 public struct FindFriendsConfig {
     /// List of contacts to display.
-    /// Each contact must have an internalId that identifies them in the customer's platform.
+    /// Each contact must have a userId that identifies them in the customer's platform.
     public let contacts: [FindFriendsContact]
     
     /// Optional: Called after an invitation is successfully created.

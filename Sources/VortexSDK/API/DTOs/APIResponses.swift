@@ -186,6 +186,7 @@ public struct OutgoingInvitation: Codable, Sendable {
     public let avatarUrl: String?
     public let status: String?
     public let createdAt: String?
+    public let metadata: [String: AnyCodable]?
 }
 
 // MARK: - Incoming Invitations
@@ -218,6 +219,7 @@ public struct IncomingInvitation: Codable, Sendable {
     public let creatorName: String?
     public let creatorAvatarUrl: String?
     public let creatorId: String?
+    public let metadata: [String: AnyCodable]?
 }
 
 // MARK: - AnyCodable

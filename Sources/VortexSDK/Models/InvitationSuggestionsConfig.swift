@@ -5,8 +5,8 @@ import Foundation
 /// A suggested contact in the Invitation Suggestions list.
 /// Provided by the customer via invitationSuggestionsConfig.contacts.
 public struct InvitationSuggestionContact: Identifiable, Sendable {
-    /// Internal ID of the contact in the customer's platform
-    public let internalId: String
+    /// The user ID that identifies this contact in the customer's platform
+    public let userId: String
     /// Display name of the contact
     public let name: String
     /// Optional subtitle (e.g., username, email, or app-specific info)
@@ -16,17 +16,17 @@ public struct InvitationSuggestionContact: Identifiable, Sendable {
     /// Optional metadata for app-specific data
     public let metadata: [String: Any]?
     
-    /// Identifiable conformance - uses internalId
-    public var id: String { internalId }
+    /// Identifiable conformance - uses userId
+    public var id: String { userId }
     
     public init(
-        internalId: String,
+        userId: String,
         name: String,
         subtitle: String? = nil,
         avatarUrl: String? = nil,
         metadata: [String: Any]? = nil
     ) {
-        self.internalId = internalId
+        self.userId = userId
         self.name = name
         self.subtitle = subtitle
         self.avatarUrl = avatarUrl
@@ -37,11 +37,11 @@ public struct InvitationSuggestionContact: Identifiable, Sendable {
 /// Configuration for the Invitation Suggestions feature.
 /// Passed to VortexInviteView to enable and configure the Invitation Suggestions component.
 ///
-/// The customer provides a list of suggested contacts with internal IDs. The user can either
+/// The customer provides a list of suggested contacts with user IDs. The user can either
 /// tap "Invite" to send an invitation, or tap "X" to dismiss the suggestion.
 public struct InvitationSuggestionsConfig {
     /// List of suggested contacts to display.
-    /// Each contact must have an internalId that identifies them in the customer's platform.
+    /// Each contact must have a userId that identifies them in the customer's platform.
     public let contacts: [InvitationSuggestionContact]
     
     /// Called when user taps "X" to dismiss a suggestion.

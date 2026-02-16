@@ -109,8 +109,8 @@ struct OutgoingInvitationsView: View {
                     .foregroundColor(nameColor)
                     .lineLimit(1)
                 
-                if let subtitle = item.subtitle {
-                    Text(subtitle)
+                if let displaySubtitle = config?.getSubtitle?(item), !displaySubtitle.isEmpty {
+                    Text(displaySubtitle)
                         .font(.system(size: subtitleFontSize))
                         .foregroundColor(subtitleColor)
                         .lineLimit(1)
@@ -205,11 +205,21 @@ struct OutgoingInvitationsView: View {
                     guard let targetType = invitation.targets?.first?.targetType else { return true }
                     return targetType != "share"
                 }
+                var mappedItems: [OutgoingInvitationItem] = []
                 for invitation in filtered {
                     let item = mapToDisplayItem(invitation)
-                    allInvitations.append(item)
+                    mappedItems.append(item)
                     invitationMap[item.id] = invitation
                 }
+                // Deduplicate: if an API invitation has the same userId as an
+                // internal invitation, keep the Vortex one (it supports API cancel/revoke).
+                // For outgoing invitations, userId holds the targetValue.
+                let apiUserIds = Set(mappedItems.compactMap { $0.userId })
+                allInvitations.removeAll { item in
+                    guard !item.isVortexInvitation, let userId = item.userId else { return false }
+                    return apiUserIds.contains(userId)
+                }
+                allInvitations.append(contentsOf: mappedItems)
             } catch {
                 // Silently fail - just show internal invitations if any
                 #if DEBUG
@@ -236,16 +246,15 @@ struct OutgoingInvitationsView: View {
         // Use targetName as display name if available, otherwise fall back to targetValue
         let unknownFallback = block.settings?.customizations?["mobile.unknownName"]?.textContent ?? "Unknown"
         let name = targetName ?? targetValue ?? invitation.senderIdentifier ?? unknownFallback
-        // Show the phone number / email / identifier as subtitle
-        let subtitle = targetValue ?? invitation.senderIdentifier
+        let metadata: [String: Any]? = invitation.metadata?.mapValues { $0.value }
         
         return OutgoingInvitationItem(
             id: invitation.id,
             name: name,
-            subtitle: subtitle,
+            userId: targetValue,
             avatarUrl: target?.targetAvatarUrl,
             isVortexInvitation: true,
-            metadata: nil
+            metadata: metadata
         )
     }
     

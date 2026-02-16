@@ -5,8 +5,8 @@ import Foundation
 /// A contact returned from the Search Box search callback.
 /// Provided by the customer via searchBoxConfig.onSearch.
 public struct SearchBoxContact: Identifiable, Sendable {
-    /// Internal ID of the contact in the customer's platform
-    public let internalId: String
+    /// The user ID that identifies this contact in the customer's platform
+    public let userId: String
     /// Display name of the contact
     public let name: String
     /// Optional subtitle (e.g., username, email, or app-specific info)
@@ -16,17 +16,17 @@ public struct SearchBoxContact: Identifiable, Sendable {
     /// Optional metadata for app-specific data
     public let metadata: [String: Any]?
     
-    /// Identifiable conformance - uses internalId
-    public var id: String { internalId }
+    /// Identifiable conformance - uses userId
+    public var id: String { userId }
     
     public init(
-        internalId: String,
+        userId: String,
         name: String,
         subtitle: String? = nil,
         avatarUrl: String? = nil,
         metadata: [String: Any]? = nil
     ) {
-        self.internalId = internalId
+        self.userId = userId
         self.name = name
         self.subtitle = subtitle
         self.avatarUrl = avatarUrl
@@ -38,8 +38,8 @@ public struct SearchBoxContact: Identifiable, Sendable {
 /// Passed to VortexInviteView to enable and configure the Search Box component.
 ///
 /// The customer provides an `onSearch` callback that returns matching contacts.
-/// When the user taps "Connect", the SDK creates an invitation with target type = internalId
-/// via the Vortex backend, identical to the Find Friends component behavior.
+/// When the user taps "Connect", the SDK creates an invitation via the Vortex backend,
+/// identical to the Find Friends component behavior.
 public struct SearchBoxConfig {
     /// Called when the user taps the search button.
     /// The customer implements this callback to perform the search and return matching contacts.
