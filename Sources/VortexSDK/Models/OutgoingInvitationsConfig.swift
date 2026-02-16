@@ -10,9 +10,9 @@ public struct OutgoingInvitationItem: Identifiable, Sendable {
     public let id: String
     /// Display name of the invitee
     public let name: String
-    /// The invitee's user ID, used for deduplication (maps to targetValue from the Vortex API).
-    /// When both API and internal invitations share the same `inviteeId`, the API one is kept.
-    public let inviteeId: String?
+    /// The user ID, used for deduplication (maps to targetValue from the Vortex API).
+    /// When both API and internal invitations share the same `userId`, the API one is kept.
+    public let userId: String?
     /// Avatar/profile image URL (optional)
     public let avatarUrl: String?
     /// Indicates the source of this invitation.
@@ -25,14 +25,14 @@ public struct OutgoingInvitationItem: Identifiable, Sendable {
     public init(
         id: String,
         name: String,
-        inviteeId: String? = nil,
+        userId: String? = nil,
         avatarUrl: String? = nil,
         isVortexInvitation: Bool = false,
         metadata: [String: Any]? = nil
     ) {
         self.id = id
         self.name = name
-        self.inviteeId = inviteeId
+        self.userId = userId
         self.avatarUrl = avatarUrl
         self.isVortexInvitation = isVortexInvitation
         self.metadata = metadata
