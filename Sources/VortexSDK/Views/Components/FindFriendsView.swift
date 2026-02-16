@@ -2,7 +2,7 @@ import SwiftUI
 
 /// View that displays a list of contacts with Connect buttons
 /// When user taps Connect, the onConnect callback is called. If it returns true,
-/// an invitation with target type = internalId is created.
+/// an invitation is created via the Vortex backend.
 struct FindFriendsView: View {
     let block: ElementNode
     @ObservedObject var viewModel: VortexInviteViewModel

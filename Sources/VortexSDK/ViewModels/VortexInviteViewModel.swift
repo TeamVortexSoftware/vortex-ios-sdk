@@ -1969,13 +1969,13 @@ class VortexInviteViewModel: ObservableObject {
         findFriendsActionInProgress = contact.id
 
         Task {
-            await createInternalIdInvitation(for: contact)
+            await createUserIdInvitation(for: contact)
             findFriendsActionInProgress = nil
         }
     }
     
     /// Create an invitation with target type = internalId
-    private func createInternalIdInvitation(for contact: FindFriendsContact) async {
+    private func createUserIdInvitation(for contact: FindFriendsContact) async {
         guard let jwt = jwt, let widgetConfig = configuration else {
             return
         }
@@ -1984,7 +1984,7 @@ class VortexInviteViewModel: ObservableObject {
         // Key must be "internalId" (camelCase) to match React Native SDK
         // The value is an object { value: internalId, name: contactName, avatarUrl?: string } so the backend can populate target fields
         var targetValue: [String: Any] = [
-            "value": contact.internalId,
+            "value": contact.userId,
             "name": contact.name
         ]
         if let avatarUrl = contact.avatarUrl {
@@ -2002,6 +2002,14 @@ class VortexInviteViewModel: ObservableObject {
             groups = [group]
         }
         
+        // Merge contact metadata with unfurl metadata (contact metadata takes precedence)
+        var mergedMetadata: [String: Any] = unfurlConfig?.toMetadata() ?? [:]
+        if let contactMetadata = contact.metadata {
+            for (key, value) in contactMetadata {
+                mergedMetadata[key] = value
+            }
+        }
+        
         do {
             _ = try await client.createInvitation(
                 jwt: jwt,
@@ -2009,7 +2017,7 @@ class VortexInviteViewModel: ObservableObject {
                 payload: payload,
                 source: "internal",
                 groups: groups,
-                metadata: unfurlConfig?.toMetadata()
+                metadata: mergedMetadata.isEmpty ? nil : mergedMetadata
             )
             
             // Fire the invitation sent event so other components (like Outgoing Invitations) can refresh
@@ -2072,7 +2080,7 @@ class VortexInviteViewModel: ObservableObject {
         // Key must be "internalId" (camelCase) to match React Native SDK
         // The value is an object { value: internalId, name: contactName, avatarUrl?: string } so the backend can populate target fields
         var targetValue: [String: Any] = [
-            "value": contact.internalId,
+            "value": contact.userId,
             "name": contact.name
         ]
         if let avatarUrl = contact.avatarUrl {
@@ -2090,6 +2098,14 @@ class VortexInviteViewModel: ObservableObject {
             groups = [group]
         }
         
+        // Merge contact metadata with unfurl metadata (contact metadata takes precedence)
+        var mergedMetadata: [String: Any] = unfurlConfig?.toMetadata() ?? [:]
+        if let contactMetadata = contact.metadata {
+            for (key, value) in contactMetadata {
+                mergedMetadata[key] = value
+            }
+        }
+        
         do {
             _ = try await client.createInvitation(
                 jwt: jwt,
@@ -2097,7 +2113,7 @@ class VortexInviteViewModel: ObservableObject {
                 payload: payload,
                 source: "internal",
                 groups: groups,
-                metadata: unfurlConfig?.toMetadata()
+                metadata: mergedMetadata.isEmpty ? nil : mergedMetadata
             )
             
             // Fire the invitation sent event so other components (like Outgoing Invitations) can refresh
@@ -2161,7 +2177,7 @@ class VortexInviteViewModel: ObservableObject {
         }
         
         var targetValue: [String: Any] = [
-            "value": contact.internalId,
+            "value": contact.userId,
             "name": contact.name
         ]
         if let avatarUrl = contact.avatarUrl {
@@ -2179,6 +2195,14 @@ class VortexInviteViewModel: ObservableObject {
             groups = [group]
         }
         
+        // Merge contact metadata with unfurl metadata (contact metadata takes precedence)
+        var mergedMetadata: [String: Any] = unfurlConfig?.toMetadata() ?? [:]
+        if let contactMetadata = contact.metadata {
+            for (key, value) in contactMetadata {
+                mergedMetadata[key] = value
+            }
+        }
+        
         do {
             _ = try await client.createInvitation(
                 jwt: jwt,
@@ -2186,7 +2210,7 @@ class VortexInviteViewModel: ObservableObject {
                 payload: payload,
                 source: "internal",
                 groups: groups,
-                metadata: unfurlConfig?.toMetadata()
+                metadata: mergedMetadata.isEmpty ? nil : mergedMetadata
             )
             
             invitationSentEvent = InvitationSentEvent(

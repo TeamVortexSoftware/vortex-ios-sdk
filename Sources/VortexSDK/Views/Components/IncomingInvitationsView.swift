@@ -128,8 +128,8 @@ struct IncomingInvitationsView: View {
                     .foregroundColor(nameColor)
                     .lineLimit(1)
                 
-                if let subtitle = invitation.subtitle, !subtitle.isEmpty {
-                    Text(subtitle)
+                if let displaySubtitle = config?.getSubtitle?(invitation), !displaySubtitle.isEmpty {
+                    Text(displaySubtitle)
                         .font(.system(size: subtitleFontSize))
                         .foregroundColor(subtitleColor)
                         .lineLimit(1)
@@ -251,31 +251,29 @@ struct IncomingInvitationsView: View {
                     return status != "accepted" && status != "accepted_elsewhere"
                 }
                 let mappedInvitations = pendingInvitations.map { inv -> IncomingInvitationItem in
-                    // For internal invitations, use creatorName and creatorIdentifierValue as subtitle
-                    let isInternal = inv.source?.lowercased() == "internal"
-                    let name: String
-                    let subtitle: String?
-                    let avatar: String?
+                    let name = inv.creatorName ?? "Unknown"
+                    let avatar = inv.creatorAvatarUrl ?? inv.avatarUrl
                     
-                    if isInternal {
-                        name = inv.creatorName ?? "Unknown"
-                        subtitle = inv.creatorId
-                        avatar = inv.creatorAvatarUrl ?? inv.avatarUrl
-                    } else {
-                        name = inv.creatorName ?? "Unknown"
-                        subtitle = inv.senderIdentifier
-                        avatar = inv.creatorAvatarUrl ?? inv.avatarUrl
-                    }
+                    let metadata: [String: Any]? = inv.metadata?.mapValues { $0.value }
                     
                     return IncomingInvitationItem(
                         id: inv.id,
                         name: name,
-                        subtitle: subtitle,
+                        userId: inv.creatorId,
                         avatarUrl: avatar,
                         isVortexInvitation: true,
-                        metadata: nil
+                        metadata: metadata
                     )
                 }
+                // Deduplicate: if an API invitation has the same userId as an
+                // internal invitation, keep the Vortex one (it supports API accept/delete).
+                // For incoming invitations, userId holds the creatorId.
+                let apiUserIds = Set(mappedInvitations.compactMap { $0.userId })
+                allInvitations.removeAll { inv in
+                    guard !inv.isVortexInvitation, let userId = inv.userId else { return false }
+                    return apiUserIds.contains(userId)
+                }
+                
                 allInvitations.append(contentsOf: mappedInvitations)
             } catch {
                 // Silently fail - just show internal invitations

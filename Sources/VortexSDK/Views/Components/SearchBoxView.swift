@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// View that displays a search box with a search button, and renders matching contacts below.
-/// When user taps Connect, an invitation with target type = internalId is created.
+/// When user taps Connect, an invitation is created via the Vortex backend.
 struct SearchBoxView: View {
     let block: ElementNode
     @ObservedObject var viewModel: VortexInviteViewModel

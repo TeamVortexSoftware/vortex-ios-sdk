@@ -2,7 +2,7 @@ import SwiftUI
 
 /// View that displays a list of suggested contacts with Invite and Dismiss buttons
 /// When user taps Invite, the onInvite callback is called. If it returns true,
-/// an invitation with target type = internalId is created.
+/// an invitation is created via the Vortex backend.
 /// When user taps X (dismiss), the onDismiss callback is called.
 struct InvitationSuggestionsView: View {
     let block: ElementNode

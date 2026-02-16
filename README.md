@@ -197,7 +197,7 @@ InviteContactsConfig(
 
 ### Find Friends
 
-The Find Friends component displays a list of contacts provided by your app. Each contact has a "Connect" button that creates an invitation with `targetType: internalId`.
+The Find Friends component displays a list of contacts provided by your app. Each contact has a "Connect" button that creates an invitation via the Vortex backend.
 
 **Basic Usage:**
 
@@ -209,8 +209,8 @@ VortexInviteView(
     jwt: jwt,
     findFriendsConfig: FindFriendsConfig(
         contacts: [
-            FindFriendsContact(internalId: "user-123", name: "Alice Johnson", subtitle: "@alice"),
-            FindFriendsContact(internalId: "user-456", name: "Bob Smith", subtitle: "@bob")
+            FindFriendsContact(userId: "user-123", name: "Alice Johnson", subtitle: "@alice"),
+            FindFriendsContact(userId: "user-456", name: "Bob Smith", subtitle: "@bob")
         ],
         onInvitationCreated: { contact in
             // Called after an invitation is successfully created
@@ -224,9 +224,9 @@ VortexInviteView(
 
 **How It Works:**
 
-1. Your app provides a list of contacts with internal IDs (users already in your platform)
+1. Your app provides a list of contacts with user IDs (users already in your platform)
 2. The component displays them with a "Connect" button (text configurable via widget config)
-3. When the user taps "Connect", the SDK creates an invitation via the Vortex API with `targetType: internalId`
+3. When the user taps "Connect", the SDK creates an invitation via the Vortex API
 4. The `onInvitationCreated` callback is called after a successful invitation
 5. The section is hidden when there are no contacts to display
 
@@ -234,11 +234,11 @@ VortexInviteView(
 
 ```swift
 FindFriendsContact(
-    internalId: String,          // Required: ID in your platform
+    userId: String,              // Required: User ID in your platform
     name: String,                // Required: Display name
     subtitle: String?,           // Optional: Secondary text (e.g., username)
     avatarUrl: String?,          // Optional: Avatar image URL
-    metadata: [String: Any]?     // Optional: Custom metadata
+    metadata: [String: Any]?     // Optional: Custom metadata (included in invitation payload)
 )
 ```
 
@@ -253,7 +253,7 @@ FindFriendsConfig(
 
 ### Invitation Suggestions
 
-The Invitation Suggestions component displays a list of suggested contacts provided by your app. Each contact has an "Invite" button and a dismiss (X) button. When the user taps "Invite", an invitation with `targetType: internalId` is created. The dismiss button removes the suggestion from the list.
+The Invitation Suggestions component displays a list of suggested contacts provided by your app. Each contact has an "Invite" button and a dismiss (X) button. When the user taps "Invite", an invitation is created via the Vortex backend. The dismiss button removes the suggestion from the list.
 
 **Basic Usage:**
 
@@ -266,13 +266,13 @@ VortexInviteView(
     invitationSuggestionsConfig: InvitationSuggestionsConfig(
         contacts: [
             InvitationSuggestionContact(
-                internalId: "user-123",
+                userId: "user-123",
                 name: "Alice Johnson",
                 subtitle: "@alice",
                 avatarUrl: "https://example.com/alice-avatar.jpg"
             ),
             InvitationSuggestionContact(
-                internalId: "user-456",
+                userId: "user-456",
                 name: "Bob Smith",
                 subtitle: "@bob"
             )
@@ -294,9 +294,9 @@ VortexInviteView(
 
 **How It Works:**
 
-1. Your app provides a list of suggested contacts with internal IDs
+1. Your app provides a list of suggested contacts with user IDs
 2. The component displays them with an "Invite" button and a dismiss (X) button
-3. When the user taps "Invite", the SDK creates an invitation via the Vortex API with `targetType: internalId`
+3. When the user taps "Invite", the SDK creates an invitation via the Vortex API
 4. The `onInvitationCreated` or `onInvitationFailed` callback is called based on the result
 5. When the user taps the X button, the `onDismiss` callback is called and the contact is removed from the list
 
@@ -304,11 +304,11 @@ VortexInviteView(
 
 ```swift
 InvitationSuggestionContact(
-    internalId: String,          // Required: ID in your platform
+    userId: String,              // Required: User ID in your platform
     name: String,                // Required: Display name
     subtitle: String?,           // Optional: Secondary text (e.g., username)
     avatarUrl: String?,          // Optional: Avatar image URL (rendered instead of initials if provided)
-    metadata: [String: Any]?     // Optional: Custom metadata
+    metadata: [String: Any]?     // Optional: Custom metadata (included in invitation payload)
 )
 ```
 
@@ -341,7 +341,7 @@ VortexInviteView(
             let results = await myAPI.searchUsers(query: query)
             return results.map { user in
                 SearchBoxContact(
-                    internalId: user.id,
+                    userId: user.id,
                     name: user.displayName,
                     subtitle: "@\(user.username)",
                     avatarUrl: user.avatarUrl
@@ -364,7 +364,7 @@ VortexInviteView(
 4. Your callback returns a list of `SearchBoxContact` objects
 5. The matching contacts are rendered below the search box with a "Connect" button next to each
 6. If the search returns no results, a configurable "no results" message is displayed
-7. When the user taps "Connect", the SDK creates an invitation via the Vortex API with `targetType: internalId` and the contact is removed from the list (identical to Find Friends behavior)
+7. When the user taps "Connect", the SDK creates an invitation via the Vortex API and the contact is removed from the list (identical to Find Friends behavior)
 
 **SearchBoxConfig Properties:**
 
@@ -406,7 +406,7 @@ VortexInviteView(
 
 **With Internal Invitations:**
 
-You can merge your app's invitations with Vortex API invitations:
+You can merge your app's invitations with Vortex API invitations. The SDK deduplicates by `userId` — if an API invitation and an internal invitation share the same `userId`, the API one is kept (since it supports server-side accept/delete).
 
 ```swift
 IncomingInvitationsConfig(
@@ -414,8 +414,9 @@ IncomingInvitationsConfig(
         IncomingInvitationItem(
             id: "internal-1",
             name: "Alice Johnson",
-            subtitle: "alice@example.com",
-            avatarUrl: "https://example.com/avatar.jpg"
+            userId: "user-123",  // Used for deduplication against API invitations
+            avatarUrl: "https://example.com/avatar.jpg",
+            metadata: ["inviter_handle": "@alice"]  // Custom metadata
         )
     ],
     onAccept: { invitation in
@@ -423,7 +424,7 @@ IncomingInvitationsConfig(
             // Vortex invitation: return true to let SDK call the Vortex API
             return true
         } else {
-            // Internal/app invitation: handle it yourself, return false (no API call needed)
+            // Internal/app invitation: handle it yourself
             await myAPI.acceptInvitation(invitation.id)
             return true  // Return true to remove from list
         }
@@ -435,6 +436,10 @@ IncomingInvitationsConfig(
             await myAPI.deleteInvitation(invitation.id)
             return true  // Return true to remove from list
         }
+    },
+    getSubtitle: { invitation in
+        // Return a custom subtitle derived from metadata
+        return invitation.metadata?["inviter_handle"] as? String
     }
 )
 ```
@@ -445,13 +450,27 @@ Use the `isVortexInvitation` property to determine where an invitation came from
 - `true`: Fetched from the Vortex API — the SDK will handle accept/delete API calls
 - `false`: Provided by your app via `internalInvitations` — your app must handle the action
 
+**IncomingInvitationItem Properties:**
+
+```swift
+IncomingInvitationItem(
+    id: String,                  // Unique identifier
+    name: String,                // Display name of the sender
+    userId: String?,             // User ID for deduplication (creatorId for incoming)
+    avatarUrl: String?,          // Avatar image URL
+    isVortexInvitation: Bool,    // Source: true = Vortex API, false = your app
+    metadata: [String: Any]?     // Custom metadata
+)
+```
+
 **IncomingInvitationsConfig Properties:**
 
 ```swift
 IncomingInvitationsConfig(
-    internalInvitations: [IncomingInvitationItem]?,  // App-provided invitations (isVortexInvitation = false)
-    onAccept: ((IncomingInvitationItem) async -> Bool)?,  // Called when user accepts
-    onDelete: ((IncomingInvitationItem) async -> Bool)?   // Called when user deletes
+    internalInvitations: [IncomingInvitationItem]?,           // App-provided invitations (isVortexInvitation = false)
+    onAccept: ((IncomingInvitationItem) async -> Bool)?,      // Called when user accepts
+    onDelete: ((IncomingInvitationItem) async -> Bool)?,      // Called when user deletes
+    getSubtitle: ((IncomingInvitationItem) -> String?)?       // Optional: compute subtitle from metadata
 )
 ```
 
@@ -486,7 +505,7 @@ VortexInviteView(
 
 **With Internal Invitations:**
 
-You can merge your app's outgoing invitations with Vortex API invitations:
+You can merge your app's outgoing invitations with Vortex API invitations. The SDK deduplicates by `userId` — if an API invitation and an internal invitation share the same `userId`, the API one is kept (since it supports server-side revocation).
 
 ```swift
 OutgoingInvitationsConfig(
@@ -494,8 +513,9 @@ OutgoingInvitationsConfig(
         OutgoingInvitationItem(
             id: "internal-1",
             name: "Bob Smith",
-            subtitle: "user-12345",  // e.g., user ID or other identifier
-            avatarUrl: "https://example.com/avatar.jpg"
+            userId: "user-12345",  // Used for deduplication against API invitations
+            avatarUrl: "https://example.com/avatar.jpg",
+            metadata: ["invitee_handle": "@bob"]  // Custom metadata
         )
     ],
     onCancel: { invitation in
@@ -507,6 +527,10 @@ OutgoingInvitationsConfig(
             await myAPI.cancelInvitation(invitation.id)
             return true  // Return true to remove from list
         }
+    },
+    getSubtitle: { invitation in
+        // Return a custom subtitle derived from metadata
+        return invitation.metadata?["invitee_handle"] as? String
     }
 )
 ```
@@ -517,12 +541,26 @@ Use the `isVortexInvitation` property to determine where an invitation came from
 - `true`: Fetched from the Vortex API — the SDK will handle cancel API calls
 - `false`: Provided by your app via `internalInvitations` — your app must handle the action
 
+**OutgoingInvitationItem Properties:**
+
+```swift
+OutgoingInvitationItem(
+    id: String,                  // Unique identifier
+    name: String,                // Display name of the invitee
+    userId: String?,             // User ID for deduplication (targetValue for outgoing)
+    avatarUrl: String?,          // Avatar image URL
+    isVortexInvitation: Bool,    // Source: true = Vortex API, false = your app
+    metadata: [String: Any]?     // Custom metadata
+)
+```
+
 **OutgoingInvitationsConfig Properties:**
 
 ```swift
 OutgoingInvitationsConfig(
-    internalInvitations: [OutgoingInvitationItem]?,  // App-provided invitations (isVortexInvitation = false)
-    onCancel: ((OutgoingInvitationItem) async -> Bool)?  // Called when user cancels
+    internalInvitations: [OutgoingInvitationItem]?,          // App-provided invitations (isVortexInvitation = false)
+    onCancel: ((OutgoingInvitationItem) async -> Bool)?,     // Called when user cancels
+    getSubtitle: ((OutgoingInvitationItem) -> String?)?      // Optional: compute subtitle from metadata
 )
 ```
 
@@ -752,6 +790,9 @@ The backend uses this priority for unfurl values:
 - Real-time loading states and error handling
 - Customizable UI based on widget configuration
 - Deferred deep linking via fingerprint matching
+- Invitation metadata support (custom data attached to invitations)
+- Deduplication of internal and API invitations by `userId`
+- Custom subtitle rendering via `getSubtitle` callback
 
 ## Examples
 

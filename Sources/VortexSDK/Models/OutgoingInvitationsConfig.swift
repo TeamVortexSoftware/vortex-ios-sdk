@@ -10,8 +10,9 @@ public struct OutgoingInvitationItem: Identifiable, Sendable {
     public let id: String
     /// Display name of the invitee
     public let name: String
-    /// Optional subtitle (user ID, email, phone, or app-specific info)
-    public let subtitle: String?
+    /// The user ID used for deduplication (e.g., targetValue for outgoing invitations).
+    /// When both API and internal invitations share the same `userId`, the API one is kept.
+    public let userId: String?
     /// Avatar/profile image URL (optional)
     public let avatarUrl: String?
     /// Indicates the source of this invitation.
@@ -24,14 +25,14 @@ public struct OutgoingInvitationItem: Identifiable, Sendable {
     public init(
         id: String,
         name: String,
-        subtitle: String? = nil,
+        userId: String? = nil,
         avatarUrl: String? = nil,
         isVortexInvitation: Bool = false,
         metadata: [String: Any]? = nil
     ) {
         self.id = id
         self.name = name
-        self.subtitle = subtitle
+        self.userId = userId
         self.avatarUrl = avatarUrl
         self.isVortexInvitation = isVortexInvitation
         self.metadata = metadata
@@ -59,11 +60,22 @@ public struct OutgoingInvitationsConfig {
     /// If not provided, the SDK will proceed with the API call for Vortex invitations.
     public let onCancel: ((OutgoingInvitationItem) async -> Bool)?
     
+    /// Optional callback to compute a custom subtitle for each invitation.
+    ///
+    /// When provided, the SDK calls this function for each invitation to determine the
+    /// displayed subtitle. This is useful when the subtitle should be derived from the
+    /// invitation's metadata (e.g., a user handle stored in `metadata["invitee_handle"]`).
+    ///
+    /// If not provided, no subtitle is rendered.
+    public let getSubtitle: ((OutgoingInvitationItem) -> String?)?
+    
     public init(
         internalInvitations: [OutgoingInvitationItem]? = nil,
-        onCancel: ((OutgoingInvitationItem) async -> Bool)? = nil
+        onCancel: ((OutgoingInvitationItem) async -> Bool)? = nil,
+        getSubtitle: ((OutgoingInvitationItem) -> String?)? = nil
     ) {
         self.internalInvitations = internalInvitations
         self.onCancel = onCancel
+        self.getSubtitle = getSubtitle
     }
 }
