@@ -259,18 +259,18 @@ struct IncomingInvitationsView: View {
                     return IncomingInvitationItem(
                         id: inv.id,
                         name: name,
-                        inviterId: inv.creatorId,
+                        userId: inv.creatorId,
                         avatarUrl: avatar,
                         isVortexInvitation: true,
                         metadata: metadata
                     )
                 }
-                // Deduplicate: if an API invitation has the same inviterId as an
+                // Deduplicate: if an API invitation has the same userId as an
                 // internal invitation, keep the Vortex one (it supports API accept/delete).
-                let apiInviterIds = Set(mappedInvitations.compactMap { $0.inviterId })
+                let apiUserIds = Set(mappedInvitations.compactMap { $0.userId })
                 allInvitations.removeAll { inv in
-                    guard !inv.isVortexInvitation, let inviterId = inv.inviterId else { return false }
-                    return apiInviterIds.contains(inviterId)
+                    guard !inv.isVortexInvitation, let userId = inv.userId else { return false }
+                    return apiUserIds.contains(userId)
                 }
                 
                 allInvitations.append(contentsOf: mappedInvitations)
