@@ -683,7 +683,7 @@ struct MatchFingerprintResponse {
 ```swift
 struct DeferredLinkContext {
     let invitationId: String    // The original invitation ID
-    let userId: String?      // ID of the user who sent the invitation
+    let inviterId: String?      // ID of the user who sent the invitation
     var scope: String?          // Scope identifier (e.g., team ID, project ID)
     var scopeType: String?      // Type of the scope (e.g., "team", "project")
     let metadata: [String: AnyCodable]?  // Additional metadata
