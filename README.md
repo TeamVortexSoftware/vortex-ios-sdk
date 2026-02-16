@@ -791,7 +791,7 @@ The backend uses this priority for unfurl values:
 - Customizable UI based on widget configuration
 - Deferred deep linking via fingerprint matching
 - Invitation metadata support (custom data attached to invitations)
-- Deduplication of internal and API invitations by `userId`/`userId`
+- Deduplication of internal and API invitations by `userId`
 - Custom subtitle rendering via `getSubtitle` callback
 
 ## Examples
