@@ -656,7 +656,7 @@ class AuthManager: ObservableObject {
             if result.matched, let context = result.context {
                 print("Found pending invitation!")
                 print("Invitation ID: \(context.invitationId)")
-                print("Inviter ID: \(context.userId ?? "N/A")")
+                print("Inviter ID: \(context.inviterId ?? "N/A")")
                 print("Scope: \(context.scope ?? "N/A")")
                 // Handle the invitation (e.g., show UI, auto-join group, etc.)
             }
