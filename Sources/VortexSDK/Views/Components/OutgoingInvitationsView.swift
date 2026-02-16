@@ -211,13 +211,12 @@ struct OutgoingInvitationsView: View {
                     mappedItems.append(item)
                     invitationMap[item.id] = invitation
                 }
-                // Deduplicate: if an API invitation has the same userId as an
+                // Deduplicate: if an API invitation has the same inviteeId as an
                 // internal invitation, keep the Vortex one (it supports API cancel/revoke).
-                // For outgoing invitations, userId holds the targetValue.
-                let apiUserIds = Set(mappedItems.compactMap { $0.userId })
+                let apiInviteeIds = Set(mappedItems.compactMap { $0.inviteeId })
                 allInvitations.removeAll { item in
-                    guard !item.isVortexInvitation, let userId = item.userId else { return false }
-                    return apiUserIds.contains(userId)
+                    guard !item.isVortexInvitation, let inviteeId = item.inviteeId else { return false }
+                    return apiInviteeIds.contains(inviteeId)
                 }
                 allInvitations.append(contentsOf: mappedItems)
             } catch {
@@ -251,7 +250,7 @@ struct OutgoingInvitationsView: View {
         return OutgoingInvitationItem(
             id: invitation.id,
             name: name,
-            userId: targetValue,
+            inviteeId: targetValue,
             avatarUrl: target?.targetAvatarUrl,
             isVortexInvitation: true,
             metadata: metadata
