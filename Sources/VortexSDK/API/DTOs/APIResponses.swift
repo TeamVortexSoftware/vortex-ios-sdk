@@ -170,11 +170,41 @@ public struct OutgoingInvitationsData: Codable, Sendable {
 }
 
 /// Target of an invitation (e.g., email or SMS recipient)
+///
+/// Handles both field-name formats returned by the API:
+/// - Full detail endpoint: `type`, `value`, `name`, `avatarUrl`
+/// - List endpoints: `targetType`, `targetValue`, `targetName`, `targetAvatarUrl`
 public struct InvitationTarget: Codable, Sendable {
     public let targetType: String
     public let targetValue: String
     public let targetName: String?
     public let targetAvatarUrl: String?
+    
+    private enum CodingKeys: String, CodingKey {
+        case targetType, targetValue, targetName, targetAvatarUrl
+        // Alternative keys used by the full detail endpoint
+        case type, value, name, avatarUrl
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.targetType = try (try? container.decode(String.self, forKey: .targetType))
+            ?? container.decode(String.self, forKey: .type)
+        self.targetValue = try (try? container.decode(String.self, forKey: .targetValue))
+            ?? container.decode(String.self, forKey: .value)
+        self.targetName = (try? container.decodeIfPresent(String.self, forKey: .targetName))
+            ?? (try? container.decodeIfPresent(String.self, forKey: .name))
+        self.targetAvatarUrl = (try? container.decodeIfPresent(String.self, forKey: .targetAvatarUrl))
+            ?? (try? container.decodeIfPresent(String.self, forKey: .avatarUrl))
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(targetType, forKey: .targetType)
+        try container.encode(targetValue, forKey: .targetValue)
+        try container.encodeIfPresent(targetName, forKey: .targetName)
+        try container.encodeIfPresent(targetAvatarUrl, forKey: .targetAvatarUrl)
+    }
 }
 
 /// Individual outgoing invitation from the API
@@ -220,6 +250,61 @@ public struct IncomingInvitation: Codable, Sendable {
     public let creatorAvatarUrl: String?
     public let creatorId: String?
     public let metadata: [String: AnyCodable]?
+}
+
+// MARK: - Invitation (full detail)
+
+/// Group associated with an invitation
+public struct InvitationGroup: Codable, Sendable {
+    public let id: String
+    public let groupId: String
+    public let type: String
+    public let name: String?
+}
+
+/// Acceptance record for an invitation
+public struct InvitationAcceptance: Codable, Sendable {
+    public let id: String
+    public let accountId: String
+    public let projectId: String
+    public let acceptedAt: String
+    public let targetType: String
+    public let targetValue: String
+    public let identifiers: [String: AnyCodable]?
+}
+
+/// A full invitation as returned by the Vortex API (GET /api/v1/invitations/:id)
+public struct Invitation: Codable, Sendable {
+    public let id: String
+    public let accountId: String?
+    public let projectId: String?
+    public let deploymentId: String?
+    public let widgetConfigurationId: String?
+    public let status: String?
+    public let invitationType: String?
+    public let deliveryTypes: [String]?
+    public let source: String?
+    public let subtype: String?
+    public let foreignCreatorId: String?
+    public let creatorName: String?
+    public let creatorAvatarUrl: String?
+    public let createdAt: String?
+    public let modifiedAt: String?
+    public let deactivated: Bool?
+    public let deliveryCount: Int?
+    public let views: Int?
+    public let clickThroughs: Int?
+    public let configurationAttributes: [String: AnyCodable]?
+    public let attributes: [String: AnyCodable]?
+    public let metadata: [String: AnyCodable]?
+    public let passThrough: String?
+    public let target: [InvitationTarget]?
+    public let groups: [InvitationGroup]?
+    public let accepts: [InvitationAcceptance]?
+    public let scope: String?
+    public let scopeType: String?
+    public let expired: Bool?
+    public let expires: String?
 }
 
 // MARK: - AnyCodable

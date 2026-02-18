@@ -320,10 +320,15 @@ public class VortexClient {
         return invitationsResponse.data.invitations
     }
     
-    /// Revoke (cancel) an outgoing invitation
+    /// Revokes an outgoing invitation that the user has sent.
+    ///
+    /// This permanently cancels the invitation. The invitation will no longer be
+    /// accessible to the recipient.
+    ///
     /// - Parameters:
     ///   - jwt: JWT authentication token
-    ///   - invitationId: ID of the invitation to revoke
+    ///   - invitationId: The ID of the invitation to revoke
+    /// - Throws: ``VortexError/httpError(statusCode:)`` if the request fails
     public func revokeInvitation(jwt: String, invitationId: String) async throws {
         let url = baseURL.appendingPathComponent("/api/v1/invitations/\(invitationId)")
         
@@ -350,11 +355,66 @@ public class VortexClient {
         }
     }
     
+    /// Retrieves details of a specific invitation by its ID.
+    ///
+    /// Use this method to fetch the full details of any invitation, including its targets,
+    /// groups, acceptance records, and metadata.
+    ///
+    /// - Parameters:
+    ///   - jwt: JWT authentication token
+    ///   - invitationId: The ID of the invitation to retrieve
+    /// - Returns: The full invitation details
+    /// - Throws: ``VortexError/httpError(statusCode:)`` if the request fails or invitation is not found
+    public func getInvitation(jwt: String, invitationId: String) async throws -> Invitation {
+        let url = baseURL.appendingPathComponent("/api/v1/invitations/\(invitationId)")
+        
+        var request = URLRequest(url: url)
+        request.httpMethod = "GET"
+        request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(sessionId, forHTTPHeaderField: "x-session-id")
+        request.setValue(clientVersion, forHTTPHeaderField: "x-vortex-client-version")
+        request.setValue(clientName, forHTTPHeaderField: "x-vortex-client-name")
+        
+        if let attestation = sessionAttestation {
+            request.setValue(attestation, forHTTPHeaderField: "x-session-attestation")
+        }
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw VortexError.invalidResponse
+        }
+        
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw VortexError.httpError(statusCode: httpResponse.statusCode)
+        }
+        
+        #if DEBUG
+        if let jsonString = String(data: data, encoding: .utf8) {
+            print("[VortexSDK] getInvitation raw response: \(jsonString)")
+        }
+        #endif
+        
+        let decoder = JSONDecoder()
+        do {
+            return try decoder.decode(Invitation.self, from: data)
+        } catch {
+            #if DEBUG
+            print("[VortexSDK] getInvitation decoding error: \(error)")
+            #endif
+            throw error
+        }
+    }
+    
     // MARK: - Incoming Invitations
     
-    /// Fetch incoming (open) invitations for the current user
+    /// Fetches incoming (open) invitations for the current user.
+    ///
+    /// Returns only pending invitations that have not yet been accepted.
+    ///
     /// - Parameter jwt: JWT authentication token
-    /// - Returns: List of incoming invitations (only pending, not yet accepted)
+    /// - Returns: List of incoming invitations
     public func getIncomingInvitations(jwt: String) async throws -> [IncomingInvitation] {
         // Note: The API only accepts a single status value, so we fetch without status filter
         // and let the API return all open invitations for the current user
@@ -392,11 +452,16 @@ public class VortexClient {
         return invitationsResponse.data.invitations
     }
     
-    /// Accept an incoming invitation
+    /// Accepts an incoming invitation that the user has received.
+    ///
+    /// Once accepted, the invitation status will be updated and the acceptance
+    /// will be recorded.
+    ///
     /// - Parameters:
     ///   - jwt: JWT authentication token
-    ///   - invitationId: ID of the invitation to accept
-    public func acceptIncomingInvitation(jwt: String, invitationId: String) async throws {
+    ///   - invitationId: The ID of the invitation to accept
+    /// - Throws: ``VortexError/httpError(statusCode:)`` if the request fails
+    public func acceptInvitation(jwt: String, invitationId: String) async throws {
         let url = baseURL.appendingPathComponent("/api/v1/invitations/accept")
         
         var request = URLRequest(url: url)
@@ -425,10 +490,14 @@ public class VortexClient {
         }
     }
     
-    /// Delete (reject/decline) an incoming invitation
+    /// Deletes (rejects/declines) an incoming invitation.
+    ///
+    /// This removes the invitation from the user's incoming list.
+    ///
     /// - Parameters:
     ///   - jwt: JWT authentication token
-    ///   - invitationId: ID of the invitation to delete
+    ///   - invitationId: The ID of the invitation to delete
+    /// - Throws: ``VortexError/httpError(statusCode:)`` if the request fails
     public func deleteIncomingInvitation(jwt: String, invitationId: String) async throws {
         let url = baseURL.appendingPathComponent("/api/v1/invitations/\(invitationId)")
         

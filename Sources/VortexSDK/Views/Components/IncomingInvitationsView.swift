@@ -321,7 +321,7 @@ struct IncomingInvitationsView: View {
         if shouldProceed && invitation.isVortexInvitation {
             if let client = client, let jwt = jwt {
                 do {
-                    try await client.acceptIncomingInvitation(jwt: jwt, invitationId: invitation.id)
+                    try await client.acceptInvitation(jwt: jwt, invitationId: invitation.id)
                 } catch {
                     #if DEBUG
                     print("[VortexSDK] Failed to accept invitation: \(error)")

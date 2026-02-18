@@ -594,6 +594,71 @@ Task {
 
 ## API Reference
 
+### VortexClient
+
+`VortexClient` provides standalone API methods for managing invitations programmatically, outside of the `VortexInviteView` UI component.
+
+**Initialization:**
+
+```swift
+import VortexSDK
+
+let client = VortexClient(
+    baseURL: URL(string: "https://client-api.vortexsoftware.com")!
+)
+```
+
+**Methods:**
+
+```swift
+// Get full details of an invitation
+let invitation = try await client.getInvitation(jwt: jwt, invitationId: "invitation-id")
+
+// Accept an incoming invitation
+try await client.acceptInvitation(jwt: jwt, invitationId: "invitation-id")
+
+// Revoke an outgoing invitation
+try await client.revokeInvitation(jwt: jwt, invitationId: "invitation-id")
+
+// Delete an incoming invitation
+try await client.deleteIncomingInvitation(jwt: jwt, invitationId: "invitation-id")
+
+// Fetch all incoming invitations
+let invitations = try await client.getIncomingInvitations(jwt: jwt)
+```
+
+| Method | Description |
+|--------|-------------|
+| `getInvitation(jwt:invitationId:)` | Retrieves full details of a specific invitation including targets, groups, acceptance records, and metadata |
+| `acceptInvitation(jwt:invitationId:)` | Accepts an incoming invitation that the user has received |
+| `revokeInvitation(jwt:invitationId:)` | Revokes (cancels) an outgoing invitation that the user has sent |
+| `deleteIncomingInvitation(jwt:invitationId:)` | Deletes an incoming invitation from the user's list |
+| `getIncomingInvitations(jwt:)` | Fetches all pending incoming invitations for the current user |
+
+**Invitation Model:**
+
+The `Invitation` struct returned by `getInvitation` includes:
+
+```swift
+public struct Invitation: Codable, Sendable {
+    public let id: String
+    public let status: String
+    public let invitationType: String
+    public let deliveryTypes: [String]
+    public let source: String?
+    public let foreignCreatorId: String?
+    public let creatorName: String?
+    public let createdAt: String
+    public let deactivated: Bool
+    public let expired: Bool
+    public let target: [InvitationTarget]?
+    public let groups: [InvitationGroup]?
+    public let accepts: [InvitationAcceptance]?
+    public let metadata: [String: AnyCodable]?
+    // ... and more fields
+}
+```
+
 ### VortexInviteView
 
 The main SwiftUI component for rendering invitation forms.
