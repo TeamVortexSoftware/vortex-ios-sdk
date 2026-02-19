@@ -620,11 +620,6 @@ try await client.acceptInvitation(jwt: jwt, invitationId: "invitation-id")
 // Revoke an outgoing invitation
 try await client.revokeInvitation(jwt: jwt, invitationId: "invitation-id")
 
-// Delete an incoming invitation
-try await client.deleteIncomingInvitation(jwt: jwt, invitationId: "invitation-id")
-
-// Fetch all incoming invitations
-let invitations = try await client.getIncomingInvitations(jwt: jwt)
 ```
 
 | Method | Description |
@@ -632,8 +627,6 @@ let invitations = try await client.getIncomingInvitations(jwt: jwt)
 | `getInvitation(jwt:invitationId:)` | Retrieves full details of a specific invitation including targets, groups, acceptance records, and metadata |
 | `acceptInvitation(jwt:invitationId:)` | Accepts an incoming invitation that the user has received |
 | `revokeInvitation(jwt:invitationId:)` | Revokes (cancels) an outgoing invitation that the user has sent |
-| `deleteIncomingInvitation(jwt:invitationId:)` | Deletes an incoming invitation from the user's list |
-| `getIncomingInvitations(jwt:)` | Fetches all pending incoming invitations for the current user |
 
 **Invitation Model:**
 
