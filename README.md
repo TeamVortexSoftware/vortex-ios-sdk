@@ -617,7 +617,7 @@ let invitation = try await client.getInvitation(jwt: jwt, invitationId: "invitat
 // Accept an incoming invitation
 try await client.acceptInvitation(jwt: jwt, invitationId: "invitation-id")
 
-// Revoke an outgoing invitation
+// Revoke (deactivate) an invitation
 try await client.revokeInvitation(jwt: jwt, invitationId: "invitation-id")
 
 ```
@@ -626,7 +626,7 @@ try await client.revokeInvitation(jwt: jwt, invitationId: "invitation-id")
 |--------|-------------|
 | `getInvitation(jwt:invitationId:)` | Retrieves full details of a specific invitation including targets, groups, acceptance records, and metadata |
 | `acceptInvitation(jwt:invitationId:)` | Accepts an incoming invitation that the user has received |
-| `revokeInvitation(jwt:invitationId:)` | Revokes (cancels) an outgoing invitation that the user has sent |
+| `revokeInvitation(jwt:invitationId:)` | Revokes (deactivates) an invitation where the user is either the creator or a target |
 
 **Invitation Model:**
 

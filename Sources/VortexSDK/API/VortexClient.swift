@@ -320,10 +320,10 @@ public class VortexClient {
         return invitationsResponse.data.invitations
     }
     
-    /// Revokes an outgoing invitation that the user has sent.
+    /// Revokes (deactivates) an invitation.
     ///
-    /// This permanently cancels the invitation. The invitation will no longer be
-    /// accessible to the recipient.
+    /// This works for any invitation where the authenticated user is either the creator
+    /// or a target. The invitation is marked as deactivated and will no longer be active.
     ///
     /// - Parameters:
     ///   - jwt: JWT authentication token
