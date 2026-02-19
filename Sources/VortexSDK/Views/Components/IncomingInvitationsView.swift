@@ -97,14 +97,6 @@ struct IncomingInvitationsView: View {
         block.settings?.customizations?["mobile.acceptConfirmMessage"]?.textContent ?? "Accept invitation from {name}?"
     }
     
-    private var deleteConfirmTitle: String {
-        block.settings?.customizations?["mobile.deleteConfirmTitle"]?.textContent ?? "Delete Invitation"
-    }
-    
-    private var deleteConfirmMessage: String {
-        block.settings?.customizations?["mobile.deleteConfirmMessage"]?.textContent ?? "Delete invitation from {name}?"
-    }
-    
     private var confirmButtonText: String {
         block.settings?.customizations?["mobile.confirmButtonText"]?.textContent ?? "Confirm"
     }
@@ -142,7 +134,9 @@ struct IncomingInvitationsView: View {
             HStack(spacing: 8) {
                 // Delete button
                 Button(action: {
-                    showDeleteConfirmation(for: invitation)
+                    Task {
+                        await handleDelete(invitation)
+                    }
                 }) {
                     if actionInProgress == invitation.id {
                         ProgressView()
@@ -291,15 +285,6 @@ struct IncomingInvitationsView: View {
         alertMessage = acceptConfirmMessage.replacingOccurrences(of: "{name}", with: invitation.name)
         alertAction = {
             await handleAccept(invitation)
-        }
-        showingAlert = true
-    }
-    
-    private func showDeleteConfirmation(for invitation: IncomingInvitationItem) {
-        alertTitle = deleteConfirmTitle
-        alertMessage = deleteConfirmMessage.replacingOccurrences(of: "{name}", with: invitation.name)
-        alertAction = {
-            await handleDelete(invitation)
         }
         showingAlert = true
     }
