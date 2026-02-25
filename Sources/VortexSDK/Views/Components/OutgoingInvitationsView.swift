@@ -16,8 +16,6 @@ struct OutgoingInvitationsView: View {
     @State private var isLoading = true
     @State private var error: String?
     @State private var actionInProgress: String?
-    @State private var showingCancelConfirmation = false
-    @State private var invitationToCancel: OutgoingInvitationItem?
     
     var body: some View {
         Group {
@@ -65,20 +63,6 @@ struct OutgoingInvitationsView: View {
                 await loadInvitations()
             }
         }
-        .alert(isPresented: $showingCancelConfirmation) {
-            Alert(
-                title: Text(cancelConfirmTitle),
-                message: Text(cancelConfirmMessage.replacingOccurrences(of: "{name}", with: invitationToCancel?.name ?? "")),
-                primaryButton: .destructive(Text(confirmButtonText)) {
-                    if let item = invitationToCancel {
-                        Task {
-                            await cancelInvitation(item)
-                        }
-                    }
-                },
-                secondaryButton: .cancel(Text(dismissButtonText))
-            )
-        }
     }
     
     // MARK: - Block Title Helper
@@ -121,8 +105,9 @@ struct OutgoingInvitationsView: View {
             
             // Cancel button
             Button {
-                invitationToCancel = item
-                showingCancelConfirmation = true
+                Task {
+                    await cancelInvitation(item)
+                }
             } label: {
                 if actionInProgress == item.id {
                     ProgressView()
