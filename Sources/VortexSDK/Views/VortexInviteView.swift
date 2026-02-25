@@ -259,6 +259,9 @@ public struct VortexInviteView: View {
             }
             .padding(.vertical)
         }
+        .onTapGesture {
+            UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+        }
     }
     
     // MARK: - Form Element Rendering
