@@ -280,7 +280,20 @@ struct OutgoingInvitationsView: View {
 
         do {
             try await client.revokeInvitation(jwt: jwt, invitationId: item.id)
+        } catch let error as VortexError {
+            if case .httpError(let statusCode) = error, statusCode == 404 || statusCode == 409 {
+                // Invitation already cancelled/handled externally - silently proceed
+            } else {
+                #if DEBUG
+                print("[VortexSDK] Failed to cancel outgoing invitation: \(error)")
+                #endif
+                actionInProgress = nil
+                return
+            }
         } catch {
+            #if DEBUG
+            print("[VortexSDK] Failed to cancel outgoing invitation: \(error)")
+            #endif
             actionInProgress = nil
             return
         }

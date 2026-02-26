@@ -307,6 +307,16 @@ struct IncomingInvitationsView: View {
             if let client = client, let jwt = jwt {
                 do {
                     try await client.acceptInvitation(jwt: jwt, invitationId: invitation.id)
+                } catch let error as VortexError {
+                    if case .httpError(let statusCode) = error, statusCode == 404 || statusCode == 409 {
+                        // Invitation already accepted/declined externally - silently proceed
+                    } else {
+                        #if DEBUG
+                        print("[VortexSDK] Failed to accept invitation: \(error)")
+                        #endif
+                        actionInProgress = nil
+                        return
+                    }
                 } catch {
                     #if DEBUG
                     print("[VortexSDK] Failed to accept invitation: \(error)")
@@ -347,6 +357,16 @@ struct IncomingInvitationsView: View {
             if let client = client, let jwt = jwt {
                 do {
                     try await client.deleteIncomingInvitation(jwt: jwt, invitationId: invitation.id)
+                } catch let error as VortexError {
+                    if case .httpError(let statusCode) = error, statusCode == 404 || statusCode == 409 {
+                        // Invitation already accepted/declined externally - silently proceed
+                    } else {
+                        #if DEBUG
+                        print("[VortexSDK] Failed to delete invitation: \(error)")
+                        #endif
+                        actionInProgress = nil
+                        return
+                    }
                 } catch {
                     #if DEBUG
                     print("[VortexSDK] Failed to delete invitation: \(error)")
