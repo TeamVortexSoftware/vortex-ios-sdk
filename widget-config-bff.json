@@ -1,0 +1,1921 @@
+{
+  "data": {
+    "widgetConfiguration": {
+      "id": "9ccba8d5-4361-4463-a4b6-6dff4a58af81",
+      "name": "Invite People",
+      "slug": "0GAxS26nTW",
+      "configuration": {
+        "meta": {
+          "configuration": {
+            "version": "0.0.1",
+            "componentType": "invite_people"
+          }
+        },
+        "props": {
+          "vortex.host": {
+            "value": "mobile",
+            "valueType": "string"
+          },
+          "vortex.theme": {
+            "value": {
+              "name": "Form Default (Light)",
+              "options": [
+                {
+                  "key": "--color-background",
+                  "value": "transparent",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-foreground",
+                  "value": "#334153",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-border",
+                  "value": "#cccccc",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-surface-background",
+                  "value": "#f5f5f5",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-surface-foreground",
+                  "value": "#111111",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-surface-border",
+                  "value": "#dddddd",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-primary-background",
+                  "value": "#6291d5",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-primary-foreground",
+                  "value": "#ffffff",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-primary-border",
+                  "value": "#6291d5",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-primary-border-radius",
+                  "value": "8px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-secondary-background",
+                  "value": "#ffffff",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-secondary-foreground",
+                  "value": "#353e5c",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-secondary-border",
+                  "value": "#dbdfe8",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-accent",
+                  "value": "#6291d5",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-secondary",
+                  "value": "#999999",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-muted",
+                  "value": "#c7c7c8",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-disabled",
+                  "value": "#aaaaaa",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-focus",
+                  "value": "#6291d5",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-pill-background",
+                  "value": "#eeeeee",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-pill-foreground",
+                  "value": "#222222",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--font-family",
+                  "value": "Inter, sans-serif",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--font-size",
+                  "value": "16px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--font-weight",
+                  "value": "400",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--line-height",
+                  "value": "1.5",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--letter-spacing",
+                  "value": "0",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--spacing-extra-small",
+                  "value": "2px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--spacing-small",
+                  "value": "4px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--spacing-medium",
+                  "value": "8px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--spacing-medium-large",
+                  "value": "10px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--spacing-large",
+                  "value": "12px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--spacing-extra-large",
+                  "value": "18px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-primary-padding",
+                  "value": "12px 24px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-primary-background",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-primary-color",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-primary-border",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-primary-border-radius",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-primary-font-family",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-primary-font-weight",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-primary-font-size",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-primary-text-transform",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-primary-letter-spacing",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-secondary-padding",
+                  "value": "12px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-secondary-background",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-secondary-color",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-secondary-border",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-secondary-border-radius",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-secondary-font-family",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-secondary-font-weight",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-secondary-font-size",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-secondary-text-transform",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--vrtx-submit-secondary-letter-spacing",
+                  "value": "",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--border-radius",
+                  "value": "7px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--border-width",
+                  "value": "1px",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--border-style",
+                  "value": "solid",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--shadow-small",
+                  "value": "0 1px 2px rgba(0,0,0,0.1)",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--shadow-medium",
+                  "value": "0 2px 4px rgba(0,0,0,0.15)",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--shadow-large",
+                  "value": "0 4px 8px rgba(0,0,0,0.2)",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--input-background-color",
+                  "value": "#ffffff",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--input-color",
+                  "value": "#000000",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-info",
+                  "value": "#197af3",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-warning",
+                  "value": "#f0ad4e",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-error",
+                  "value": "#d9534f",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--color-success",
+                  "value": "#5cb85c",
+                  "schemaVersion": 1
+                },
+                {
+                  "key": "--grid-gap",
+                  "value": "0.5rem",
+                  "schemaVersion": 1
+                }
+              ]
+            },
+            "valueType": "Theme"
+          },
+          "vortex.components": {
+            "value": [],
+            "valueType": "array"
+          },
+          "vortex.business.type": {
+            "value": "b2c",
+            "valueType": "string"
+          },
+          "vortex.components.form": {
+            "value": {
+              "root": {
+                "id": "b3f4822c-3297-47c6-9544-84b10a27b464",
+                "type": "root",
+                "style": {
+                  "background": "#111323"
+                },
+                "theme": {
+                  "name": "",
+                  "options": [
+                    {
+                      "key": "--vrtx-form-title-color",
+                      "value": "#ffffff",
+                      "schemaVersion": 1
+                    },
+                    {
+                      "key": "--vrtx-form-title-font-family",
+                      "value": "",
+                      "schemaVersion": 1
+                    },
+                    {
+                      "key": "--vrtx-form-title-font-size",
+                      "value": "",
+                      "schemaVersion": 1
+                    },
+                    {
+                      "key": "--vrtx-form-title-font-weight",
+                      "value": "",
+                      "schemaVersion": 1
+                    }
+                  ]
+                },
+                "subtype": "vrtx-root",
+                "tagName": "vrtx-root",
+                "children": [
+                  {
+                    "id": "00a7723d-a25b-4496-839f-7f286d1bab51",
+                    "type": "row",
+                    "subtype": "vrtx-row",
+                    "tagName": "vrtx-row",
+                    "children": [
+                      {
+                        "id": "9875e553-782e-4bb3-ae15-4d9091d6a5e3",
+                        "type": "column",
+                        "subtype": "vrtx-column",
+                        "tagName": "vrtx-column",
+                        "children": [
+                          {
+                            "id": "990d507c-2526-4648-b125-8e743156d98d",
+                            "type": "block",
+                            "style": {},
+                            "theme": {
+                              "name": "",
+                              "options": [
+                                {
+                                  "key": "--vrtx-search-box-connect-button-padding",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-connect-button-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-connect-button-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-connect-button-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-connect-button-background",
+                                  "value": "linear-gradient(90deg, #ff9e99 0%, #cad34b 100%)",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-connect-button-border",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-connect-button-border-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-search-button-padding",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-search-button-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-search-button-background",
+                                  "value": "linear-gradient(90deg, #ff9e99 0%, #cad34b 100%)",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-search-button-border",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-search-button-border-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-avatar-background",
+                                  "value": "#ff9e99",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-avatar-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-contact-name-color",
+                                  "value": "#808089",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-contact-name-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-contact-name-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-search-box-contact-name-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                }
+                              ]
+                            },
+                            "subtype": "vrtx-search-box",
+                            "tagName": "vrtx-search-box",
+                            "children": [],
+                            "settings": {
+                              "customizations": {
+                                "connectButton": {
+                                  "textContent": "Connect"
+                                },
+                                "noResultsMessage": {
+                                  "textContent": "No results found"
+                                },
+                                "searchPlaceholder": {
+                                  "textContent": "Enter your friend's BFF ID or email"
+                                }
+                              }
+                            },
+                            "attributes": {},
+                            "schemaVersion": 1
+                          }
+                        ],
+                        "settings": {
+                          "size": {
+                            "xs": 12
+                          }
+                        },
+                        "attributes": {},
+                        "schemaVersion": 1
+                      }
+                    ],
+                    "settings": {},
+                    "attributes": {},
+                    "schemaVersion": 1
+                  },
+                  {
+                    "id": "fd1de850-4003-47d0-ae1c-36b990935674",
+                    "type": "row",
+                    "subtype": "vrtx-row",
+                    "tagName": "vrtx-row",
+                    "children": [
+                      {
+                        "id": "97e9dfd4-f380-4383-bf91-0f674a76436f",
+                        "type": "column",
+                        "subtype": "vrtx-column",
+                        "tagName": "vrtx-column",
+                        "children": [
+                          {
+                            "id": "92d2c24a-9daf-40d7-b367-4aae49af29f3",
+                            "type": "block",
+                            "theme": {
+                              "name": "",
+                              "options": [
+                                {
+                                  "key": "--vrtx-incoming-invitations-title-color",
+                                  "value": "#ffffff",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-title-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-title-font-size",
+                                  "value": "24px",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-title-font-weight",
+                                  "value": "700",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-accept-button-padding",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-accept-button-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-accept-button-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-accept-button-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-accept-button-background",
+                                  "value": "linear-gradient(90deg, #ff9e99 0%, #cad34b 100%)",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-accept-button-border",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-accept-button-border-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-avatar-background",
+                                  "value": "#ff9e99",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-avatar-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-name-color",
+                                  "value": "#808089",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-name-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-name-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-name-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-delete-button-padding",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-delete-button-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-delete-button-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-delete-button-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-delete-button-background",
+                                  "value": "#c9cbd2",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-delete-button-border",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-incoming-invitations-delete-button-border-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                }
+                              ]
+                            },
+                            "subtype": "vrtx-incoming-invitations",
+                            "tagName": "vrtx-incoming-invitations",
+                            "children": [],
+                            "settings": {
+                              "customizations": {
+                                "acceptButton": {
+                                  "textContent": null
+                                },
+                                "deleteButton": {
+                                  "textContent": null
+                                },
+                                "emptyStateMessage": {
+                                  "textContent": null
+                                }
+                              }
+                            },
+                            "attributes": {
+                              "title": "Friend requests"
+                            },
+                            "schemaVersion": 1
+                          }
+                        ],
+                        "settings": {
+                          "size": {
+                            "xs": 12
+                          }
+                        },
+                        "attributes": {},
+                        "schemaVersion": 1
+                      }
+                    ],
+                    "settings": {},
+                    "attributes": {},
+                    "schemaVersion": 1
+                  },
+                  {
+                    "id": "05c5751c-ebad-4a83-bef4-485263adb956",
+                    "type": "row",
+                    "subtype": "vrtx-row",
+                    "tagName": "vrtx-row",
+                    "children": [
+                      {
+                        "id": "f7d90cc9-4e66-419d-a107-54802b1d0ed8",
+                        "type": "column",
+                        "subtype": "vrtx-column",
+                        "tagName": "vrtx-column",
+                        "children": [
+                          {
+                            "id": "d0b36278-c733-4c51-8d73-54c8ead80be0",
+                            "type": "block",
+                            "theme": {
+                              "name": "",
+                              "options": [
+                                {
+                                  "key": "--vrtx-find-friends-title-color",
+                                  "value": "#ffffff",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-title-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-title-font-size",
+                                  "value": "24px",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-title-font-weight",
+                                  "value": "700",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-avatar-background",
+                                  "value": "#ff9e99",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-avatar-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-contact-name-color",
+                                  "value": "#808089",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-contact-name-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-contact-name-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-contact-name-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-connect-button-padding",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-connect-button-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-connect-button-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-connect-button-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-connect-button-background",
+                                  "value": "linear-gradient(90deg, #ff9e99 0%, #cad34b 100%)",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-connect-button-border",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-find-friends-connect-button-border-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                }
+                              ]
+                            },
+                            "subtype": "vrtx-find-friends",
+                            "tagName": "vrtx-find-friends",
+                            "children": [],
+                            "settings": {
+                              "customizations": {
+                                "connectButton": {
+                                  "textContent": null
+                                }
+                              }
+                            },
+                            "attributes": {
+                              "title": "Friends already on BFF"
+                            },
+                            "schemaVersion": 1
+                          }
+                        ],
+                        "settings": {
+                          "size": {
+                            "xs": 12
+                          }
+                        },
+                        "attributes": {},
+                        "schemaVersion": 1
+                      }
+                    ],
+                    "settings": {},
+                    "attributes": {},
+                    "schemaVersion": 1
+                  },
+                  {
+                    "id": "993ddfaf-6535-4990-823f-9dbadc790f5c",
+                    "type": "row",
+                    "subtype": "vrtx-row",
+                    "tagName": "vrtx-row",
+                    "children": [
+                      {
+                        "id": "3f782c13-e0e3-4307-947f-a30f586adf2c",
+                        "type": "column",
+                        "subtype": "vrtx-column",
+                        "tagName": "vrtx-column",
+                        "children": [
+                          {
+                            "id": "f6fed577-96ac-4758-8464-1f22bf745594",
+                            "type": "block",
+                            "theme": {
+                              "name": "",
+                              "options": [
+                                {
+                                  "key": "--vrtx-invite-contacts-avatar-background",
+                                  "value": "#ff9e99",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-avatar-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-name-color",
+                                  "value": "#808089",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-name-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-name-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-name-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-invite-button-padding",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-invite-button-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-invite-button-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-invite-button-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-invite-button-background",
+                                  "value": "linear-gradient(90deg, #ff9e99 0%, #cad34b 100%)",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-invite-button-border",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-invite-button-border-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-title-color",
+                                  "value": "#ffffff",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-title-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-title-font-size",
+                                  "value": "24px",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invite-contacts-title-font-weight",
+                                  "value": "700",
+                                  "schemaVersion": 1
+                                }
+                              ]
+                            },
+                            "subtype": "vrtx-invite-contacts",
+                            "tagName": "vrtx-invite-contacts",
+                            "children": [],
+                            "settings": {
+                              "customizations": {
+                                "backButton": {
+                                  "textContent": "Back"
+                                },
+                                "smsMessage": {
+                                  "textContent": "Check this out! "
+                                },
+                                "inviteButton": {
+                                  "textContent": "Invite"
+                                },
+                                "invitedStatus": {
+                                  "textContent": "✓ Invited!"
+                                },
+                                "emptySearchState": {
+                                  "textContent": "No contacts match your search"
+                                },
+                                "emptyStateMessage": {
+                                  "textContent": "No contacts to invite"
+                                },
+                                "searchPlaceholder": {
+                                  "textContent": "Search contacts"
+                                },
+                                "inviteYourContactsText": {
+                                  "textContent": "Invite your contacts"
+                                }
+                              }
+                            },
+                            "attributes": {},
+                            "schemaVersion": 2
+                          }
+                        ],
+                        "settings": {
+                          "size": {
+                            "xs": 12
+                          }
+                        },
+                        "attributes": {},
+                        "schemaVersion": 1
+                      }
+                    ],
+                    "settings": {},
+                    "attributes": {},
+                    "schemaVersion": 1
+                  },
+                  {
+                    "id": "9b1f0592-1949-4cb0-8607-4e89d975088b",
+                    "meta": {
+                      "source": {
+                        "group": {
+                          "name": "grp-share-options"
+                        }
+                      }
+                    },
+                    "type": "row",
+                    "subtype": "vrtx-row",
+                    "tagName": "vrtx-row",
+                    "children": [
+                      {
+                        "id": "c08c38f5-5e13-4322-9f93-120ff7bca1ea",
+                        "meta": {
+                          "source": {
+                            "group": {
+                              "name": "grp-share-options"
+                            }
+                          }
+                        },
+                        "type": "column",
+                        "subtype": "vrtx-column",
+                        "tagName": "vrtx-column",
+                        "children": [
+                          {
+                            "id": "82018b44-72ec-4aca-949e-447e82058e69",
+                            "meta": {
+                              "source": {
+                                "group": {
+                                  "name": "grp-share-options"
+                                }
+                              }
+                            },
+                            "type": "block",
+                            "style": {
+                              "color": "#ffffff"
+                            },
+                            "subtype": "vrtx-heading",
+                            "tagName": "vrtx-heading",
+                            "children": [],
+                            "settings": {
+                              "overrideTagName": "h1"
+                            },
+                            "attributes": {},
+                            "textContent": "Invite with a link",
+                            "schemaVersion": 1
+                          }
+                        ],
+                        "settings": {
+                          "size": {
+                            "xs": 12
+                          }
+                        },
+                        "attributes": {},
+                        "schemaVersion": 1
+                      }
+                    ],
+                    "settings": {},
+                    "attributes": {},
+                    "schemaVersion": 1
+                  },
+                  {
+                    "id": "cbc2aac4-4049-48f4-b5d6-ed7a3753caef",
+                    "meta": {
+                      "source": {
+                        "group": {
+                          "name": "grp-share-options"
+                        }
+                      }
+                    },
+                    "type": "row",
+                    "subtype": "vrtx-row",
+                    "tagName": "vrtx-row",
+                    "children": [
+                      {
+                        "id": "0931d17a-3c3a-4b92-b65a-6355ccb08a5e",
+                        "meta": {
+                          "source": {
+                            "group": {
+                              "name": "grp-share-options"
+                            }
+                          }
+                        },
+                        "type": "column",
+                        "subtype": "vrtx-column",
+                        "tagName": "vrtx-column",
+                        "children": [
+                          {
+                            "id": "05b7c2e6-9a41-4e9e-bd5c-365d29722dbe",
+                            "meta": {
+                              "source": {
+                                "group": {
+                                  "name": "grp-share-options"
+                                }
+                              }
+                            },
+                            "type": "block",
+                            "theme": {
+                              "name": "",
+                              "options": [
+                                {
+                                  "key": "--vrtx-icon-button-padding",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-margin",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-background",
+                                  "value": "linear-gradient(90deg, #ff9e99 0%, #cad34b 100%)",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-text-align",
+                                  "value": "left",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-text-decoration",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-text-transform",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-border",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-border-top",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-border-right",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-border-bottom",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-border-left",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-border-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-border-top-left-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-border-top-right-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-border-bottom-right-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-border-bottom-left-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-icon-button-display",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                }
+                              ]
+                            },
+                            "subtype": "vrtx-share-options",
+                            "tagName": "vrtx-share-options",
+                            "children": [],
+                            "settings": {
+                              "customizations": {
+                                "sms": {
+                                  "textContent": null
+                                },
+                                "line": {
+                                  "textContent": "Share via LINE"
+                                },
+                                "email": {
+                                  "textContent": null
+                                },
+                                "qrCode": {
+                                  "textContent": "Show QR Code"
+                                },
+                                "discord": {
+                                  "textContent": null
+                                },
+                                "copyLink": {
+                                  "textContent": "Copy Link"
+                                },
+                                "telegram": {
+                                  "textContent": null
+                                },
+                                "whatsApp": {
+                                  "textContent": null
+                                },
+                                "twitterDms": {
+                                  "textContent": null
+                                },
+                                "instagramDms": {
+                                  "textContent": null
+                                },
+                                "nativeShareSheet": {
+                                  "textContent": "Share Link"
+                                },
+                                "facebookMessenger": {
+                                  "textContent": null
+                                },
+                                "linkedInMessaging": {
+                                  "textContent": null
+                                },
+                                "mobile.copyLink.successText": {
+                                  "textContent": "✓ Copied!"
+                                },
+                                "mobile.nativeShareSheet.successText": {
+                                  "textContent": "✓ Shared!"
+                                }
+                              }
+                            },
+                            "attributes": {},
+                            "schemaVersion": 2
+                          }
+                        ],
+                        "settings": {
+                          "size": {
+                            "xs": 12
+                          }
+                        },
+                        "attributes": {},
+                        "schemaVersion": 1
+                      }
+                    ],
+                    "settings": {},
+                    "attributes": {},
+                    "schemaVersion": 1
+                  },
+                  {
+                    "id": "537be99d-014a-4bcb-a64d-c7d4ff803c33",
+                    "meta": {
+                      "source": {
+                        "group": {
+                          "name": "grp-email-invitations"
+                        }
+                      }
+                    },
+                    "type": "row",
+                    "hidden": true,
+                    "subtype": "vrtx-row",
+                    "tagName": "vrtx-row",
+                    "children": [
+                      {
+                        "id": "12eb7761-f987-4fb3-a1b7-4cde5dcf73cc",
+                        "meta": {
+                          "source": {
+                            "group": {
+                              "name": "grp-email-invitations"
+                            }
+                          }
+                        },
+                        "type": "column",
+                        "hidden": true,
+                        "subtype": "vrtx-column",
+                        "tagName": "vrtx-column",
+                        "children": [
+                          {
+                            "id": "2d1edea5-58a3-42b6-8309-201b2203ee36",
+                            "meta": {
+                              "source": {
+                                "group": {
+                                  "name": "grp-email-invitations"
+                                }
+                              }
+                            },
+                            "type": "block",
+                            "style": {
+                              "textAlign": "center"
+                            },
+                            "hidden": true,
+                            "subtype": "vrtx-heading",
+                            "tagName": "vrtx-heading",
+                            "children": [],
+                            "settings": {
+                              "overrideTagName": "h1"
+                            },
+                            "attributes": {},
+                            "textContent": "Add by Email",
+                            "schemaVersion": 1
+                          }
+                        ],
+                        "settings": {
+                          "size": {
+                            "xs": 12
+                          }
+                        },
+                        "attributes": {},
+                        "schemaVersion": 1
+                      }
+                    ],
+                    "settings": {},
+                    "attributes": {},
+                    "schemaVersion": 1
+                  },
+                  {
+                    "id": "26b49932-85f9-471c-8a99-85f7112b792e",
+                    "meta": {
+                      "source": {
+                        "group": {
+                          "name": "grp-email-invitations"
+                        }
+                      }
+                    },
+                    "type": "row",
+                    "hidden": true,
+                    "subtype": "vrtx-row",
+                    "tagName": "vrtx-row",
+                    "children": [
+                      {
+                        "id": "a67af96b-e16d-4790-b480-339e60ad583c",
+                        "meta": {
+                          "source": {
+                            "group": {
+                              "name": "grp-email-invitations"
+                            }
+                          }
+                        },
+                        "type": "column",
+                        "hidden": true,
+                        "subtype": "vrtx-column",
+                        "tagName": "vrtx-column",
+                        "children": [
+                          {
+                            "id": "db1ca691-a2d7-488e-a955-db9430b8b731",
+                            "meta": {
+                              "source": {
+                                "group": {
+                                  "name": "grp-email-invitations"
+                                }
+                              }
+                            },
+                            "type": "block",
+                            "hidden": true,
+                            "vortex": {
+                              "role": "email"
+                            },
+                            "subtype": "vrtx-email-invitations",
+                            "tagName": "vrtx-email-invitations",
+                            "children": [],
+                            "settings": {
+                              "customizations": {
+                                "mobile.hint": {
+                                  "textContent": "Press return to add each email"
+                                },
+                                "mobile.sendButton": {
+                                  "textContent": "Send Invitation"
+                                },
+                                "mobile.placeholder": {
+                                  "textContent": "Enter email addresses"
+                                },
+                                "mobile.successMessage": {
+                                  "textContent": "Invitation sent successfully!"
+                                },
+                                "mobile.sendButtonPlural": {
+                                  "textContent": "Send Invitations"
+                                }
+                              }
+                            },
+                            "attributes": {
+                              "name": "emails",
+                              "type": "email",
+                              "required": "true",
+                              "placeholder": "Enter emails separated by spaces"
+                            },
+                            "validation": [
+                              {
+                                "type": "text",
+                                "operator": "required",
+                                "priority": 1,
+                                "canRemove": false,
+                                "errorMessage": "* Required"
+                              },
+                              {
+                                "type": "text",
+                                "value": "",
+                                "operator": "isEmail",
+                                "priority": 10,
+                                "canRemove": false,
+                                "errorMessage": "Invalid email address"
+                              },
+                              {
+                                "type": "text",
+                                "value": "",
+                                "operator": "notInGroup",
+                                "priority": 20,
+                                "canRemove": false,
+                                "errorMessage": "Already a member"
+                              },
+                              {
+                                "type": "text",
+                                "value": "",
+                                "operator": "noExistingInvites",
+                                "priority": 30,
+                                "canRemove": false,
+                                "errorMessage": "Already invited"
+                              }
+                            ],
+                            "schemaVersion": 2
+                          }
+                        ],
+                        "settings": {
+                          "size": {
+                            "xs": 12
+                          }
+                        },
+                        "attributes": {},
+                        "schemaVersion": 1
+                      }
+                    ],
+                    "settings": {},
+                    "attributes": {},
+                    "schemaVersion": 1
+                  },
+                  {
+                    "id": "0d067161-1c93-47eb-995b-d893d6f3b3d4",
+                    "type": "row",
+                    "subtype": "vrtx-row",
+                    "tagName": "vrtx-row",
+                    "children": [
+                      {
+                        "id": "5a238536-a36b-4bc0-85b7-a79287ba70ca",
+                        "type": "column",
+                        "subtype": "vrtx-column",
+                        "tagName": "vrtx-column",
+                        "children": [
+                          {
+                            "id": "41a4e954-8849-4f6a-a14d-6f7a0d874098",
+                            "type": "block",
+                            "theme": {
+                              "name": "",
+                              "options": [
+                                {
+                                  "key": "--vrtx-invitation-suggestions-title-color",
+                                  "value": "#ffffff",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-title-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-title-font-size",
+                                  "value": "24px",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-title-font-weight",
+                                  "value": "700",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-avatar-background",
+                                  "value": "#ff9e99",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-avatar-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-name-color",
+                                  "value": "#808089",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-name-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-name-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-name-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-invite-button-padding",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-invite-button-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-invite-button-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-invite-button-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-invite-button-background",
+                                  "value": "linear-gradient(90deg, #ff9e99 0%, #cad34b 100%)",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-invite-button-border",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-invitation-suggestions-invite-button-border-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                }
+                              ]
+                            },
+                            "subtype": "vrtx-invitation-suggestions",
+                            "tagName": "vrtx-invitation-suggestions",
+                            "children": [],
+                            "settings": {
+                              "customizations": {
+                                "inviteButton": {
+                                  "textContent": null
+                                },
+                                "emptyStateMessage": {
+                                  "textContent": null
+                                }
+                              }
+                            },
+                            "attributes": {
+                              "title": "People you may know"
+                            },
+                            "schemaVersion": 1
+                          }
+                        ],
+                        "settings": {
+                          "size": {
+                            "xs": 12
+                          }
+                        },
+                        "attributes": {},
+                        "schemaVersion": 1
+                      }
+                    ],
+                    "settings": {},
+                    "attributes": {},
+                    "schemaVersion": 1
+                  },
+                  {
+                    "id": "448cf02d-bdee-425d-9248-c947d5d5319c",
+                    "meta": {
+                      "source": {
+                        "group": {
+                          "name": "grp-email-invitations"
+                        }
+                      }
+                    },
+                    "type": "row",
+                    "hidden": true,
+                    "subtype": "vrtx-row",
+                    "tagName": "vrtx-row",
+                    "children": [
+                      {
+                        "id": "b0c30e5e-a6fe-444d-bcf6-eedf8c51b5e5",
+                        "meta": {
+                          "source": {
+                            "group": {
+                              "name": "grp-email-invitations"
+                            }
+                          }
+                        },
+                        "type": "column",
+                        "hidden": true,
+                        "subtype": "vrtx-column",
+                        "tagName": "vrtx-column",
+                        "children": [
+                          {
+                            "id": "bb6446af-037a-4f31-85f9-12c9279ca757",
+                            "meta": {
+                              "source": {
+                                "group": {
+                                  "name": "grp-email-invitations"
+                                }
+                              }
+                            },
+                            "type": "block",
+                            "hidden": true,
+                            "vortex": {
+                              "role": "submit"
+                            },
+                            "subtype": "vrtx-submit",
+                            "tagName": "vrtx-submit",
+                            "children": [],
+                            "settings": {},
+                            "attributes": {
+                              "name": "submit1",
+                              "type": "submit",
+                              "variant": "primary"
+                            },
+                            "textContent": "Invite",
+                            "schemaVersion": 1
+                          }
+                        ],
+                        "settings": {
+                          "size": {
+                            "xs": 12
+                          }
+                        },
+                        "attributes": {},
+                        "schemaVersion": 1
+                      }
+                    ],
+                    "settings": {},
+                    "attributes": {},
+                    "schemaVersion": 1
+                  },
+                  {
+                    "id": "bab6a892-f2fe-42a2-af02-1d895d91130e",
+                    "type": "row",
+                    "subtype": "vrtx-row",
+                    "tagName": "vrtx-row",
+                    "children": [
+                      {
+                        "id": "8cfa1577-6769-494f-bb32-4183822e0f15",
+                        "type": "column",
+                        "subtype": "vrtx-column",
+                        "tagName": "vrtx-column",
+                        "children": [
+                          {
+                            "id": "0790c248-12f9-4f58-befa-908883a2d6e9",
+                            "type": "block",
+                            "theme": {
+                              "name": "",
+                              "options": [
+                                {
+                                  "key": "--vrtx-outgoing-invitations-title-color",
+                                  "value": "#ffffff",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-title-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-title-font-size",
+                                  "value": "24px",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-title-font-weight",
+                                  "value": "700",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-avatar-background",
+                                  "value": "#ff9e99",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-avatar-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-name-color",
+                                  "value": "#808089",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-name-font-family",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-name-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-name-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-cancel-button-padding",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-cancel-button-font-size",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-cancel-button-font-weight",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-cancel-button-color",
+                                  "value": "#333333",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-cancel-button-background",
+                                  "value": "#c9cbd2",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-cancel-button-border",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                },
+                                {
+                                  "key": "--vrtx-outgoing-invitations-cancel-button-border-radius",
+                                  "value": "",
+                                  "schemaVersion": 1
+                                }
+                              ]
+                            },
+                            "subtype": "vrtx-outgoing-invitations",
+                            "tagName": "vrtx-outgoing-invitations",
+                            "children": [],
+                            "settings": {
+                              "customizations": {
+                                "cancelButton": {
+                                  "textContent": null
+                                },
+                                "emptyStateMessage": {
+                                  "textContent": null
+                                }
+                              }
+                            },
+                            "attributes": {
+                              "label": "asdf",
+                              "title": "Invitations you have sent"
+                            },
+                            "schemaVersion": 1
+                          }
+                        ],
+                        "settings": {
+                          "size": {
+                            "xs": 12
+                          }
+                        },
+                        "attributes": {},
+                        "schemaVersion": 1
+                      }
+                    ],
+                    "settings": {},
+                    "attributes": {},
+                    "schemaVersion": 1
+                  }
+                ],
+                "settings": {
+                  "customizations": {
+                    "mobile.formTitle": {
+                      "textContent": "Add Friends"
+                    }
+                  }
+                },
+                "attributes": {},
+                "schemaVersion": 1
+              }
+            },
+            "valueType": "WebPageData"
+          },
+          "vortex.components.autojoin": {
+            "value": [
+              "vortex.components.autojoin.options.checked"
+            ],
+            "valueType": "array"
+          },
+          "vortex.deployment.environments": {
+            "value": [],
+            "valueType": "array"
+          },
+          "vortex.components.share.options": {
+            "value": [
+              "copyLink",
+              "line",
+              "nativeShareSheet",
+              "qrCode"
+            ],
+            "valueType": "array"
+          },
+          "vortex.components.share.template.body": {
+            "value": "I’ve been using MixerBox BFF to stay connected with my friends in real time. Come join me! {{vortex_share_link}}",
+            "valueType": "string"
+          },
+          "vortex.email.template.accept.from.name": {
+            "value": "",
+            "valueType": "string"
+          },
+          "vortex.components.share.template.subject": {
+            "value": "",
+            "valueType": "string"
+          },
+          "vortex.email.template.accept.from.address": {
+            "value": "no-reply@gmail.com",
+            "valueType": "string"
+          },
+          "vortex.email.template.accept.from.replyto": {
+            "value": "no-reply@gmail.com",
+            "valueType": "string"
+          },
+          "vortex.email.template.accept.from.subject": {
+            "value": " just joined your workspace",
+            "valueType": "string"
+          },
+          "vortex.email.template.invitation.from.name": {
+            "value": "",
+            "valueType": "string"
+          },
+          "vortex.email.template.invitation.from.address": {
+            "value": "no-reply@gmail.com",
+            "valueType": "string"
+          },
+          "vortex.email.template.invitation.from.replyto": {
+            "value": "no-reply@gmail.com",
+            "valueType": "string"
+          },
+          "vortex.email.template.invitation.from.subject": {
+            "value": " has invited you to work with them in gmail.com",
+            "valueType": "string"
+          },
+          "vortex.components.share.options.expirationdays": {
+            "value": 0,
+            "valueType": "number"
+          },
+          "vortex.components.options.redirecturl.production": {
+            "value": "https://mixerboxbff.com/user",
+            "valueType": "string"
+          },
+          "vortex.components.options.redirecturl.development": {
+            "value": "https://dev.tomodoko.com/user",
+            "valueType": "string"
+          },
+          "vortex.components.share.invitations.options.expirydays": {
+            "value": 0,
+            "valueType": "number"
+          },
+          "vortex.components.emailinvitations.options.nudges.count": {
+            "value": 2,
+            "valueType": "number"
+          },
+          "vortex.email.template.invitation.from.replyto.useinvitee": {
+            "value": false,
+            "valueType": "boolean"
+          },
+          "vortex.components.emailinvitations.options.reminders.count": {
+            "value": 3,
+            "valueType": "number"
+          },
+          "vortex.components.share.invitations.options.notifyonacceptance": {
+            "value": false,
+            "valueType": "boolean"
+          }
+        }
+      },
+      "version": 2
+    },
+    "deploymentId": "2f98e7b6-bd3d-4a15-90b3-dab6ec71d66d",
+    "widgetType": "invite_people",
+    "environmentRole": "production",
+    "environmentName": "Production",
+    "renderer": {
+      "url": "https://assets.vortexsoftware.com/vortex/prod/renderer.js"
+    },
+    "sessionAttestation": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCIsImlhdCI6MTc3MjExNDkyOX0.eyJzZXNzaW9uSWQiOiIzQzk3MTJCNS00N0U4LTQ3RkItQjIxMi0zRTRGNzcwNDkyOUEiLCJpYXQiOjE3NzIxMTQ5Mjl9.XnyHrvUGayZfHeM3qxyUOOujnfD-KXuTscCyTS7v1qo"
+  }
+}
