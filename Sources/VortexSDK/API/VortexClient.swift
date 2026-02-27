@@ -94,7 +94,35 @@ public class VortexClient {
         #endif
         
         let decoder = JSONDecoder()
-        let configResponse = try decoder.decode(WidgetConfigurationResponse.self, from: data)
+        let configResponse: WidgetConfigurationResponse
+        do {
+            configResponse = try decoder.decode(WidgetConfigurationResponse.self, from: data)
+        } catch {
+            #if DEBUG
+            print("[VortexSDK] ❌ Failed to decode widget configuration (\(data.count) bytes)")
+            if let decodingError = error as? DecodingError {
+                switch decodingError {
+                case .typeMismatch(let type, let context):
+                    let path = context.codingPath.map { $0.stringValue }.joined(separator: ".")
+                    print("[VortexSDK]   Type mismatch: expected \(type) at '\(path)' — \(context.debugDescription)")
+                case .valueNotFound(let type, let context):
+                    let path = context.codingPath.map { $0.stringValue }.joined(separator: ".")
+                    print("[VortexSDK]   Value not found: expected \(type) at '\(path)' — \(context.debugDescription)")
+                case .keyNotFound(let key, let context):
+                    let path = context.codingPath.map { $0.stringValue }.joined(separator: ".")
+                    print("[VortexSDK]   Key '\(key.stringValue)' not found at '\(path)' — \(context.debugDescription)")
+                case .dataCorrupted(let context):
+                    let path = context.codingPath.map { $0.stringValue }.joined(separator: ".")
+                    print("[VortexSDK]   Data corrupted at '\(path)' — \(context.debugDescription)")
+                @unknown default:
+                    print("[VortexSDK]   \(error)")
+                }
+            } else {
+                print("[VortexSDK]   \(error)")
+            }
+            #endif
+            throw error
+        }
         
         // Store session attestation for future requests
         if let attestation = configResponse.data.sessionAttestation {

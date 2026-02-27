@@ -19,6 +19,37 @@ public struct WidgetConfiguration: Codable, Sendable {
     public let widgetId: String?
     public let deploymentId: String?
     public let widgetType: String?
+    
+    private enum CodingKeys: String, CodingKey {
+        case id, name, slug, version, configuration
+        case createdAt, updatedAt, createdBy, status
+        case projectId, widgetId, deploymentId, widgetType
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.id = try container.decode(String.self, forKey: .id)
+        self.name = try container.decodeIfPresent(String.self, forKey: .name)
+        self.slug = try container.decodeIfPresent(String.self, forKey: .slug)
+        self.configuration = try container.decode(WidgetConfigurationConfiguration.self, forKey: .configuration)
+        self.createdAt = try container.decodeIfPresent(String.self, forKey: .createdAt)
+        self.updatedAt = try container.decodeIfPresent(String.self, forKey: .updatedAt)
+        self.createdBy = try container.decodeIfPresent(String.self, forKey: .createdBy)
+        self.status = try container.decodeIfPresent(String.self, forKey: .status)
+        self.projectId = try container.decodeIfPresent(String.self, forKey: .projectId)
+        self.widgetId = try container.decodeIfPresent(String.self, forKey: .widgetId)
+        self.deploymentId = try container.decodeIfPresent(String.self, forKey: .deploymentId)
+        self.widgetType = try container.decodeIfPresent(String.self, forKey: .widgetType)
+        
+        // Handle version as either String or Int from the API
+        if let stringVersion = try? container.decode(String.self, forKey: .version) {
+            self.version = stringVersion
+        } else if let intVersion = try? container.decode(Int.self, forKey: .version) {
+            self.version = String(intVersion)
+        } else {
+            self.version = nil
+        }
+    }
 }
 
 /// Configuration container with metadata and props
