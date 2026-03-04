@@ -250,6 +250,12 @@ public struct VortexInviteView: View {
                     
                 case .qrCode:
                     qrCodeView
+                    
+                case .inviteContacts:
+                    // Invite Contacts secondary page - renders the contacts list
+                    if let block = viewModel.inviteContactsBlock {
+                        InviteContactsView(block: block, viewModel: viewModel)
+                    }
                 }
                 
                 // Success message (can show in any view)

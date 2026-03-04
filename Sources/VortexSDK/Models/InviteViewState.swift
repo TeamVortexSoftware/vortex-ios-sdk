@@ -12,4 +12,6 @@ public enum InviteViewState: Sendable {
     case googleContactsPicker
     /// QR code display view
     case qrCode
+    /// Invite contacts list view
+    case inviteContacts
 }

@@ -204,8 +204,6 @@ struct InviteContactsView: View {
     let block: ElementNode
     @ObservedObject var viewModel: VortexInviteViewModel
     
-    /// Track if showing the contacts list view
-    @State private var showContactsList = false
     
     /// Search query for filtering contacts
     @State private var searchQuery = ""
@@ -331,8 +329,8 @@ struct InviteContactsView: View {
             // If no config or empty contacts, render nothing
             if viewModel.inviteContactsConfig == nil || contacts.isEmpty {
                 EmptyView()
-            } else if showContactsList {
-                // Contacts list view
+            } else if viewModel.currentView == .inviteContacts {
+                // Contacts list view (secondary page)
                 contactsListView
             } else {
                 // Main view: "Invite your contacts" entry
@@ -367,7 +365,7 @@ struct InviteContactsView: View {
     
     private var inviteContactsEntryView: some View {
         Button(action: {
-            showContactsList = true
+            viewModel.currentView = .inviteContacts
         }) {
             HStack {
                 Text(inviteYourContactsText)
@@ -392,9 +390,6 @@ struct InviteContactsView: View {
     
     private var contactsListView: some View {
         LazyVStack(spacing: 0) {
-            // Back header with search
-            backHeaderView
-            
             // Search box
             searchBoxView
             
@@ -420,33 +415,6 @@ struct InviteContactsView: View {
         }
         .padding(.horizontal)
         .padding(.bottom, 16)
-    }
-    
-    // MARK: - Back Header View
-    
-    private var backButtonText: String {
-        block.settings?.customizations?["backButton"]?.textContent ?? "Back"
-    }
-    
-    private var backHeaderView: some View {
-        Button(action: {
-            showContactsList = false
-            searchQuery = ""
-        }) {
-            HStack(alignment: .center, spacing: 4) {
-                Text("‹")
-                    .font(.system(size: 20, weight: .regular))
-                    .foregroundColor(secondaryForegroundColor)
-                
-                Text(backButtonText)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(foregroundColor)
-            }
-            .padding(.vertical, 12)
-        }
-        .buttonStyle(PlainButtonStyle())
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(.bottom, 8)
     }
     
     // MARK: - Search Box View

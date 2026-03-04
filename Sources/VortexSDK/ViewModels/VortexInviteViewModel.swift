@@ -498,6 +498,12 @@ class VortexInviteViewModel: ObservableObject {
         return findBlock(in: root, withSubtype: "vrtx-contacts-import")
     }
     
+    /// Find the invite contacts block from the form structure
+    var inviteContactsBlock: ElementNode? {
+        guard let root = formStructure else { return nil }
+        return findBlock(in: root, withSubtype: "vrtx-invite-contacts")
+    }
+    
     /// Read a customization label from any element block, falling back to a default
     func customLabel(from block: ElementNode?, key: String, default defaultValue: String) -> String {
         block?.settings?.customizations?[key]?.textContent ?? defaultValue
@@ -928,7 +934,13 @@ class VortexInviteViewModel: ObservableObject {
 
             // Track the SMS invitation
             trackShareLinkClick(clickName: "inviteContactViaSMS")
-            return response.data.invitationEntries?.first?.shortLink
+            
+            // Fire invitation sent event so outgoing invitations list refreshes
+            if let shortLink = response.data.invitationEntries?.first?.shortLink {
+                fireInvitationSentEvent(source: .inviteContacts, shortLink: shortLink)
+                return shortLink
+            }
+            return nil
         } catch {
             return nil
         }
