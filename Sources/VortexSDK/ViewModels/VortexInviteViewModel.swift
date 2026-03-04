@@ -83,6 +83,7 @@ class VortexInviteViewModel: ObservableObject {
     @Published var searchBoxResults: [SearchBoxContact]? = nil
     @Published var searchBoxIsSearching: Bool = false
     @Published var searchBoxActionInProgress: String? = nil
+    @Published var searchBoxDismissFocusToken: Int = 0
     
     // Invitation Suggestions state
     @Published var invitationSuggestionsActionInProgress: String? = nil
@@ -2214,6 +2215,7 @@ class VortexInviteViewModel: ObservableObject {
     func handleSearchBoxConnect(_ contact: SearchBoxContact) {
         guard searchBoxConfig != nil else { return }
         
+        searchBoxDismissFocusToken += 1
         searchBoxActionInProgress = contact.id
         
         Task {
@@ -2280,6 +2282,12 @@ class VortexInviteViewModel: ObservableObject {
             
             // Remove the connected contact from the search results list
             searchBoxResults?.removeAll { $0.id == contact.id }
+            
+            // If all results have been connected, clear the search state
+            if searchBoxResults?.isEmpty == true {
+                searchBoxResults = nil
+                searchBoxQuery = ""
+            }
             
             // Notify the customer that the invitation was created
             searchBoxConfig?.onInvitationCreated?(contact)

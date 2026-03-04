@@ -164,6 +164,7 @@ struct SearchBoxView: View {
                 searchButtonBackgroundValue: searchButtonBackgroundValue,
                 defaultPrimaryBackground: defaultPrimaryBackground,
                 parseGradient: parseSearchButtonLinearGradient,
+                dismissFocusToken: viewModel.searchBoxDismissFocusToken,
                 onCommit: { viewModel.handleSearchBoxSearch() }
             )
             .padding(.bottom, 12)
@@ -677,6 +678,7 @@ private struct SearchRowFocusable: View {
     let searchButtonBackgroundValue: String?
     let defaultPrimaryBackground: Color
     let parseGradient: (String) -> SearchButtonGradient?
+    let dismissFocusToken: Int
     let onCommit: () -> Void
     
     @FocusState private var isFieldFocused: Bool
@@ -719,6 +721,9 @@ private struct SearchRowFocusable: View {
                 .cornerRadius(8)
             }
             .disabled(isSearching || isDisabled)
+        }
+        .onChange(of: dismissFocusToken) { _ in
+            isFieldFocused = false
         }
     }
     
