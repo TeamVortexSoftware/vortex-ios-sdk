@@ -88,6 +88,13 @@ class VortexInviteViewModel: ObservableObject {
     @Published var invitationSuggestionsActionInProgress: String? = nil
     @Published var invitedInvitationSuggestionIds: Set<String> = []
     @Published var dismissedInvitationSuggestionIds: Set<String> = []
+
+    // Outgoing invitations fetched from API (shared cache to avoid duplicate calls)
+    @Published var fetchedOutgoingInvitations: [OutgoingInvitation] = []
+    // Outgoing invitation user IDs (for filtering suggestions, find friends, search box)
+    @Published var outgoingInvitationUserIds: Set<String> = []
+    // Whether outgoing invitations have been loaded (for per-component shimmer placeholders)
+    @Published var isOutgoingInvitationsLoaded = false
     
     /// Filtered contacts based on search query
     var filteredContacts: [VortexContact] {
@@ -785,22 +792,31 @@ class VortexInviteViewModel: ObservableObject {
             return
         }
         
+        error = nil
+
         // Step 1: Check for cached configuration (from prefetcher or previous load)
         var hasCachedConfig = false
-        
+
         if let cached = await VortexConfigurationCache.shared.get(componentId, locale: locale) {
             // Use configuration from shared cache (locale-aware)
             configuration = cached.configuration
             deploymentId = cached.deploymentId
             hasCachedConfig = true
         }
-        
-        // Step 2: Only show loading if we don't have any configuration yet
+
+        // Check for cached outgoing invitations (from prefetcher) early,
+        // so components render with filtered data immediately (no shimmer)
+        if let cachedOutgoing = await VortexConfigurationCache.shared.getOutgoingInvitations(jwt: jwt) {
+            fetchedOutgoingInvitations = cachedOutgoing
+            updateOutgoingInvitationUserIds()
+            isOutgoingInvitationsLoaded = true
+        }
+
+        // Only show global loading spinner if there's no cached config
         if !hasCachedConfig {
             isLoading = true
         }
-        error = nil
-        
+
         // Step 3: Always fetch fresh configuration (stale-while-revalidate)
         do {
             let configData = try await client.getWidgetConfiguration(
@@ -836,8 +852,14 @@ class VortexInviteViewModel: ObservableObject {
         }
         
         isLoading = false
+        // Fetch outgoing invitations (SWR if cached, fresh if not)
+        // Components show shimmer only if not already loaded
+        Task { @MainActor in
+            await fetchOutgoingInvitations()
+            isOutgoingInvitationsLoaded = true
+        }
     }
-    
+
     // MARK: - Shareable Link
     
     private func fetchShareableLink() async {
@@ -2037,6 +2059,44 @@ class VortexInviteViewModel: ObservableObject {
         }
     }
     
+    // MARK: - Outgoing Invitation Filtering
+
+    /// Fetches outgoing invitations from the API and caches them.
+    /// Also updates the outgoingInvitationUserIds set for filtering.
+    func fetchOutgoingInvitations() async {
+        guard let jwt = jwt else { return }
+
+        // Fetch from API
+        do {
+            let fetched = try await client.getOutgoingInvitations(jwt: jwt)
+            fetchedOutgoingInvitations = fetched
+            // Update shared cache
+            await VortexConfigurationCache.shared.setOutgoingInvitations(jwt: jwt, invitations: fetched)
+        } catch {
+            // Silently fail - keep previous fetched data
+        }
+
+        updateOutgoingInvitationUserIds()
+    }
+
+    /// Derives the set of user IDs from both internal and API-fetched outgoing invitations.
+    private func updateOutgoingInvitationUserIds() {
+        var userIds = Set<String>()
+        if let internalInvitations = outgoingInvitationsConfig?.internalInvitations {
+            for item in internalInvitations {
+                if let userId = item.userId {
+                    userIds.insert(userId)
+                }
+            }
+        }
+        for invitation in fetchedOutgoingInvitations {
+            if let targetValue = invitation.targets?.first?.targetValue {
+                userIds.insert(targetValue)
+            }
+        }
+        outgoingInvitationUserIds = userIds
+    }
+
     // MARK: - Invitation Suggestions
     
     /// Handle Invite button tap for a contact in Invitation Suggestions

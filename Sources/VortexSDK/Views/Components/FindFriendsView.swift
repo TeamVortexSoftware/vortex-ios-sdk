@@ -15,7 +15,10 @@ struct FindFriendsView: View {
     /// Contacts from findFriendsConfig, excluding already connected ones
     private var contacts: [FindFriendsContact] {
         let allContacts = viewModel.findFriendsConfig?.contacts ?? []
-        return allContacts.filter { !viewModel.connectedFindFriendsContactIds.contains($0.id) }
+        return allContacts.filter {
+            !viewModel.connectedFindFriendsContactIds.contains($0.id) &&
+            !viewModel.outgoingInvitationUserIds.contains($0.userId)
+        }
     }
     
     /// Primary color from theme or default blue
@@ -74,6 +77,8 @@ struct FindFriendsView: View {
         Group {
             if viewModel.findFriendsConfig == nil {
                 placeholderView
+            } else if !viewModel.isOutgoingInvitationsLoaded {
+                shimmerView
             } else if contacts.isEmpty {
                 // No-op: render nothing (0 height) when no contacts are provided
                 EmptyView()
@@ -81,6 +86,22 @@ struct FindFriendsView: View {
                 contactsListView
             }
         }
+    }
+
+    // MARK: - Shimmer Loading View
+
+    private var shimmerView: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let title = title, !title.isEmpty {
+                Text(title)
+                    .font(.system(size: titleFontSize, weight: titleFontWeight))
+                    .foregroundColor(titleColor)
+                    .padding(.bottom, 16)
+            }
+            ShimmerPlaceholderList(rowCount: min(contacts.count > 0 ? contacts.count : 3, 3))
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 16)
     }
     
     // MARK: - Placeholder View

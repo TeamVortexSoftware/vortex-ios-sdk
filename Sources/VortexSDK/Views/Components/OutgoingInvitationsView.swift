@@ -13,15 +13,26 @@ struct OutgoingInvitationsView: View {
     
     @State private var invitations: [OutgoingInvitationItem] = []
     @State private var vortexInvitationMap: [String: OutgoingInvitation] = [:]
-    @State private var isLoading = true
+    @State private var invitationsLoaded = false
     @State private var error: String?
     @State private var actionInProgress: String?
-    
+
+    private var isLoading: Bool {
+        !invitationsLoaded || !viewModel.isOutgoingInvitationsLoaded
+    }
+
     var body: some View {
         Group {
             if isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, minHeight: 120)
+                VStack(alignment: .leading, spacing: 0) {
+                    if let title = blockTitle, !title.isEmpty {
+                        Text(title)
+                            .font(.system(size: titleFontSize, weight: titleFontWeight))
+                            .foregroundColor(titleColor)
+                            .padding(.bottom, 12)
+                    }
+                    ShimmerPlaceholderList(rowCount: 3)
+                }
             } else if let error = error {
                 Text(error)
                     .foregroundColor(.red)
@@ -48,19 +59,26 @@ struct OutgoingInvitationsView: View {
         .padding(.horizontal, 16)
         .onAppear {
             Task {
-                await loadInvitations()
+                await loadInvitations(refetch: false)
             }
         }
         .onChange(of: jwt) { newJwt in
             if newJwt != nil && invitations.isEmpty {
                 Task {
-                    await loadInvitations()
+                    await loadInvitations(refetch: true)
+                }
+            }
+        }
+        .onChange(of: viewModel.isOutgoingInvitationsLoaded) { loaded in
+            if loaded {
+                Task {
+                    await loadInvitations(refetch: false)
                 }
             }
         }
         .onChange(of: viewModel.invitationSentEvent) { _ in
             Task {
-                await loadInvitations()
+                await loadInvitations(refetch: true)
             }
         }
     }
@@ -169,56 +187,50 @@ struct OutgoingInvitationsView: View {
     
     // MARK: - Actions
     
-    private func loadInvitations() async {
-        isLoading = true
-        error = nil
-        
+    private func loadInvitations(refetch: Bool = true) async {
+        // SWR: only show loading state if we don't have data yet
+        if !invitationsLoaded {
+            error = nil
+        }
+
+        // Fetch or reuse cached outgoing invitations via the ViewModel
+        if refetch {
+            await viewModel.fetchOutgoingInvitations()
+        }
+
         var allInvitations: [OutgoingInvitationItem] = []
         var invitationMap: [String: OutgoingInvitation] = [:]
-        
+
         // Add internal invitations from config
         if let internalInvitations = config?.internalInvitations {
             allInvitations.append(contentsOf: internalInvitations)
         }
-        
-        // Fetch from API if we have jwt
-        if let jwt = jwt {
-            do {
-                let fetched = try await client.getOutgoingInvitations(jwt: jwt)
-                // Filter out shareable link invitations (targetType "share")
-                let filtered = fetched.filter { invitation in
-                    guard let targetType = invitation.targets?.first?.targetType else { return true }
-                    return targetType != "share"
-                }
-                var mappedItems: [OutgoingInvitationItem] = []
-                for invitation in filtered {
-                    let item = mapToDisplayItem(invitation)
-                    mappedItems.append(item)
-                    invitationMap[item.id] = invitation
-                }
-                // Deduplicate: if an API invitation has the same userId as an
-                // internal invitation, keep the Vortex one (it supports API cancel/revoke).
-                let apiUserIds = Set(mappedItems.compactMap { $0.userId })
-                allInvitations.removeAll { item in
-                    guard !item.isVortexInvitation, let userId = item.userId else { return false }
-                    return apiUserIds.contains(userId)
-                }
-                allInvitations.append(contentsOf: mappedItems)
-            } catch {
-                // Silently fail - just show internal invitations if any
-                #if DEBUG
-                print("[VortexSDK] Failed to fetch outgoing invitations: \(error)")
-                #endif
-                // Only show error if we have no internal invitations
-                if allInvitations.isEmpty {
-                    self.error = block.settings?.customizations?["mobile.errorMessage"]?.textContent ?? "Failed to load invitations"
-                }
-            }
+
+        // Use cached API invitations from ViewModel
+        let fetched = viewModel.fetchedOutgoingInvitations
+        // Filter out shareable link invitations (targetType "share")
+        let filtered = fetched.filter { invitation in
+            guard let targetType = invitation.targets?.first?.targetType else { return true }
+            return targetType != "share"
         }
-        
+        var mappedItems: [OutgoingInvitationItem] = []
+        for invitation in filtered {
+            let item = mapToDisplayItem(invitation)
+            mappedItems.append(item)
+            invitationMap[item.id] = invitation
+        }
+        // Deduplicate: if an API invitation has the same userId as an
+        // internal invitation, keep the Vortex one (it supports API cancel/revoke).
+        let apiUserIds = Set(mappedItems.compactMap { $0.userId })
+        allInvitations.removeAll { item in
+            guard !item.isVortexInvitation, let userId = item.userId else { return false }
+            return apiUserIds.contains(userId)
+        }
+        allInvitations.append(contentsOf: mappedItems)
+
         invitations = allInvitations.sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
         vortexInvitationMap = invitationMap
-        isLoading = false
+        invitationsLoaded = true
     }
     
     private func mapToDisplayItem(_ invitation: OutgoingInvitation) -> OutgoingInvitationItem {
@@ -304,6 +316,10 @@ struct OutgoingInvitationsView: View {
         }
         
         actionInProgress = nil
+        
+        // Refresh outgoing invitations so filtered components (Search Box, Find Friends, etc.)
+        // re-include the cancelled contact
+        await viewModel.fetchOutgoingInvitations()
     }
     
     // MARK: - Theme Helpers

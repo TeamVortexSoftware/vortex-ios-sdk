@@ -17,6 +17,9 @@ public actor VortexConfigurationCache {
     /// Internal storage for cached configurations
     private var cache: [String: CachedConfiguration] = [:]
     
+    /// Cached outgoing invitations keyed by JWT hash
+    private var outgoingInvitationsCache: [String: [OutgoingInvitation]] = [:]
+    
     /// Cached configuration with metadata
     private struct CachedConfiguration {
         let configuration: WidgetConfiguration
@@ -93,6 +96,33 @@ public actor VortexConfigurationCache {
     public func has(_ componentId: String, locale: String? = nil) -> Bool {
         let key = cacheKey(componentId: componentId, locale: locale)
         return cache[key] != nil
+    }
+    
+    // MARK: - Outgoing Invitations Cache
+    
+    /// Get cached outgoing invitations.
+    /// - Parameter jwt: JWT token (used as cache key via hash)
+    /// - Returns: Cached outgoing invitations, or nil if not cached
+    public func getOutgoingInvitations(jwt: String) -> [OutgoingInvitation]? {
+        return outgoingInvitationsCache[String(jwt.hashValue)]
+    }
+    
+    /// Store outgoing invitations in the cache.
+    /// - Parameters:
+    ///   - jwt: JWT token (used as cache key via hash)
+    ///   - invitations: The outgoing invitations to cache
+    public func setOutgoingInvitations(jwt: String, invitations: [OutgoingInvitation]) {
+        outgoingInvitationsCache[String(jwt.hashValue)] = invitations
+    }
+    
+    /// Clear cached outgoing invitations.
+    /// - Parameter jwt: Optional JWT to clear specific cache. If nil, clears all.
+    public func clearOutgoingInvitations(jwt: String? = nil) {
+        if let jwt = jwt {
+            outgoingInvitationsCache.removeValue(forKey: String(jwt.hashValue))
+        } else {
+            outgoingInvitationsCache.removeAll()
+        }
     }
     
     /// Get cache statistics for debugging.

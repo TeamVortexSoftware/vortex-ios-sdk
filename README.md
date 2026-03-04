@@ -228,7 +228,8 @@ VortexInviteView(
 2. The component displays them with a "Connect" button (text configurable via widget config)
 3. When the user taps "Connect", the SDK creates an invitation via the Vortex API
 4. The `onInvitationCreated` callback is called after a successful invitation
-5. The section is hidden when there are no contacts to display
+5. Contacts that already have an outstanding outgoing invitation are automatically filtered out (matched by `userId`)
+6. The section is hidden when there are no contacts to display
 
 **FindFriendsContact Properties:**
 
@@ -298,7 +299,8 @@ VortexInviteView(
 2. The component displays them with an "Invite" button and a dismiss (X) button
 3. When the user taps "Invite", the SDK creates an invitation via the Vortex API
 4. The `onInvitationCreated` or `onInvitationFailed` callback is called based on the result
-5. When the user taps the X button, the `onDismiss` callback is called and the contact is removed from the list
+5. Contacts that already have an outstanding outgoing invitation are automatically filtered out (matched by `userId`)
+6. When the user taps the X button, the `onDismiss` callback is called and the contact is removed from the list
 
 **InvitationSuggestionContact Properties:**
 
@@ -364,7 +366,8 @@ VortexInviteView(
 4. Your callback returns a list of `SearchBoxContact` objects
 5. The matching contacts are rendered below the search box with a "Connect" button next to each
 6. If the search returns no results, a configurable "no results" message is displayed
-7. When the user taps "Connect", the SDK creates an invitation via the Vortex API and the contact is removed from the list (identical to Find Friends behavior)
+7. Contacts that already have an outstanding outgoing invitation are automatically filtered out (matched by `userId`)
+8. When the user taps "Connect", the SDK creates an invitation via the Vortex API and the contact is removed from the list (identical to Find Friends behavior)
 
 **SearchBoxConfig Properties:**
 

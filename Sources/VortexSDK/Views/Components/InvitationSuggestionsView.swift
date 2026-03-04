@@ -16,7 +16,11 @@ struct InvitationSuggestionsView: View {
     /// Contacts from invitationSuggestionsConfig, excluding already invited/dismissed ones
     private var contacts: [InvitationSuggestionContact] {
         let allContacts = viewModel.invitationSuggestionsConfig?.contacts ?? []
-        return allContacts.filter { !viewModel.dismissedInvitationSuggestionIds.contains($0.id) && !viewModel.invitedInvitationSuggestionIds.contains($0.id) }
+        return allContacts.filter {
+            !viewModel.dismissedInvitationSuggestionIds.contains($0.id) &&
+            !viewModel.invitedInvitationSuggestionIds.contains($0.id) &&
+            !viewModel.outgoingInvitationUserIds.contains($0.userId)
+        }
     }
     
     /// Primary color from theme or default blue
@@ -75,6 +79,8 @@ struct InvitationSuggestionsView: View {
         Group {
             if viewModel.invitationSuggestionsConfig == nil {
                 placeholderView
+            } else if !viewModel.isOutgoingInvitationsLoaded {
+                shimmerView
             } else if contacts.isEmpty {
                 // No-op: render nothing (0 height) when no contacts are provided
                 EmptyView()
@@ -82,6 +88,22 @@ struct InvitationSuggestionsView: View {
                 contactsListView
             }
         }
+    }
+
+    // MARK: - Shimmer Loading View
+
+    private var shimmerView: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let title = title, !title.isEmpty {
+                Text(title)
+                    .font(.system(size: titleFontSize, weight: titleFontWeight))
+                    .foregroundColor(titleColor)
+                    .padding(.bottom, 16)
+            }
+            ShimmerPlaceholderList(rowCount: min(contacts.count > 0 ? contacts.count : 3, 3))
+        }
+        .padding(.horizontal)
+        .padding(.bottom, 16)
     }
     
     // MARK: - Placeholder View

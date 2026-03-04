@@ -97,6 +97,14 @@ public class VortexConfigurationPrefetcher: ObservableObject {
                 locale: locale
             )
             
+            // Also prefetch outgoing invitations
+            do {
+                let outgoingInvitations = try await client.getOutgoingInvitations(jwt: jwt)
+                await VortexConfigurationCache.shared.setOutgoingInvitations(jwt: jwt, invitations: outgoingInvitations)
+            } catch {
+                // Silently fail - outgoing invitations will be fetched when form opens
+            }
+            
             isPrefetched = true
             isLoading = false
             return configData.widgetConfiguration

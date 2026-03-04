@@ -119,7 +119,8 @@ struct SearchBoxView: View {
             searchRow
             
             // Results
-            if let results = viewModel.searchBoxResults {
+            if let allResults = viewModel.searchBoxResults {
+                let results = allResults.filter { !viewModel.outgoingInvitationUserIds.contains($0.userId) }
                 if results.isEmpty && !viewModel.searchBoxIsSearching {
                     // No results message
                     Text(noResultsMessage)
