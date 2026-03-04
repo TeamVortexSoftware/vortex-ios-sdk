@@ -5,7 +5,7 @@ import CoreTelephony
 /// VortexSDK version information and namespace
 public enum VortexSDKInfo {
     /// Current version of the SDK
-    public static let version = "1.0.12"
+    public static let version = "1.0.13-dev"
     
     /// SDK name identifier
     public static let name = "VortexSDK-iOS"
