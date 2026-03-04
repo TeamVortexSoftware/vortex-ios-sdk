@@ -2090,6 +2090,10 @@ class VortexInviteViewModel: ObservableObject {
         }
 
         updateOutgoingInvitationUserIds()
+        
+        // Remove locally-connected Find Friends contacts whose invitations were revoked,
+        // so they reappear in the Find Friends list.
+        connectedFindFriendsContactIds = connectedFindFriendsContactIds.filter { outgoingInvitationUserIds.contains($0) }
     }
 
     /// Derives the set of user IDs from both internal and API-fetched outgoing invitations.
