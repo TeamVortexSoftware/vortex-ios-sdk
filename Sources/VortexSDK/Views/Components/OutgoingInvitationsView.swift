@@ -21,42 +21,58 @@ struct OutgoingInvitationsView: View {
         !invitationsLoaded || !viewModel.isOutgoingInvitationsLoaded
     }
 
-    var body: some View {
-        Group {
-            if isLoading {
-                VStack(alignment: .leading, spacing: 0) {
-                    if let title = blockTitle, !title.isEmpty {
-                        Text(title)
-                            .font(.system(size: titleFontSize, weight: titleFontWeight))
-                            .foregroundColor(titleColor)
-                            .padding(.bottom, 12)
-                    }
-                    ShimmerPlaceholderList(rowCount: 3)
-                }
-            } else if let error = error {
-                Text(error)
-                    .foregroundColor(.red)
-                    .font(.subheadline)
-                    .frame(maxWidth: .infinity, minHeight: 120)
-            } else if invitations.isEmpty {
-                // No-op: render nothing (0 height) when no invitations
-                EmptyView()
-            } else {
-                VStack(alignment: .leading, spacing: 0) {
-                    if let title = blockTitle, !title.isEmpty {
-                        Text(title)
-                            .font(.system(size: titleFontSize, weight: titleFontWeight))
-                            .foregroundColor(titleColor)
-                            .padding(.bottom, 12)
-                    }
+    private var hasVisibleContent: Bool {
+        isLoading || !invitations.isEmpty || error != nil
+    }
 
-                    ForEach(invitations) { item in
-                        invitationRow(item)
-                    }
+    @ViewBuilder
+    private var bodyContent: some View {
+        if isLoading {
+            VStack(alignment: .leading, spacing: 0) {
+                if let title = blockTitle, !title.isEmpty {
+                    Text(title)
+                        .font(.system(size: titleFontSize, weight: titleFontWeight))
+                        .foregroundColor(titleColor)
+                        .padding(.bottom, 12)
+                }
+                ShimmerPlaceholderList(rowCount: 3)
+            }
+            .padding(.horizontal, 16)
+        } else if let error = error {
+            Text(error)
+                .foregroundColor(.red)
+                .font(.subheadline)
+                .frame(maxWidth: .infinity, minHeight: 120)
+                .padding(.horizontal, 16)
+        } else if !invitations.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                if let title = blockTitle, !title.isEmpty {
+                    Text(title)
+                        .font(.system(size: titleFontSize, weight: titleFontWeight))
+                        .foregroundColor(titleColor)
+                        .padding(.bottom, 12)
+                }
+                ForEach(invitations) { item in
+                    invitationRow(item)
                 }
             }
+            .padding(.horizontal, 16)
         }
-        .padding(.horizontal, 16)
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            bodyContent
+        }
+        .onAppear {
+            viewModel.isOutgoingInvitationsVisible = hasVisibleContent
+        }
+        .onChange(of: invitations.count) { _ in
+            viewModel.isOutgoingInvitationsVisible = hasVisibleContent
+        }
+        .onChange(of: invitationsLoaded) { _ in
+            viewModel.isOutgoingInvitationsVisible = hasVisibleContent
+        }
         .onAppear {
             Task {
                 await loadInvitations(refetch: false)

@@ -227,7 +227,7 @@ public struct VortexInviteView: View {
     
     private var formView: some View {
         ScrollView {
-            VStack(spacing: 16) {
+            VStack(spacing: 0) {
                 // Show different content based on currentView
                 switch viewModel.currentView {
                 case .main:
@@ -300,11 +300,28 @@ public struct VortexInviteView: View {
                 }
                 
                 if hasVisibleContent {
-                    VStack(spacing: 12) {
+                    // Check dynamic visibility for components that load async
+                    let allSubtypes = Set(children.flatMap { col in
+                        (col.children ?? []).map { b in b.subtype ?? "" }
+                    })
+                    let isDynamicComponent =
+                        allSubtypes.contains("vrtx-incoming-invitations") ||
+                        allSubtypes.contains("vrtx-find-friends") ||
+                        allSubtypes.contains("vrtx-invitation-suggestions") ||
+                        allSubtypes.contains("vrtx-outgoing-invitations")
+                    let isDynamicallyVisible = isDynamicComponent && (
+                        (allSubtypes.contains("vrtx-incoming-invitations") && viewModel.isIncomingInvitationsVisible) ||
+                        (allSubtypes.contains("vrtx-find-friends") && viewModel.isFindFriendsVisible) ||
+                        (allSubtypes.contains("vrtx-invitation-suggestions") && viewModel.isInvitationSuggestionsVisible) ||
+                        (allSubtypes.contains("vrtx-outgoing-invitations") && viewModel.isOutgoingInvitationsVisible)
+                    )
+                    
+                    VStack(spacing: (isDynamicComponent && !isDynamicallyVisible) ? 0 : 12) {
                         ForEach(children, id: \.id) { column in
                             renderColumn(column, excludeGroups: excludeGroups)
                         }
                     }
+                    .padding(.top, (!isDynamicComponent || isDynamicallyVisible) ? 16 : 0)
                 }
             }
         }

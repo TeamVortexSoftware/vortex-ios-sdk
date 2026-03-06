@@ -73,18 +73,32 @@ struct FindFriendsView: View {
         return .semibold
     }
     
+    /// Whether this component has visible content
+    private var hasVisibleContent: Bool {
+        viewModel.findFriendsConfig != nil && (!viewModel.isOutgoingInvitationsLoaded || !contacts.isEmpty)
+    }
+    
     var body: some View {
-        Group {
-            if viewModel.findFriendsConfig == nil {
-                placeholderView
-            } else if !viewModel.isOutgoingInvitationsLoaded {
-                shimmerView
-            } else if contacts.isEmpty {
-                // No-op: render nothing (0 height) when no contacts are provided
-                EmptyView()
-            } else {
-                contactsListView
+        bodyContent
+            .onAppear {
+                viewModel.isFindFriendsVisible = hasVisibleContent
             }
+            .onChange(of: contacts.count) { _ in
+                viewModel.isFindFriendsVisible = hasVisibleContent
+            }
+            .onChange(of: viewModel.isOutgoingInvitationsLoaded) { _ in
+                viewModel.isFindFriendsVisible = hasVisibleContent
+            }
+    }
+    
+    @ViewBuilder
+    private var bodyContent: some View {
+        if viewModel.findFriendsConfig == nil {
+            // No config provided — render nothing
+        } else if !viewModel.isOutgoingInvitationsLoaded {
+            shimmerView
+        } else if !contacts.isEmpty {
+            contactsListView
         }
     }
 
@@ -101,7 +115,6 @@ struct FindFriendsView: View {
             ShimmerPlaceholderList(rowCount: min(contacts.count > 0 ? contacts.count : 3, 3))
         }
         .padding(.horizontal)
-        .padding(.bottom, 16)
     }
     
     // MARK: - Placeholder View
@@ -146,7 +159,6 @@ struct FindFriendsView: View {
             }
         }
         .padding(.horizontal)
-        .padding(.bottom, 16)
     }
 }
 

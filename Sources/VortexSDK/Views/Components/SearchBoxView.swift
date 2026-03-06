@@ -145,7 +145,6 @@ struct SearchBoxView: View {
             }
         }
         .padding(.horizontal)
-        .padding(.bottom, 16)
     }
     
     // MARK: - Search Row

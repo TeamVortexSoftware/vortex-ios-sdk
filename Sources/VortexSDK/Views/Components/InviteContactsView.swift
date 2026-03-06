@@ -379,7 +379,7 @@ struct InviteContactsView: View {
                     .foregroundColor(titleColor)
                     .opacity(0.75)
             }
-            .padding(.vertical, 16)
+            .padding(.bottom, 16)
             .contentShape(Rectangle())
         }
         .buttonStyle(PlainButtonStyle())

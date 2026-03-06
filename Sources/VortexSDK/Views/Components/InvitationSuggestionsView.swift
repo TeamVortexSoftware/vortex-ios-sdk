@@ -75,18 +75,31 @@ struct InvitationSuggestionsView: View {
         return .semibold
     }
     
+    private var hasVisibleContent: Bool {
+        viewModel.invitationSuggestionsConfig != nil && (!viewModel.isOutgoingInvitationsLoaded || !contacts.isEmpty)
+    }
+
     var body: some View {
-        Group {
-            if viewModel.invitationSuggestionsConfig == nil {
-                placeholderView
-            } else if !viewModel.isOutgoingInvitationsLoaded {
-                shimmerView
-            } else if contacts.isEmpty {
-                // No-op: render nothing (0 height) when no contacts are provided
-                EmptyView()
-            } else {
-                contactsListView
+        bodyContent
+            .onAppear {
+                viewModel.isInvitationSuggestionsVisible = hasVisibleContent
             }
+            .onChange(of: contacts.count) { _ in
+                viewModel.isInvitationSuggestionsVisible = hasVisibleContent
+            }
+            .onChange(of: viewModel.isOutgoingInvitationsLoaded) { _ in
+                viewModel.isInvitationSuggestionsVisible = hasVisibleContent
+            }
+    }
+
+    @ViewBuilder
+    private var bodyContent: some View {
+        if viewModel.invitationSuggestionsConfig == nil {
+            // No config provided — render nothing
+        } else if !viewModel.isOutgoingInvitationsLoaded {
+            shimmerView
+        } else if !contacts.isEmpty {
+            contactsListView
         }
     }
 
@@ -103,9 +116,8 @@ struct InvitationSuggestionsView: View {
             ShimmerPlaceholderList(rowCount: min(contacts.count > 0 ? contacts.count : 3, 3))
         }
         .padding(.horizontal)
-        .padding(.bottom, 16)
     }
-    
+
     // MARK: - Placeholder View
     
     private var placeholderView: some View {
@@ -160,10 +172,8 @@ struct InvitationSuggestionsView: View {
             }
         }
         .padding(.horizontal)
-        .padding(.bottom, 16)
     }
 }
-
 // MARK: - Contact Item View
 
 private struct InvitationSuggestionContactItemView: View {

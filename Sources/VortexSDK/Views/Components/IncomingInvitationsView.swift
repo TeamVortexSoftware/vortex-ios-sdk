@@ -18,29 +18,9 @@ struct IncomingInvitationsView: View {
     @State private var alertAction: (() async -> Void)? = nil
     
     var body: some View {
-        Group {
-            if isLoading {
-                ProgressView()
-                    .frame(maxWidth: .infinity, minHeight: 120)
-            } else if invitations.isEmpty {
-                // No-op: render nothing (0 height) when no invitations
-                EmptyView()
-            } else {
-                VStack(alignment: .leading, spacing: 0) {
-                    if let title = blockTitle, !title.isEmpty {
-                        Text(title)
-                            .font(.system(size: titleFontSize, weight: titleFontWeight))
-                            .foregroundColor(titleColor)
-                            .padding(.bottom, 12)
-                    }
-                    
-                    ForEach(invitations) { invitation in
-                        invitationRow(invitation)
-                    }
-                }
-            }
+        VStack(spacing: 0) {
+            contentView
         }
-        .padding(.horizontal, 16)
         .onAppear {
             Task {
                 await loadInvitations()
@@ -59,6 +39,25 @@ struct IncomingInvitationsView: View {
                 },
                 secondaryButton: .cancel(Text(cancelButtonText))
             )
+        }
+    }
+    
+    @ViewBuilder
+    private var contentView: some View {
+        if !invitations.isEmpty {
+            VStack(alignment: .leading, spacing: 0) {
+                if let title = blockTitle, !title.isEmpty {
+                    Text(title)
+                        .font(.system(size: titleFontSize, weight: titleFontWeight))
+                        .foregroundColor(titleColor)
+                        .padding(.bottom, 12)
+                }
+                
+                ForEach(invitations) { invitation in
+                    invitationRow(invitation)
+                }
+            }
+            .padding(.horizontal, 16)
         }
     }
     
@@ -278,6 +277,7 @@ struct IncomingInvitationsView: View {
         
         invitations = allInvitations
         isLoading = false
+        viewModel.isIncomingInvitationsVisible = !allInvitations.isEmpty
     }
     
     private func showAcceptConfirmation(for invitation: IncomingInvitationItem) {

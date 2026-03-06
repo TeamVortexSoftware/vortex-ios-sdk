@@ -91,6 +91,12 @@ class VortexInviteViewModel: ObservableObject {
     @Published var invitedInvitationSuggestionIds: Set<String> = []
     @Published var dismissedInvitationSuggestionIds: Set<String> = []
 
+    // Dynamic visibility flags (set by components after async loading)
+    @Published var isIncomingInvitationsVisible: Bool = false
+    @Published var isFindFriendsVisible: Bool = false
+    @Published var isInvitationSuggestionsVisible: Bool = false
+    @Published var isOutgoingInvitationsVisible: Bool = false
+
     // Outgoing invitations fetched from API (shared cache to avoid duplicate calls)
     @Published var fetchedOutgoingInvitations: [OutgoingInvitation] = []
     // Outgoing invitation user IDs (for filtering suggestions, find friends, search box)
