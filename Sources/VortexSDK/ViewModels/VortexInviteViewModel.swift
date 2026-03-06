@@ -1059,6 +1059,45 @@ class VortexInviteViewModel: ObservableObject {
         invitationSentEvent = InvitationSentEvent(source: source, shortLink: shortLink)
     }
     
+    // MARK: - Share Source Tracking
+    
+    /// Source code mapping for share platform tracking (matches web widget DEV-1600)
+    private let shareSourceCodes: [String: String] = [
+        "sms": "m",
+        "email": "e",
+        "native": "n",
+        "qrcode": "q",
+        "whatsapp": "w",
+        "twitter": "t",
+        "facebook": "f",
+        "instagram": "i",
+        "slack": "s",
+        "linkedin": "l",
+        "telegram": "g",
+        "discord": "d",
+        "line": "y",
+        "msteams": "p"
+    ]
+    
+    /// Transforms a shareable link URL to include a source code for tracking.
+    /// Converts `/i/shortcode` → `/i/{code}/shortcode`
+    func injectShareSource(_ baseUrl: String, _ source: String) -> String {
+        guard let code = shareSourceCodes[source],
+              var urlComponents = URLComponents(string: baseUrl) else {
+            return baseUrl
+        }
+        
+        let pathParts = urlComponents.path.split(separator: "/")
+        if let inviteIndex = pathParts.firstIndex(of: "i"),
+           inviteIndex < pathParts.count - 1 {
+            var newParts = Array(pathParts)
+            newParts.insert(Substring(code), at: inviteIndex + 1)
+            urlComponents.path = "/" + newParts.joined(separator: "/")
+            return urlComponents.string ?? baseUrl
+        }
+        return baseUrl
+    }
+    
     // MARK: - Share Actions
     
     func copyLink() async {
@@ -1077,7 +1116,7 @@ class VortexInviteViewModel: ObservableObject {
             return
         }
         
-        // Copy to clipboard
+        // Copy to clipboard (no source injection for copy link, matches web widget)
         UIPasteboard.general.string = link
         
         loadingCopy = false
@@ -1104,17 +1143,19 @@ class VortexInviteViewModel: ObservableObject {
             return
         }
         
+        let trackedLink = injectShareSource(link, "native")
+        
         // Get the share template from configuration (matching RN SDK behavior)
-        var shareText = link
+        var shareText = trackedLink
         if let config = configuration,
            let templateProp = config.configuration.props["vortex.components.share.template.body"],
            case .string(let template) = templateProp.value {
             // Replace placeholder with actual link
             if template.contains("{{vortex_share_link}}") {
-                shareText = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                shareText = template.replacingOccurrences(of: "{{vortex_share_link}}", with: trackedLink)
             } else {
                 // If no placeholder, append link to template
-                shareText = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                shareText = template.hasSuffix(" ") ? "\(template)\(trackedLink)" : "\(template) \(trackedLink)"
             }
         }
         
@@ -1130,7 +1171,7 @@ class VortexInviteViewModel: ObservableObject {
         
         // Build activity items - include both text and URL for rich sharing
         var activityItems: [Any] = [shareText]
-        if let url = URL(string: link) {
+        if let url = URL(string: trackedLink) {
             activityItems.append(url)
         }
         
@@ -1197,17 +1238,19 @@ class VortexInviteViewModel: ObservableObject {
                 return
             }
             
+            let trackedLink = injectShareSource(link, "sms")
+            
             // Get the share template from configuration (matching RN SDK behavior)
-            var smsBody = link
+            var smsBody = trackedLink
             if let config = configuration,
                let templateProp = config.configuration.props["vortex.components.share.template.body"],
                case .string(let template) = templateProp.value {
                 // Replace placeholder with actual link
                 if template.contains("{{vortex_share_link}}") {
-                    smsBody = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                    smsBody = template.replacingOccurrences(of: "{{vortex_share_link}}", with: trackedLink)
                 } else {
                     // If no placeholder, append link to template
-                    smsBody = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                    smsBody = template.hasSuffix(" ") ? "\(template)\(trackedLink)" : "\(template) \(trackedLink)"
                 }
             }
             
@@ -1237,17 +1280,19 @@ class VortexInviteViewModel: ObservableObject {
                 return
             }
             
+            let trackedLink = injectShareSource(link, "line")
+            
             // Get the share template from configuration (matching SMS behavior)
-            var message = link
+            var message = trackedLink
             if let config = configuration,
                let templateProp = config.configuration.props["vortex.components.share.template.body"],
                case .string(let template) = templateProp.value {
                 // Replace placeholder with actual link
                 if template.contains("{{vortex_share_link}}") {
-                    message = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                    message = template.replacingOccurrences(of: "{{vortex_share_link}}", with: trackedLink)
                 } else {
                     // If no placeholder, append link to template
-                    message = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                    message = template.hasSuffix(" ") ? "\(template)\(trackedLink)" : "\(template) \(trackedLink)"
                 }
             }
             
@@ -1277,17 +1322,19 @@ class VortexInviteViewModel: ObservableObject {
                 return
             }
             
+            let trackedLink = injectShareSource(link, "line")
+            
             // Get the share template from configuration (matching SMS behavior)
-            var message = link
+            var message = trackedLink
             if let config = configuration,
                let templateProp = config.configuration.props["vortex.components.share.template.body"],
                case .string(let template) = templateProp.value {
                 // Replace placeholder with actual link
                 if template.contains("{{vortex_share_link}}") {
-                    message = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                    message = template.replacingOccurrences(of: "{{vortex_share_link}}", with: trackedLink)
                 } else {
                     // If no placeholder, append link to template
-                    message = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                    message = template.hasSuffix(" ") ? "\(template)\(trackedLink)" : "\(template) \(trackedLink)"
                 }
             }
             
@@ -1295,7 +1342,7 @@ class VortexInviteViewModel: ObservableObject {
             // Hard-coded LIFF app URL for proof of concept
             let liffBaseUrl = "https://liff.line.me/2008909352-RwnncfLZ"
             
-            guard let encodedLink = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
+            guard let encodedLink = trackedLink.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
                   let encodedMessage = message.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),
                   let url = URL(string: "\(liffBaseUrl)?invitationLink=\(encodedLink)&message=\(encodedMessage)") else {
                 return
@@ -1324,9 +1371,11 @@ class VortexInviteViewModel: ObservableObject {
             
             guard let link = shareableLink else { return }
             
+            let trackedLink = injectShareSource(link, "email")
+            
             // Get subject and body from configuration
             var subject = "You're invited!"
-            var body = link
+            var body = trackedLink
             
             if let config = configuration {
                 if let subjectProp = config.configuration.props["vortex.components.share.template.subject"],
@@ -1337,9 +1386,9 @@ class VortexInviteViewModel: ObservableObject {
                 if let bodyProp = config.configuration.props["vortex.components.share.template.body"],
                    case .string(let template) = bodyProp.value {
                     if template.contains("{{vortex_share_link}}") {
-                        body = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                        body = template.replacingOccurrences(of: "{{vortex_share_link}}", with: trackedLink)
                     } else {
-                        body = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                        body = template.hasSuffix(" ") ? "\(template)\(trackedLink)" : "\(template) \(trackedLink)"
                     }
                 }
             }
@@ -1372,14 +1421,16 @@ class VortexInviteViewModel: ObservableObject {
             
             guard let link = shareableLink else { return }
             
-            var text = link
+            let trackedLink = injectShareSource(link, "twitter")
+            
+            var text = trackedLink
             if let config = configuration,
                let bodyProp = config.configuration.props["vortex.components.share.template.body"],
                case .string(let template) = bodyProp.value {
                 if template.contains("{{vortex_share_link}}") {
-                    text = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                    text = template.replacingOccurrences(of: "{{vortex_share_link}}", with: trackedLink)
                 } else {
-                    text = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                    text = template.hasSuffix(" ") ? "\(template)\(trackedLink)" : "\(template) \(trackedLink)"
                 }
             }
             
@@ -1426,14 +1477,16 @@ class VortexInviteViewModel: ObservableObject {
             
             guard let link = shareableLink else { return }
             
-            var text = link
+            let trackedLink = injectShareSource(link, "whatsapp")
+            
+            var text = trackedLink
             if let config = configuration,
                let bodyProp = config.configuration.props["vortex.components.share.template.body"],
                case .string(let template) = bodyProp.value {
                 if template.contains("{{vortex_share_link}}") {
-                    text = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                    text = template.replacingOccurrences(of: "{{vortex_share_link}}", with: trackedLink)
                 } else {
-                    text = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                    text = template.hasSuffix(" ") ? "\(template)\(trackedLink)" : "\(template) \(trackedLink)"
                 }
             }
             
@@ -1461,8 +1514,11 @@ class VortexInviteViewModel: ObservableObject {
                 await fetchShareableLink()
             }
             
-            guard let link = shareableLink,
-                  let encodedLink = link.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return }
+            guard let link = shareableLink else { return }
+            
+            let trackedLink = injectShareSource(link, "facebook")
+            
+            guard let encodedLink = trackedLink.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) else { return }
             
             let messengerURL = URL(string: "fb-messenger://share?link=\(encodedLink)")
             let messengerWebURL = URL(string: "https://www.facebook.com/dialog/send?link=\(encodedLink)&app_id=0&redirect_uri=\(encodedLink)")
@@ -1488,14 +1544,16 @@ class VortexInviteViewModel: ObservableObject {
             
             guard let link = shareableLink else { return }
             
-            var text = link
+            let trackedLink = injectShareSource(link, "telegram")
+            
+            var text = trackedLink
             if let config = configuration,
                let bodyProp = config.configuration.props["vortex.components.share.template.body"],
                case .string(let template) = bodyProp.value {
                 if template.contains("{{vortex_share_link}}") {
-                    text = template.replacingOccurrences(of: "{{vortex_share_link}}", with: link)
+                    text = template.replacingOccurrences(of: "{{vortex_share_link}}", with: trackedLink)
                 } else {
-                    text = template.hasSuffix(" ") ? "\(template)\(link)" : "\(template) \(link)"
+                    text = template.hasSuffix(" ") ? "\(template)\(trackedLink)" : "\(template) \(trackedLink)"
                 }
             }
             

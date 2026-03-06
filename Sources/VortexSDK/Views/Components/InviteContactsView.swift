@@ -446,10 +446,13 @@ struct InviteContactsView: View {
             let shortLink = await viewModel.createSmsInvitation(phoneNumber: contact.phoneNumber, contactName: contact.name)
             
             if let shortLink = shortLink {
+                // Inject SMS source code into the link for share tracking
+                let trackedLink = viewModel.injectShareSource(shortLink, "sms")
+                
                 // Get SMS message template and replace placeholder with actual link
                 let smsMessage = viewModel.getSmsMessageTemplate()
-                let message = smsMessage.replacingOccurrences(of: "{{link}}", with: shortLink)
-                    .replacingOccurrences(of: "{{vortex_share_link}}", with: shortLink)
+                let message = smsMessage.replacingOccurrences(of: "{{link}}", with: trackedLink)
+                    .replacingOccurrences(of: "{{vortex_share_link}}", with: trackedLink)
                 
                 // Store pending invite data for use after SMS composer dismisses
                 pendingInviteContact = contact

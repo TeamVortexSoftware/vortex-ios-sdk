@@ -872,7 +872,7 @@ public struct VortexInviteView: View {
                             .scaleEffect(1.5)
                     }
                     .frame(width: 250, height: 250)
-                } else if let link = viewModel.shareableLink, let qrImage = generateQRCode(from: link) {
+                } else if let link = viewModel.shareableLink, let qrImage = generateQRCode(from: viewModel.injectShareSource(link, "qrcode")) {
                     // QR Code image
                     Image(uiImage: qrImage)
                         .interpolation(.none)
