@@ -1,5 +1,14 @@
 import Foundation
 
+// MARK: - Contact Source
+
+/// Represents the source of a Google contact
+public enum ContactSource: Sendable {
+    case contacts
+    case workspace
+    case calendar
+}
+
 // MARK: - Contact Model
 
 /// Represents a contact with email for invitation
@@ -7,11 +16,25 @@ public struct VortexContact: Identifiable, Sendable {
     public let id: String
     public let name: String
     public let email: String
+    public let source: ContactSource
+    public let imageUrl: String?
     
-    public init(id: String, name: String, email: String) {
+    public init(id: String, name: String, email: String, source: ContactSource = .contacts, imageUrl: String? = nil) {
         self.id = id
         self.name = name
         self.email = email
+        self.source = source
+        self.imageUrl = imageUrl
+    }
+    
+    /// Initials derived from the contact's name (up to 2 characters)
+    public var initials: String {
+        name.split(separator: " ")
+            .compactMap { $0.first.map { String($0) } }
+            .joined()
+            .uppercased()
+            .prefix(2)
+            .description
     }
 }
 

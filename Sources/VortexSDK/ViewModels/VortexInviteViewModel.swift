@@ -70,6 +70,7 @@ class VortexInviteViewModel: ObservableObject {
     @Published var invitedGoogleContactIds: Set<String> = []
     @Published var loadingGoogleContactIds: Set<String> = []
     @Published var failedGoogleContactIds: [String: String] = [:] // contactId -> error message
+    @Published var googleAuthenticatedEmail: String = ""
     
     // Form field values for custom form elements
     @Published var formFieldValues: [String: String] = [:]
@@ -109,16 +110,47 @@ class VortexInviteViewModel: ObservableObject {
         }
     }
     
-    /// Filtered Google contacts based on search query
-    var filteredGoogleContacts: [VortexContact] {
+    /// Filtered frequently contacted (calendar) contacts based on search query
+    var filteredFrequentlyContacted: [VortexContact] {
+        let calendar = googleContacts.filter { $0.source == .calendar }
         if googleContactsSearchQuery.isEmpty {
-            return googleContacts
+            return calendar
         }
         let query = googleContactsSearchQuery.lowercased()
-        return googleContacts.filter { contact in
+        return calendar.filter { contact in
             contact.name.lowercased().contains(query) ||
             contact.email.lowercased().contains(query)
         }
+    }
+    
+    /// Filtered main (non-calendar) Google contacts based on search query
+    var filteredMainContacts: [VortexContact] {
+        let main = googleContacts.filter { $0.source != .calendar }
+        if googleContactsSearchQuery.isEmpty {
+            return main
+        }
+        let query = googleContactsSearchQuery.lowercased()
+        return main.filter { contact in
+            contact.name.lowercased().contains(query) ||
+            contact.email.lowercased().contains(query)
+        }
+    }
+    
+    /// Grouped main contacts by first letter for alphabetic section headers
+    var groupedMainContacts: [(letter: String, contacts: [VortexContact])] {
+        let contacts = filteredMainContacts
+        var groups: [String: [VortexContact]] = [:]
+        for contact in contacts {
+            let firstChar = contact.name.first.map { String($0).uppercased() } ?? "#"
+            let letter = firstChar.rangeOfCharacter(from: .letters) != nil ? firstChar : "#"
+            groups[letter, default: []].append(contact)
+        }
+        return groups.sorted { $0.key < $1.key }.map { (letter: $0.key, contacts: $0.value) }
+    }
+    
+    /// Combined filtered Google contacts (for empty state check)
+    var filteredGoogleContacts: [VortexContact] {
+        filteredFrequentlyContacted + filteredMainContacts
     }
     
     // MARK: - Private Properties
@@ -482,6 +514,29 @@ class VortexInviteViewModel: ObservableObject {
         return enabledComponents.contains("vortex.components.importcontacts.providers.google")
     }
     
+    var isGoogleWorkspaceEnabled: Bool {
+        enabledComponents.contains("vortex.components.importcontacts.providers.google.workspace.directory")
+    }
+    
+    var isGoogleCalendarEnabled: Bool {
+        enabledComponents.contains("vortex.components.importcontacts.providers.google.calendar.guests")
+    }
+    
+    /// Dynamic OAuth scopes based on enabled toggles
+    private var googleOAuthScopes: [String] {
+        var scopes = [
+            "https://www.googleapis.com/auth/contacts.readonly",
+            "https://www.googleapis.com/auth/userinfo.email"
+        ]
+        if isGoogleWorkspaceEnabled {
+            scopes.append("https://www.googleapis.com/auth/directory.readonly")
+        }
+        if isGoogleCalendarEnabled {
+            scopes.append("https://www.googleapis.com/auth/calendar.readonly")
+        }
+        return scopes
+    }
+    
     var isEmailInvitationsEnabled: Bool {
         enabledComponents.contains("vortex.components.emailinvitations")
     }
@@ -506,7 +561,36 @@ class VortexInviteViewModel: ObservableObject {
     
     /// Read a customization label from any element block, falling back to a default
     func customLabel(from block: ElementNode?, key: String, default defaultValue: String) -> String {
-        block?.settings?.customizations?[key]?.textContent ?? defaultValue
+        // Try flat dotted key first (e.g. "google.frequentlyContactedTitle")
+        if let text = block?.settings?.customizations?[key]?.textContent {
+            return text
+        }
+        // Editor saves via nested path (e.g. google -> frequentlyContactedTitle -> textContent),
+        // while API defaults use dotted-key format. Try nested lookup.
+        let keyParts = key.split(separator: ".").map(String.init)
+        if keyParts.count >= 2, let customizations = block?.settings?.customizations {
+            // Navigate nested: customizations["google"]?... but customizations is [String: ButtonCustomization]
+            // The nested structure means the first part is a key whose value contains sub-keys.
+            // Since our model is flat [String: ButtonCustomization], we need to check if the config
+            // was decoded with nested dictionaries. For now, try the raw JSON approach.
+            if let nestedBlock = block?.settings?.rawCustomizations {
+                var current: Any? = nestedBlock as Any
+                for part in keyParts {
+                    if let dict = current as? [String: AnyCodable] {
+                        current = dict[part]?.value
+                    } else if let dict = current as? [String: Any] {
+                        current = dict[part]
+                    } else {
+                        current = nil
+                        break
+                    }
+                }
+                if let dict = current as? [String: Any], let text = dict["textContent"] as? String {
+                    return text
+                }
+            }
+        }
+        return defaultValue
     }
     
     /// Read a customization label from the root element (vrtx-root)
@@ -1489,12 +1573,104 @@ class VortexInviteViewModel: ObservableObject {
         googleContactsError = nil
         
         do {
-            // Import GoogleSignIn dynamically to avoid hard dependency issues
             let accessToken = try await performGoogleSignIn(clientId: clientId)
             
-            // Fetch contacts from Google People API
-            let contacts = try await fetchContactsFromPeopleAPI(accessToken: accessToken)
-            googleContacts = contacts
+            // Fetch authenticated user's email for self-exclusion
+            let userEmail = await fetchAuthenticatedUserEmail(accessToken: accessToken)
+            if !userEmail.isEmpty {
+                googleAuthenticatedEmail = userEmail
+            }
+            
+            // Fetch all enabled sources in parallel
+            var allContacts: [VortexContact] = []
+            var calendarContacts: [VortexContact] = []
+            
+            await withTaskGroup(of: (String, [VortexContact]).self) { group in
+                // Personal contacts (always fetched when google is enabled)
+                group.addTask {
+                    do {
+                        let contacts = try await self.fetchContactsFromPeopleAPI(accessToken: accessToken)
+                        return ("contacts", contacts)
+                    } catch {
+                        return ("contacts", [])
+                    }
+                }
+                
+                // Workspace directory
+                if isGoogleWorkspaceEnabled {
+                    group.addTask {
+                        do {
+                            let contacts = try await self.fetchWorkspaceDirectory(accessToken: accessToken)
+                            return ("workspace", contacts)
+                        } catch {
+                            return ("workspace_error", [])
+                        }
+                    }
+                }
+                
+                // Calendar guests
+                if isGoogleCalendarEnabled {
+                    group.addTask {
+                        do {
+                            let contacts = try await self.fetchCalendarGuests(accessToken: accessToken)
+                            return ("calendar", contacts)
+                        } catch {
+                            return ("calendar", [])
+                        }
+                    }
+                }
+                
+                for await (source, contacts) in group {
+                    switch source {
+                    case "contacts":
+                        allContacts.append(contentsOf: contacts)
+                    case "workspace":
+                        allContacts.append(contentsOf: contacts)
+                    case "workspace_error":
+                        break
+                    case "calendar":
+                        calendarContacts = contacts
+                    default:
+                        break
+                    }
+                }
+                
+            }
+            
+            // Self-exclusion: filter out authenticated user's email
+            let selfEmail = userEmail.lowercased()
+            if !selfEmail.isEmpty {
+                allContacts = allContacts.filter { $0.email.lowercased() != selfEmail }
+                calendarContacts = calendarContacts.filter { $0.email.lowercased() != selfEmail }
+            }
+            
+            // Deduplicate contacts + workspace by email (lowercase)
+            var seenEmails: Set<String> = []
+            var dedupedMain: [VortexContact] = []
+            for contact in allContacts.sorted(by: { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }) {
+                let key = contact.email.lowercased()
+                if !seenEmails.contains(key) {
+                    seenEmails.insert(key)
+                    dedupedMain.append(contact)
+                }
+            }
+            
+            // Deduplicate calendar contacts by email
+            var calendarEmails: Set<String> = []
+            var dedupedCalendar: [VortexContact] = []
+            for contact in calendarContacts {
+                let key = contact.email.lowercased()
+                if !calendarEmails.contains(key) {
+                    calendarEmails.insert(key)
+                    dedupedCalendar.append(contact)
+                }
+            }
+            
+            // Cross-source dedup: if email in calendar, remove from main
+            let calendarEmailSet = Set(dedupedCalendar.map { $0.email.lowercased() })
+            dedupedMain = dedupedMain.filter { !calendarEmailSet.contains($0.email.lowercased()) }
+            
+            googleContacts = dedupedCalendar + dedupedMain
             
         } catch let error as GoogleContactsError {
             googleContactsError = error
@@ -1503,6 +1679,148 @@ class VortexInviteViewModel: ObservableObject {
         }
         
         loadingGoogleContacts = false
+    }
+    
+    /// Fetch the authenticated user's email from Google userinfo endpoint
+    private func fetchAuthenticatedUserEmail(accessToken: String) async -> String {
+        guard let url = URL(string: "https://www.googleapis.com/oauth2/v3/userinfo") else { return "" }
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        do {
+            let (data, _) = try await URLSession.shared.data(for: request)
+            let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+            return json?["email"] as? String ?? ""
+        } catch {
+            return ""
+        }
+    }
+    
+    /// Fetch contacts from Google Workspace Directory
+    /// Tries DOMAIN_PROFILE → DOMAIN_CONTACT → searchDirectoryPeople (matching RN SDK)
+    private func fetchWorkspaceDirectory(accessToken: String) async throws -> [VortexContact] {
+        let sources: [(String, String)] = [
+            ("listDirectoryPeople", "https://people.googleapis.com/v1/people:listDirectoryPeople?sources=DIRECTORY_SOURCE_TYPE_DOMAIN_PROFILE&readMask=names,emailAddresses,photos&pageSize=1000"),
+            ("listDirectoryPeople", "https://people.googleapis.com/v1/people:listDirectoryPeople?sources=DIRECTORY_SOURCE_TYPE_DOMAIN_CONTACT&readMask=names,emailAddresses,photos&pageSize=1000"),
+            ("searchDirectoryPeople", "https://people.googleapis.com/v1/people:searchDirectoryPeople?sources=DIRECTORY_SOURCE_TYPE_DOMAIN_PROFILE&readMask=names,emailAddresses,photos&pageSize=500&query="),
+        ]
+        
+        for (_, urlString) in sources {
+            guard let url = URL(string: urlString) else { continue }
+            do {
+                var request = URLRequest(url: url)
+                request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+                
+                let (data, response) = try await URLSession.shared.data(for: request)
+                guard let httpResponse = response as? HTTPURLResponse,
+                      (200...299).contains(httpResponse.statusCode) else { continue }
+                
+                let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+                let people = json?["people"] as? [[String: Any]] ?? []
+                if people.isEmpty { continue }
+                
+                var contacts: [VortexContact] = []
+                for person in people {
+                    guard let emailAddresses = person["emailAddresses"] as? [[String: Any]] else { continue }
+                    let resourceName = person["resourceName"] as? String ?? UUID().uuidString
+                    let names = person["names"] as? [[String: Any]]
+                    let displayName = names?.first?["displayName"] as? String
+                    let photos = person["photos"] as? [[String: Any]]
+                    let photoUrl = photos?.first?["url"] as? String
+                    let isDefaultPhoto = photos?.first?["default"] as? Bool ?? false
+                    let imageUrl = (photoUrl != nil && !isDefaultPhoto) ? photoUrl : nil
+                    
+                    for emailObj in emailAddresses {
+                        guard let email = emailObj["value"] as? String else { continue }
+                        let key = "ws-\(resourceName)-\(email)"
+                        let name = displayName ?? inferNameFromEmail(email)
+                        contacts.append(VortexContact(id: key, name: name, email: email, source: .workspace, imageUrl: imageUrl))
+                    }
+                }
+                return contacts
+            } catch {
+                continue
+            }
+        }
+        return []
+    }
+    
+    /// Fetch calendar guests from Google Calendar API and apply frequently contacted algorithm
+    private func fetchCalendarGuests(accessToken: String) async throws -> [VortexContact] {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let thirtyDaysAgo = calendar.date(byAdding: .day, value: -30, to: now) else { return [] }
+        
+        let formatter = ISO8601DateFormatter()
+        let timeMin = formatter.string(from: thirtyDaysAgo)
+        let timeMax = formatter.string(from: now)
+        
+        let urlString = "https://www.googleapis.com/calendar/v3/calendars/primary/events?timeMin=\(timeMin)&timeMax=\(timeMax)&maxResults=500&singleEvents=true"
+        guard let url = URL(string: urlString) else { throw GoogleContactsError.invalidURL }
+        
+        var request = URLRequest(url: url)
+        request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
+        
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let httpResponse = response as? HTTPURLResponse,
+              (200...299).contains(httpResponse.statusCode) else {
+            throw GoogleContactsError.apiError(statusCode: (response as? HTTPURLResponse)?.statusCode ?? 0)
+        }
+        
+        let json = try JSONSerialization.jsonObject(with: data) as? [String: Any]
+        let items = json?["items"] as? [[String: Any]] ?? []
+        
+        // Count frequency of each attendee email
+        var attendeeCounts: [String: (name: String, count: Int)] = [:]
+        for event in items {
+            guard let attendees = event["attendees"] as? [[String: Any]] else { continue }
+            for attendee in attendees {
+                guard let email = attendee["email"] as? String else { continue }
+                let emailLower = email.lowercased().trimmingCharacters(in: .whitespaces)
+                if emailLower.isEmpty { continue }
+                // Skip self, resource calendars, and group calendars (matching RN)
+                if emailLower == googleAuthenticatedEmail.lowercased() { continue }
+                if emailLower.contains("resource.calendar.google.com") { continue }
+                if emailLower.hasPrefix("group.calendar.google.com") { continue }
+                let displayName = attendee["displayName"] as? String
+                let name: String
+                if let dn = displayName, !dn.isEmpty, dn != emailLower {
+                    name = dn
+                } else {
+                    name = inferNameFromEmail(email)
+                }
+                if let existing = attendeeCounts[emailLower] {
+                    attendeeCounts[emailLower] = (name: existing.name, count: existing.count + 1)
+                } else {
+                    attendeeCounts[emailLower] = (name: name, count: 1)
+                }
+            }
+        }
+        
+        // Frequently contacted algorithm
+        // 1. Require minimum 2 shared events
+        let qualified = attendeeCounts.filter { $0.value.count >= 2 }
+        // 2. Sort by frequency descending
+        let sorted = qualified.sorted { $0.value.count > $1.value.count }
+        // 3. Top 20%, capped at 10, floor of 3
+        let twentyPercent = Int(ceil(Double(sorted.count) * 0.2))
+        let limit = min(max(twentyPercent, 3), 10)
+        let frequentlyContacted = Array(sorted.prefix(limit))
+        // 4. Sort alphabetically by name
+        let result = frequentlyContacted.sorted { $0.value.name.localizedCaseInsensitiveCompare($1.value.name) == .orderedAscending }
+        
+        return result.map { email, info in
+            VortexContact(id: "cal-\(email)", name: info.name, email: email, source: .calendar)
+        }
+    }
+    
+    /// Switch Google account - signs out and re-fetches
+    func switchGoogleAccount() async {
+        #if canImport(GoogleSignIn)
+        GIDSignIn.sharedInstance.signOut()
+        #endif
+        googleContacts = []
+        googleAuthenticatedEmail = ""
+        await fetchGoogleContacts()
     }
     
     /// Perform Google Sign-In and return access token
@@ -1576,17 +1894,18 @@ class VortexInviteViewModel: ObservableObject {
             // Configure GoogleSignIn with the client ID
             GIDSignIn.sharedInstance.configuration = GIDConfiguration(clientID: clientId)
             
-            // Define the contacts scope
-            let contactsScope = "https://www.googleapis.com/auth/contacts.readonly"
+            // Build dynamic scopes based on enabled toggles
+            let scopes = googleOAuthScopes
             
             // Try silent sign-in first (uses cached credentials)
             do {
                 if GIDSignIn.sharedInstance.hasPreviousSignIn() {
                     let user = try await GIDSignIn.sharedInstance.restorePreviousSignIn()
                     
-                    // Check if we have the contacts scope
+                    // Check if we have all required scopes
                     let grantedScopes = user.grantedScopes ?? []
-                    if grantedScopes.contains(contactsScope) {
+                    let missingScopes = scopes.filter { !grantedScopes.contains($0) }
+                    if missingScopes.isEmpty {
                         // Refresh tokens if needed
                         try await user.refreshTokensIfNeeded()
                         guard let accessToken = user.accessToken.tokenString as String? else {
@@ -1594,8 +1913,8 @@ class VortexInviteViewModel: ObservableObject {
                         }
                         return accessToken
                     } else {
-                        // Need to request additional scope - addScopes is on GIDGoogleUser in v7.x
-                        let result = try await user.addScopes([contactsScope], presenting: presentingVC)
+                        // Need to request additional scopes
+                        let result = try await user.addScopes(missingScopes, presenting: presentingVC)
                         guard let accessToken = result.user.accessToken.tokenString as String? else {
                             throw GoogleContactsError.noAccessToken
                         }
@@ -1610,7 +1929,7 @@ class VortexInviteViewModel: ObservableObject {
                 let result = try await GIDSignIn.sharedInstance.signIn(
                     withPresenting: presentingVC,
                     hint: nil,
-                    additionalScopes: [contactsScope]
+                    additionalScopes: scopes
                 )
                 
                 guard let accessToken = result.user.accessToken.tokenString as String? else {
@@ -1641,7 +1960,7 @@ class VortexInviteViewModel: ObservableObject {
     
     /// Fetch contacts from Google People API
     private func fetchContactsFromPeopleAPI(accessToken: String) async throws -> [VortexContact] {
-        let urlString = "https://people.googleapis.com/v1/people/me/connections?personFields=names,emailAddresses&pageSize=1000"
+        let urlString = "https://people.googleapis.com/v1/people/me/connections?personFields=names,emailAddresses,photos&pageSize=1000"
         guard let url = URL(string: urlString) else {
             throw GoogleContactsError.invalidURL
         }
@@ -1671,13 +1990,22 @@ class VortexInviteViewModel: ObservableObject {
             let names = person["names"] as? [[String: Any]]
             let displayName = names?.first?["displayName"] as? String
             
+            // Extract photo URL (skip default/placeholder photos)
+            let photos = person["photos"] as? [[String: Any]]
+            let photoUrl: String? = {
+                guard let photo = photos?.first,
+                      let url = photo["url"] as? String,
+                      photo["default"] as? Bool != true else { return nil }
+                return url
+            }()
+            
             for emailObj in emailAddresses {
                 guard let email = emailObj["value"] as? String else { continue }
                 let key = "\(resourceName)-\(email)"
                 
                 if contactMap[key] == nil {
                     let name = displayName ?? inferNameFromEmail(email)
-                    contactMap[key] = VortexContact(id: key, name: name, email: email)
+                    contactMap[key] = VortexContact(id: key, name: name, email: email, imageUrl: photoUrl)
                 }
             }
         }

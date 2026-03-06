@@ -681,6 +681,29 @@ public struct VortexInviteView: View {
                 .foregroundColor(Color(UIColor.label))
                 .padding(.top, 16)
             
+            // Switch Account UI (above search, matching RN)
+            if !viewModel.googleAuthenticatedEmail.isEmpty {
+                HStack {
+                    Text(viewModel.googleAuthenticatedEmail)
+                        .font(.system(size: 13))
+                        .foregroundColor(Color(red: 0x66/255, green: 0x66/255, blue: 0x66/255))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                    Spacer()
+                    Button(action: {
+                        Task { await viewModel.switchGoogleAccount() }
+                    }) {
+                        Text(viewModel.customLabel(from: ciBlock, key: "google.switchAccountLabel", default: "Switch Google Account"))
+                            .font(.system(size: 13))
+                            .foregroundColor(Color(red: 0x1a/255, green: 0x73/255, blue: 0xe8/255))
+                    }
+                    .frame(minHeight: 44)
+                    .padding(.leading, 12)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, -8)
+            }
+            
             // Search field
             HStack {
                 Image(systemName: "magnifyingglass")
@@ -758,29 +781,65 @@ public struct VortexInviteView: View {
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 40)
             } else {
-                // Contacts list
+                // Contacts list with sections
                 ScrollView {
                     LazyVStack(spacing: 0) {
-                        ForEach(viewModel.filteredGoogleContacts) { contact in
-                            ContactRowView(
-                                contact: contact,
-                                isInvited: viewModel.invitedGoogleContactIds.contains(contact.id),
-                                isLoading: viewModel.loadingGoogleContactIds.contains(contact.id),
-                                errorMessage: viewModel.failedGoogleContactIds[contact.id],
-                                onInvite: {
-                                    Task { await viewModel.inviteGoogleContact(contact) }
-                                },
-                                inviteLabel: viewModel.customLabel(from: ciBlock, key: "google.inviteButton", default: "Invite"),
-                                invitedLabel: viewModel.customLabel(from: ciBlock, key: "google.invitedStatus", default: "✓ Invited!"),
-                                retryLabel: viewModel.customLabel(from: ciBlock, key: "google.retryButton", default: "Retry")
-                            )
-                            Divider()
-                                .padding(.leading, 16)
+                        
+                        // Frequently contacted section
+                        if !viewModel.filteredFrequentlyContacted.isEmpty {
+                            sectionDivider(text: viewModel.customLabel(from: ciBlock, key: "google.frequentlyContactedTitle", default: "★ Frequently contacted"))
+                            ForEach(viewModel.filteredFrequentlyContacted) { contact in
+                                googleContactRow(contact: contact, ciBlock: ciBlock)
+                            }
+                        }
+                        
+                        // Alphabetic sections for main contacts
+                        ForEach(viewModel.groupedMainContacts, id: \.letter) { group in
+                            sectionDivider(text: group.letter)
+                            ForEach(group.contacts) { contact in
+                                googleContactRow(contact: contact, ciBlock: ciBlock)
+                            }
                         }
                     }
                 }
             }
         }
+    }
+    
+    /// Section divider matching RN SDK style (bottom border, not pinned)
+    @ViewBuilder
+    private func sectionDivider(text: String) -> some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text(text)
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(Color(red: 0x88/255, green: 0x88/255, blue: 0x88/255))
+                Spacer()
+            }
+            .padding(.horizontal, 16)
+            .padding(.vertical, 6)
+            .padding(.top, 4)
+            
+            Divider()
+                .padding(.horizontal, 16)
+        }
+    }
+    
+    /// Reusable Google contact row
+    @ViewBuilder
+    private func googleContactRow(contact: VortexContact, ciBlock: ElementNode?) -> some View {
+        ContactRowView(
+            contact: contact,
+            isInvited: viewModel.invitedGoogleContactIds.contains(contact.id),
+            isLoading: viewModel.loadingGoogleContactIds.contains(contact.id),
+            errorMessage: viewModel.failedGoogleContactIds[contact.id],
+            onInvite: {
+                Task { await viewModel.inviteGoogleContact(contact) }
+            },
+            inviteLabel: viewModel.customLabel(from: ciBlock, key: "google.inviteButton", default: "Invite"),
+            invitedLabel: viewModel.customLabel(from: ciBlock, key: "google.invitedStatus", default: "✓ Invited!"),
+            retryLabel: viewModel.customLabel(from: ciBlock, key: "google.retryButton", default: "Retry")
+        )
     }
     
     // MARK: - QR Code View

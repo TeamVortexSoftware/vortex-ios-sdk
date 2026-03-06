@@ -111,17 +111,41 @@ struct ContactRowView: View {
     var invitedLabel: String = "✓ Invited!"
     var retryLabel: String = "Retry"
     
+    private var initialsView: some View {
+        ZStack {
+            Circle()
+                .fill(Color(red: 0x62/255, green: 0x91/255, blue: 0xd5/255))
+                .frame(width: 44, height: 44)
+            Text(contact.initials)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.white)
+        }
+    }
+    
     var body: some View {
         HStack(spacing: 12) {
+            // Avatar (photo or initials)
+            if #available(iOS 15.0, *), let imageUrl = contact.imageUrl, let url = URL(string: imageUrl) {
+                AsyncImage(url: url) { image in
+                    image.resizable().scaledToFill()
+                } placeholder: {
+                    initialsView
+                }
+                .frame(width: 44, height: 44)
+                .clipShape(Circle())
+            } else {
+                initialsView
+            }
+            
             // Contact info
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(contact.name)
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.primary)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(Color(red: 0x1a/255, green: 0x1a/255, blue: 0x1a/255))
                     .lineLimit(1)
                 Text(contact.email)
                     .font(.system(size: 13))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(Color(red: 0x66/255, green: 0x66/255, blue: 0x66/255))
                     .lineLimit(1)
                 // Show error message if present
                 if let error = errorMessage {

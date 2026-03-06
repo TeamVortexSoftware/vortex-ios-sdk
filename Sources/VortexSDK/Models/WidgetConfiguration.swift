@@ -192,7 +192,7 @@ public struct ElementGroup: Codable, Sendable {
 }
 
 /// Element settings (size, layout, actions, etc.)
-public struct ElementSettings: Codable, Sendable {
+public struct ElementSettings: Sendable {
     public let direction: String?
     public let divider: String?
     public let action: NodeAction?
@@ -201,6 +201,40 @@ public struct ElementSettings: Codable, Sendable {
     public let options: [ElementOption]?
     public let overrideTagName: String?
     public let customizations: [String: ButtonCustomization]?
+    /// Raw customizations for nested key lookup (editor saves nested paths)
+    public let rawCustomizations: [String: AnyCodable]?
+    
+    private enum CodingKeys: String, CodingKey {
+        case direction, divider, action, size, layout, options, overrideTagName, customizations
+    }
+}
+
+extension ElementSettings: Codable {
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        direction = try container.decodeIfPresent(String.self, forKey: .direction)
+        divider = try container.decodeIfPresent(String.self, forKey: .divider)
+        action = try container.decodeIfPresent(NodeAction.self, forKey: .action)
+        size = try container.decodeIfPresent(SizeConfig.self, forKey: .size)
+        layout = try container.decodeIfPresent([SizeConfig].self, forKey: .layout)
+        options = try container.decodeIfPresent([ElementOption].self, forKey: .options)
+        overrideTagName = try container.decodeIfPresent(String.self, forKey: .overrideTagName)
+        customizations = try container.decodeIfPresent([String: ButtonCustomization].self, forKey: .customizations)
+        // Decode raw customizations as untyped dictionary for nested key lookup
+        rawCustomizations = try? container.decodeIfPresent([String: AnyCodable].self, forKey: .customizations)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent(direction, forKey: .direction)
+        try container.encodeIfPresent(divider, forKey: .divider)
+        try container.encodeIfPresent(action, forKey: .action)
+        try container.encodeIfPresent(size, forKey: .size)
+        try container.encodeIfPresent(layout, forKey: .layout)
+        try container.encodeIfPresent(options, forKey: .options)
+        try container.encodeIfPresent(overrideTagName, forKey: .overrideTagName)
+        try container.encodeIfPresent(customizations, forKey: .customizations)
+    }
 }
 
 /// Customization options for buttons (supports custom labels from widget configuration)
