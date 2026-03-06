@@ -308,8 +308,6 @@ public class VortexClient {
     public func getOutgoingInvitations(jwt: String) async throws -> [OutgoingInvitation] {
         let url = baseURL.appendingPathComponent("/api/v1/invitations/sent")
         
-        print("[VortexSDK] VortexClient.getOutgoingInvitations() - URL: \(url.absoluteString)")
-        
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
@@ -322,29 +320,18 @@ public class VortexClient {
             request.setValue(attestation, forHTTPHeaderField: "x-session-attestation")
         }
         
-        print("[VortexSDK] VortexClient.getOutgoingInvitations() - Making request...")
         let (data, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
-            print("[VortexSDK] VortexClient.getOutgoingInvitations() - Invalid response (not HTTP)")
             throw VortexError.invalidResponse
         }
         
-        print("[VortexSDK] VortexClient.getOutgoingInvitations() - Status code: \(httpResponse.statusCode)")
-        
         guard (200...299).contains(httpResponse.statusCode) else {
-            print("[VortexSDK] VortexClient.getOutgoingInvitations() - HTTP error: \(httpResponse.statusCode)")
             throw VortexError.httpError(statusCode: httpResponse.statusCode)
-        }
-        
-        if let responseString = String(data: data, encoding: .utf8) {
-            print("[VortexSDK] VortexClient.getOutgoingInvitations() - Response body: \(responseString)")
         }
         
         let decoder = JSONDecoder()
         let invitationsResponse = try decoder.decode(OutgoingInvitationsResponse.self, from: data)
-        print("[VortexSDK] VortexClient.getOutgoingInvitations() - Decoded \(invitationsResponse.data.invitations.count) invitations")
-        print("[VortexSDK] VortexClient.getOutgoingInvitations() - Raw invitations data: \(invitationsResponse.data.invitations)")
         return invitationsResponse.data.invitations
     }
     
@@ -468,11 +455,6 @@ public class VortexClient {
         
         guard (200...299).contains(httpResponse.statusCode) else {
             throw VortexError.httpError(statusCode: httpResponse.statusCode)
-        }
-        
-        // Debug: Print raw JSON response
-        if let jsonString = String(data: data, encoding: .utf8) {
-            print("[VortexSDK] Raw incoming invitations response: \(jsonString)")
         }
         
         let decoder = JSONDecoder()
