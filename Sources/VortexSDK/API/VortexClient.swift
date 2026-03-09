@@ -153,7 +153,8 @@ public class VortexClient {
         groups: [GroupDTO]? = nil,
         targets: [[String: Any]]? = nil,
         templateVariables: [String: String]? = nil,
-        metadata: [String: Any]? = nil
+        metadata: [String: Any]? = nil,
+        subtype: String? = nil
     ) async throws -> CreateInvitationResponse {
         let url = baseURL.appendingPathComponent("/api/v1/invitations")
         
@@ -196,6 +197,10 @@ public class VortexClient {
         
         if let metadata = metadata {
             body["metadata"] = metadata
+        }
+        
+        if let subtype = subtype {
+            body["subtype"] = subtype
         }
         
         let bodyData = try JSONSerialization.data(withJSONObject: body)

@@ -2444,15 +2444,16 @@ class VortexInviteViewModel: ObservableObject {
                 payload: payload,
                 source: "internal",
                 groups: groups,
-                metadata: mergedMetadata.isEmpty ? nil : mergedMetadata
+                metadata: mergedMetadata.isEmpty ? nil : mergedMetadata,
+                subtype: "find-friends"
             )
-            
+
             // Fire the invitation sent event so other components (like Outgoing Invitations) can refresh
             invitationSentEvent = InvitationSentEvent(
                 source: .findFriends,
                 shortLink: ""
             )
-            
+
             // Mark contact as connected so it's removed from the list
             connectedFindFriendsContactIds.insert(contact.id)
             
@@ -2582,9 +2583,10 @@ class VortexInviteViewModel: ObservableObject {
                 payload: payload,
                 source: "internal",
                 groups: groups,
-                metadata: mergedMetadata.isEmpty ? nil : mergedMetadata
+                metadata: mergedMetadata.isEmpty ? nil : mergedMetadata,
+                subtype: "suggestions"
             )
-            
+
             // Fire the invitation sent event so other components (like Outgoing Invitations) can refresh
             invitationSentEvent = InvitationSentEvent(
                 source: .invitationSuggestions,
@@ -2680,14 +2682,15 @@ class VortexInviteViewModel: ObservableObject {
                 payload: payload,
                 source: "internal",
                 groups: groups,
-                metadata: mergedMetadata.isEmpty ? nil : mergedMetadata
+                metadata: mergedMetadata.isEmpty ? nil : mergedMetadata,
+                subtype: "search-box"
             )
-            
+
             invitationSentEvent = InvitationSentEvent(
                 source: .findFriends,
                 shortLink: ""
             )
-            
+
             // Remove the connected contact from the search results list
             searchBoxResults?.removeAll { $0.id == contact.id }
             
