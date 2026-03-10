@@ -864,6 +864,18 @@ class VortexInviteViewModel: ObservableObject {
         ])
     }
 
+    // MARK: - Invite Contacts Events
+
+    /// Track contacts link click event (when user clicks to view contacts list)
+    func trackContactsLinkClicked() {
+        trackEvent(.contactsLinkClicked)
+    }
+
+    /// Track contacts invite button click event (when user clicks to invite a specific contact)
+    func trackContactsInviteButtonClicked() {
+        trackEvent(.contactsInviteButtonClicked)
+    }
+
     // MARK: - Deprecated/Removed Events
 
     // trackEmailValidationError is not used - validation errors should be tracked via
@@ -1022,9 +1034,6 @@ class VortexInviteViewModel: ObservableObject {
                 metadata: unfurlConfig?.toMetadata()
             )
 
-            // Track the SMS invitation
-            trackShareLinkClick(clickName: "inviteContactViaSMS")
-            
             // Fire invitation sent event so outgoing invitations list refreshes
             if let shortLink = response.data.invitationEntries?.first?.shortLink {
                 fireInvitationSentEvent(source: .inviteContacts, shortLink: shortLink)

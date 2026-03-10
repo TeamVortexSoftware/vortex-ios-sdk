@@ -365,6 +365,7 @@ struct InviteContactsView: View {
     
     private var inviteContactsEntryView: some View {
         Button(action: {
+            viewModel.trackContactsLinkClicked()
             viewModel.currentView = .inviteContacts
         }) {
             HStack {
@@ -439,6 +440,7 @@ struct InviteContactsView: View {
     // MARK: - Invite Handler
     
     private func handleInvite(_ contact: InviteContactsContact) {
+        viewModel.trackContactsInviteButtonClicked()
         actionInProgress = contact.id
         
         Task {

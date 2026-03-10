@@ -198,6 +198,14 @@ public enum VortexEventName: String, CaseIterable, Sendable {
     /// Emitted when invite button is clicked in Find Friends.
     case findFriendsInviteClicked = "findFriendsInvite_button_clicked"
 
+    // MARK: - Invite Contacts Events
+
+    /// Emitted when the contacts link is clicked to view the list of contacts.
+    case contactsLinkClicked = "contacts_link_clicked"
+
+    /// Emitted when a button to invite a specific contact is clicked.
+    case contactsInviteButtonClicked = "contactsInvite_button_clicked"
+
     // MARK: - Widget Lifecycle Events
 
     /// Emitted when widget configuration is loaded.
