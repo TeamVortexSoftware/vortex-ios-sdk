@@ -652,15 +652,16 @@ private struct InviteContactsItemView: View {
             return nil
         }
         
-        let colors = parseGradientColors(value)
-        guard colors.count >= 2 else { return nil }
+        let colorStops = parseGradientColorStops(value)
+        guard colorStops.count >= 2 else { return nil }
         
         // Parse angle (default 90deg = horizontal left to right)
         let angle = parseGradientAngle(value)
         let (start, end) = gradientPoints(for: angle)
         
+        let stops = colorStops.map { Gradient.Stop(color: $0.color, location: $0.location) }
         return LinearGradient(
-            gradient: Gradient(colors: colors),
+            gradient: Gradient(stops: stops),
             startPoint: start,
             endPoint: end
         )
@@ -700,21 +701,32 @@ private struct InviteContactsItemView: View {
     
     // MARK: - Gradient Parsing Helpers
     
-    private func parseGradientColors(_ gradientString: String) -> [Color] {
-        let colorPattern = #"(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8})\s+\d+%"#
+    private struct GradientColorStop {
+        let color: Color
+        let location: CGFloat
+    }
+    
+    private func parseGradientColorStops(_ gradientString: String) -> [GradientColorStop] {
+        let colorPattern = #"(rgba?\([^)]+\)|#[0-9a-fA-F]{3,8})\s+(\d+)%"#
         guard let colorRegex = try? NSRegularExpression(pattern: colorPattern, options: .caseInsensitive) else {
             return []
         }
         
         let matches = colorRegex.matches(in: gradientString, range: NSRange(gradientString.startIndex..., in: gradientString))
         
-        return matches.compactMap { match -> Color? in
-            guard match.numberOfRanges >= 2,
-                  let colorRange = Range(match.range(at: 1), in: gradientString) else {
+        return matches.compactMap { match -> GradientColorStop? in
+            guard match.numberOfRanges >= 3,
+                  let colorRange = Range(match.range(at: 1), in: gradientString),
+                  let stopRange = Range(match.range(at: 2), in: gradientString) else {
                 return nil
             }
             let colorStr = String(gradientString[colorRange]).trimmingCharacters(in: .whitespaces)
-            return Color(hex: colorStr)
+            let stopStr = String(gradientString[stopRange])
+            guard let color = Color(hex: colorStr),
+                  let stopValue = Double(stopStr) else {
+                return nil
+            }
+            return GradientColorStop(color: color, location: CGFloat(stopValue / 100.0))
         }
     }
     
