@@ -50,6 +50,41 @@ struct SearchBoxView: View {
         return options.first { $0.key == key }?.value
     }
     
+    // MARK: - Input Styles
+    
+    private var inputColor: Color? {
+        if let value = getBlockThemeValue("--vrtx-search-box-input-color"),
+           let color = Color(hex: value) {
+            return color
+        }
+        return nil
+    }
+    
+    private var inputFontSize: CGFloat {
+        if let value = getBlockThemeValue("--vrtx-search-box-input-font-size"),
+           let size = Double(value.replacingOccurrences(of: "px", with: "")) {
+            return CGFloat(size)
+        }
+        return 16
+    }
+    
+    private var inputFontWeight: Font.Weight {
+        if let value = getBlockThemeValue("--vrtx-search-box-input-font-weight") {
+            return parseFontWeight(value)
+        }
+        return .regular
+    }
+    
+    // MARK: - Placeholder Styles
+    
+    private var placeholderColor: Color? {
+        if let value = getBlockThemeValue("--vrtx-search-box-placeholder-color"),
+           let color = Color(hex: value) {
+            return color
+        }
+        return nil
+    }
+    
     // MARK: - Title Styles
     
     private var titleColor: Color {
@@ -154,6 +189,10 @@ struct SearchBoxView: View {
         if #available(iOS 15.0, *) {
             SearchRowFocusable(
                 placeholder: placeholder,
+                placeholderColor: placeholderColor,
+                inputColor: inputColor,
+                inputFontSize: inputFontSize,
+                inputFontWeight: inputFontWeight,
                 query: $viewModel.searchBoxQuery,
                 foregroundColor: foregroundColor,
                 borderColor: borderColor,
@@ -169,12 +208,20 @@ struct SearchBoxView: View {
             .padding(.bottom, 12)
         } else {
             HStack(spacing: 8) {
-                TextField(placeholder, text: $viewModel.searchBoxQuery, onCommit: {
-                    viewModel.handleSearchBoxSearch()
-                })
-                .font(.system(size: 16))
-                .foregroundColor(foregroundColor)
-                .padding(.horizontal, 12)
+                ZStack(alignment: .leading) {
+                    if viewModel.searchBoxQuery.isEmpty {
+                        Text(placeholder)
+                            .font(.system(size: inputFontSize))
+                            .foregroundColor(placeholderColor ?? Color(UIColor.placeholderText))
+                            .padding(.horizontal, 12)
+                    }
+                    TextField("", text: $viewModel.searchBoxQuery, onCommit: {
+                        viewModel.handleSearchBoxSearch()
+                    })
+                    .font(.system(size: inputFontSize, weight: inputFontWeight))
+                    .foregroundColor(inputColor ?? foregroundColor)
+                    .padding(.horizontal, 12)
+                }
                 .frame(height: 44)
                 .overlay(
                     RoundedRectangle(cornerRadius: 8)
@@ -668,6 +715,10 @@ private struct SearchBoxContactItemView: View {
 @available(iOS 15.0, *)
 private struct SearchRowFocusable: View {
     let placeholder: String
+    let placeholderColor: Color?
+    let inputColor: Color?
+    let inputFontSize: CGFloat
+    let inputFontWeight: Font.Weight
     @Binding var query: String
     let foregroundColor: Color
     let borderColor: Color
@@ -684,21 +735,32 @@ private struct SearchRowFocusable: View {
     
     var body: some View {
         HStack(spacing: 8) {
-            TextField(placeholder, text: $query)
-                .focused($isFieldFocused)
-                .font(.system(size: 16))
-                .foregroundColor(foregroundColor)
-                .padding(.horizontal, 12)
-                .frame(height: 44)
-                .overlay(
-                    RoundedRectangle(cornerRadius: 8)
-                        .stroke(borderColor, lineWidth: 1)
-                )
-                .submitLabel(.search)
-                .onSubmit {
-                    isFieldFocused = false
-                    onCommit()
+            ZStack(alignment: .leading) {
+                if query.isEmpty {
+                    Text(placeholder)
+                        .font(.system(size: inputFontSize))
+                        .foregroundColor(placeholderColor ?? Color(UIColor.placeholderText))
+                        .padding(.horizontal, 12)
                 }
+                TextField("", text: $query)
+                    .focused($isFieldFocused)
+                    .font(.system(size: inputFontSize, weight: inputFontWeight))
+                    .foregroundColor(inputColor ?? foregroundColor)
+                    .padding(.horizontal, 12)
+            }
+            .frame(height: 44)
+            .overlay(
+                RoundedRectangle(cornerRadius: 8)
+                    .stroke(borderColor, lineWidth: 1)
+            )
+            .onTapGesture {
+                isFieldFocused = true
+            }
+            .submitLabel(.search)
+            .onSubmit {
+                isFieldFocused = false
+                onCommit()
+            }
             
             Button(action: {
                 isFieldFocused = false

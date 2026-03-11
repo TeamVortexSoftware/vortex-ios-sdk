@@ -282,6 +282,52 @@ struct InviteContactsView: View {
         viewModel.themeBorder ?? Color(UIColor.separator)
     }
     
+    // MARK: - Input Styles
+    
+    private var inputColor: Color? {
+        if let value = getBlockThemeValue("--vrtx-invite-contacts-input-color"),
+           let color = Color(hex: value) {
+            return color
+        }
+        return nil
+    }
+    
+    private var inputFontSize: CGFloat {
+        if let value = getBlockThemeValue("--vrtx-invite-contacts-input-font-size"),
+           let size = Double(value.replacingOccurrences(of: "px", with: "")) {
+            return CGFloat(size)
+        }
+        return 16
+    }
+    
+    private var inputFontWeight: Font.Weight {
+        if let value = getBlockThemeValue("--vrtx-invite-contacts-input-font-weight") {
+            switch value.lowercased() {
+            case "100", "thin": return .thin
+            case "200", "ultralight": return .ultraLight
+            case "300", "light": return .light
+            case "400", "normal", "regular": return .regular
+            case "500", "medium": return .medium
+            case "600", "semibold": return .semibold
+            case "700", "bold": return .bold
+            case "800", "heavy": return .heavy
+            case "900", "black": return .black
+            default: return .regular
+            }
+        }
+        return .regular
+    }
+    
+    // MARK: - Placeholder Styles
+    
+    private var placeholderColor: Color? {
+        if let value = getBlockThemeValue("--vrtx-invite-contacts-placeholder-color"),
+           let color = Color(hex: value) {
+            return color
+        }
+        return nil
+    }
+    
     // MARK: - Title Styles (from block.theme.options)
     
     /// Get a theme option value from block.theme.options by key
@@ -422,11 +468,18 @@ struct InviteContactsView: View {
     
     private var searchBoxView: some View {
         HStack {
-            TextField(searchPlaceholderText, text: $searchQuery)
-                .font(.system(size: 16))
-                .foregroundColor(foregroundColor)
-                .autocapitalization(.none)
-                .disableAutocorrection(true)
+            ZStack(alignment: .leading) {
+                if searchQuery.isEmpty {
+                    Text(searchPlaceholderText)
+                        .font(.system(size: inputFontSize))
+                        .foregroundColor(placeholderColor ?? Color(UIColor.placeholderText))
+                }
+                TextField("", text: $searchQuery)
+                    .font(.system(size: inputFontSize, weight: inputFontWeight))
+                    .foregroundColor(inputColor ?? foregroundColor)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+            }
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 10)
