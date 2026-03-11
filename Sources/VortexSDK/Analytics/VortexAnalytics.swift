@@ -197,6 +197,8 @@ public enum VortexEventName: String, CaseIterable, Sendable {
 
     /// Emitted when invite button is clicked in Find Friends.
     case findFriendsInviteClicked = "findFriendsInvite_button_clicked"
+    /// Fired when the find friends list is displayed
+    case findFriendsListDisplayed = "findFriends_list_displayed"
 
     // MARK: - Invite Contacts Events
 

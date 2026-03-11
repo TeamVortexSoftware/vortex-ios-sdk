@@ -159,6 +159,9 @@ struct FindFriendsView: View {
             }
         }
         .padding(.horizontal)
+        .onAppear {
+            viewModel.trackFindFriendsListDisplayed(count: contacts.count)
+        }
     }
 }
 

@@ -864,6 +864,14 @@ class VortexInviteViewModel: ObservableObject {
         ])
     }
 
+    /// Track find friends list displayed event
+    /// - Parameter count: The number of friends being displayed
+    func trackFindFriendsListDisplayed(count: Int) {
+        trackEvent(.findFriendsListDisplayed, payload: [
+            "count": count
+        ])
+    }
+
     // MARK: - Invite Contacts Events
 
     /// Track contacts link click event (when user clicks to view contacts list)
