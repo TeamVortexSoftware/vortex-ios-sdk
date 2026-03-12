@@ -900,10 +900,19 @@ class VortexInviteViewModel: ObservableObject {
     
     // MARK: - Configuration Loading
     
+    /// Guards against concurrent and rapid-fire configuration fetches.
+    private var isLoadingConfiguration = false
+    private var lastFetchTime: Date?
+    private let minFetchInterval: TimeInterval = 30
+    
     /// Load widget configuration with stale-while-revalidate pattern.
     /// If cached/prefetched configuration exists, it's used immediately (no loading spinner).
     /// Fresh configuration is always fetched in the background to ensure up-to-date data.
     func loadConfiguration() async {
+        guard !isLoadingConfiguration else { return }
+        isLoadingConfiguration = true
+        defer { isLoadingConfiguration = false }
+        
         guard let jwt = jwt else {
             error = .missingJWT
             return
@@ -934,7 +943,18 @@ class VortexInviteViewModel: ObservableObject {
             isLoading = true
         }
 
-        // Step 3: Always fetch fresh configuration (stale-while-revalidate)
+        // Step 3: Fetch fresh configuration (stale-while-revalidate) unless recently fetched
+        if let lastFetch = lastFetchTime,
+           Date().timeIntervalSince(lastFetch) < minFetchInterval,
+           hasCachedConfig {
+            isLoading = false
+            Task { @MainActor in
+                await fetchOutgoingInvitations()
+                isOutgoingInvitationsLoaded = true
+            }
+            return
+        }
+        
         do {
             let configData = try await client.getWidgetConfiguration(
                 componentId: componentId,
@@ -953,6 +973,8 @@ class VortexInviteViewModel: ObservableObject {
                 deploymentId: configData.deploymentId,
                 locale: locale
             )
+            
+            lastFetchTime = Date()
             
             // Pre-fetch shareable link
             await fetchShareableLink()

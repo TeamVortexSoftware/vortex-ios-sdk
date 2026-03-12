@@ -52,6 +52,7 @@ public class VortexConfigurationPrefetcher: ObservableObject {
     
     private let client: VortexClient
     private let locale: String?
+    private var isPrefetching = false
     
     /// Initialize a new prefetcher
     /// - Parameters:
@@ -73,12 +74,15 @@ public class VortexConfigurationPrefetcher: ObservableObject {
     /// - Returns: The prefetched configuration, or nil if prefetch failed
     @discardableResult
     public func prefetch(jwt: String) async -> WidgetConfiguration? {
+        guard !isPrefetching else { return nil }
+        
         // Check if already cached (locale-aware)
         if let cached = await VortexConfigurationCache.shared.get(componentId, locale: locale) {
             isPrefetched = true
             return cached.configuration
         }
         
+        isPrefetching = true
         isLoading = true
         error = nil
         
@@ -107,10 +111,12 @@ public class VortexConfigurationPrefetcher: ObservableObject {
             
             isPrefetched = true
             isLoading = false
+            isPrefetching = false
             return configData.widgetConfiguration
         } catch {
             self.error = error
             isLoading = false
+            isPrefetching = false
             return nil
         }
     }
