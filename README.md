@@ -22,14 +22,14 @@ Add the following to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/teamvortexsoftware/vortex-ios-sdk.git", from: "1.0.16")
+    .package(url: "https://github.com/teamvortexsoftware/vortex-ios-sdk.git", from: "1.0.17")
 ]
 ```
 
 Or in Xcode:
 1. **File → Add Package Dependencies...**
 2. Enter the repository URL: `https://github.com/teamvortexsoftware/vortex-ios-sdk.git`
-3. Select version: `1.0.16` or higher
+3. Select version: `1.0.17` or higher
 4. Add to your target
 
 ## Quick Start
