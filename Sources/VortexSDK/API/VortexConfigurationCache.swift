@@ -55,6 +55,20 @@ public actor VortexConfigurationCache {
         return (cached.configuration, cached.deploymentId)
     }
     
+    /// Check if the cached configuration is fresh (within the given interval).
+    /// - Parameters:
+    ///   - componentId: The widget component ID
+    ///   - locale: Optional locale for i18n
+    ///   - interval: Maximum age in seconds for the cache to be considered fresh
+    /// - Returns: True if a cached config exists and was stored less than `interval` seconds ago
+    public func isFresh(_ componentId: String, locale: String? = nil, within interval: TimeInterval) -> Bool {
+        let key = cacheKey(componentId: componentId, locale: locale)
+        guard let cached = cache[key] else {
+            return false
+        }
+        return Date().timeIntervalSince(cached.cachedAt) < interval
+    }
+    
     /// Store a widget configuration in the cache.
     /// - Parameters:
     ///   - componentId: The widget component ID

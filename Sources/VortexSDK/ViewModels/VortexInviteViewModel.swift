@@ -902,7 +902,6 @@ class VortexInviteViewModel: ObservableObject {
     
     /// Guards against concurrent and rapid-fire configuration fetches.
     private var isLoadingConfiguration = false
-    private var lastFetchTime: Date?
     private let minFetchInterval: TimeInterval = 30
     
     /// Load widget configuration with stale-while-revalidate pattern.
@@ -944,9 +943,8 @@ class VortexInviteViewModel: ObservableObject {
         }
 
         // Step 3: Fetch fresh configuration (stale-while-revalidate) unless recently fetched
-        if let lastFetch = lastFetchTime,
-           Date().timeIntervalSince(lastFetch) < minFetchInterval,
-           hasCachedConfig {
+        let cacheIsFresh = await VortexConfigurationCache.shared.isFresh(componentId, locale: locale, within: minFetchInterval)
+        if cacheIsFresh && hasCachedConfig {
             isLoading = false
             Task { @MainActor in
                 await fetchOutgoingInvitations()
@@ -973,8 +971,6 @@ class VortexInviteViewModel: ObservableObject {
                 deploymentId: configData.deploymentId,
                 locale: locale
             )
-            
-            lastFetchTime = Date()
             
             // Pre-fetch shareable link
             await fetchShareableLink()
