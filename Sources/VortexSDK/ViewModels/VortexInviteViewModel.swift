@@ -902,7 +902,9 @@ class VortexInviteViewModel: ObservableObject {
     
     /// Guards against concurrent and rapid-fire configuration fetches.
     private var isLoadingConfiguration = false
+    private var hasLoadedOnce = false
     private let minFetchInterval: TimeInterval = 30
+    private let revalidationInterval: TimeInterval = 300
     
     /// Load widget configuration with stale-while-revalidate pattern.
     /// If cached/prefetched configuration exists, it's used immediately (no loading spinner).
@@ -915,6 +917,13 @@ class VortexInviteViewModel: ObservableObject {
         guard let jwt = jwt else {
             error = .missingJWT
             return
+        }
+        
+        // After a successful first load, only revalidate if cache is stale (5 min).
+        // This prevents excessive API calls when UIKit hosts re-trigger .task on every appearance.
+        if hasLoadedOnce && configuration != nil {
+            let stillFresh = await VortexConfigurationCache.shared.isFresh(componentId, locale: locale, within: revalidationInterval)
+            if stillFresh { return }
         }
         
         error = nil
@@ -946,6 +955,7 @@ class VortexInviteViewModel: ObservableObject {
         let cacheIsFresh = await VortexConfigurationCache.shared.isFresh(componentId, locale: locale, within: minFetchInterval)
         if cacheIsFresh && hasCachedConfig {
             isLoading = false
+            hasLoadedOnce = true
             Task { @MainActor in
                 await fetchOutgoingInvitations()
                 isOutgoingInvitationsLoaded = true
@@ -987,6 +997,7 @@ class VortexInviteViewModel: ObservableObject {
         }
         
         isLoading = false
+        hasLoadedOnce = true
         // Fetch outgoing invitations (SWR if cached, fresh if not)
         // Components show shimmer only if not already loaded
         Task { @MainActor in
