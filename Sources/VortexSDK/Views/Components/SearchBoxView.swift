@@ -220,6 +220,8 @@ struct SearchBoxView: View {
                     })
                     .font(.system(size: inputFontSize, weight: inputFontWeight))
                     .foregroundColor(inputColor ?? foregroundColor)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
                     .padding(.horizontal, 12)
                 }
                 .frame(height: 44)
@@ -746,6 +748,8 @@ private struct SearchRowFocusable: View {
                     .focused($isFieldFocused)
                     .font(.system(size: inputFontSize, weight: inputFontWeight))
                     .foregroundColor(inputColor ?? foregroundColor)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
                     .padding(.horizontal, 12)
             }
             .frame(height: 44)
