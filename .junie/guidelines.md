@@ -26,23 +26,41 @@ Sources/VortexSDK/
 │   ├── DTOs/
 │   │   └── APIResponses.swift      # Response DTOs (WidgetConfigurationResponse, CreateInvitationResponse, etc.)
 │   ├── VortexClient.swift          # Main API client for backend communication
+│   ├── VortexConfigurationCache.swift # In-memory cache for widget configurations
+│   ├── VortexConfigurationPrefetcher.swift # Prefetch support with stale-while-revalidate
 │   └── VortexError.swift           # Error types (VortexError enum)
+├── Analytics/
+│   └── VortexAnalytics.swift       # Analytics tracking
 ├── Extensions/
 │   └── View+Extensions.swift       # SwiftUI view extensions (RoundedCorner, AttributeValue helpers)
 ├── Models/
+│   ├── FindFriendsConfig.swift     # Find friends feature configuration
+│   ├── IncomingInvitationsConfig.swift # Incoming invitations configuration
+│   ├── InvitationSuggestionsConfig.swift # Invitation suggestions configuration
+│   ├── InviteContactsConfig.swift  # Invite contacts configuration
 │   ├── InviteViewState.swift       # View state enum (main, emailEntry, contactsPicker, etc.)
+│   ├── OutgoingInvitationsConfig.swift # Outgoing invitations configuration
+│   ├── SearchBoxConfig.swift       # Search box configuration
+│   ├── UnfurlConfig.swift          # Link unfurl configuration
 │   ├── VortexContact.swift         # Contact model for device/Google contacts
 │   └── WidgetConfiguration.swift   # Configuration models (ElementNode, Theme, etc.)
 ├── ViewModels/
-│   └── VortexInviteViewModel.swift # Main ViewModel (~900 lines) - handles all business logic
+│   └── VortexInviteViewModel.swift # Main ViewModel - handles all business logic
 ├── Views/
 │   ├── Components/
 │   │   ├── ContactComponents.swift # ContactsImportView, ContactsPickerView, GoogleContactsPickerView
+│   │   ├── FindFriendsView.swift   # Find friends UI component
 │   │   ├── FormComponents.swift    # Form elements (Textbox, Select, Radio, Checkbox, etc.)
-│   │   └── ShareComponents.swift   # ShareOptionsView, ShareButton, EmailPillView
+│   │   ├── IncomingInvitationsView.swift # Incoming invitations UI
+│   │   ├── InvitationSuggestionsView.swift # Invitation suggestions UI
+│   │   ├── InviteContactsView.swift # Invite contacts UI
+│   │   ├── OutgoingInvitationsView.swift # Outgoing invitations UI
+│   │   ├── SearchBoxView.swift     # Search box component
+│   │   ├── ShareComponents.swift   # ShareOptionsView, ShareButton, EmailPillView
+│   │   └── ShimmerPlaceholder.swift # Loading shimmer effect
 │   ├── FontAwesomeLoader.swift     # Loads bundled FontAwesome 6 fonts
 │   ├── VortexIcon.swift            # Icon component using FontAwesome with SF Symbol fallbacks
-│   └── VortexInviteView.swift      # Main entry point view (~686 lines)
+│   └── VortexInviteView.swift      # Main entry point view
 ├── Resources/
 │   ├── fa-brands-400.ttf           # FontAwesome brand icons (Google, WhatsApp, etc.)
 │   ├── fa-regular-400.ttf          # FontAwesome regular icons
@@ -83,7 +101,7 @@ The SDK uses a recursive rendering approach:
 
 4. **Google Sign-In setup**: Requires `googleIosClientId` parameter and proper URL scheme configuration in the host app.
 
-5. **Minimum iOS version**: iOS 15.0+ (set in Package.swift)
+5. **Minimum iOS version**: iOS 14.0+ (set in Package.swift). Use iOS 14-compatible APIs (e.g., `.autocapitalization(.none)` and `.disableAutocorrection(true)` instead of their newer replacements).
 
 6. **Build command**: Use Xcode or `xcodebuild -scheme VortexSDK -destination 'platform=iOS Simulator,name=iPhone 16' build`
 
