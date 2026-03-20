@@ -12,13 +12,24 @@ struct FindFriendsView: View {
         block.attributes?["title"]?.stringValue
     }
     
-    /// Contacts from findFriendsConfig, excluding already connected ones
-    private var contacts: [FindFriendsContact] {
+    /// All eligible contacts (not connected, not already invited via outgoing)
+    private var eligibleContacts: [FindFriendsContact] {
         let allContacts = viewModel.findFriendsConfig?.contacts ?? []
         return allContacts.filter {
             !viewModel.connectedFindFriendsContactIds.contains($0.id) &&
             !viewModel.outgoingInvitationUserIds.contains($0.userId)
         }
+    }
+    
+    /// Contacts to display, respecting maxDisplayCount limit and sorted alphabetically
+    private var contacts: [FindFriendsContact] {
+        let eligible = eligibleContacts
+        if viewModel.findFriendsConfig?.maxDisplayCount != nil {
+            return eligible
+                .filter { viewModel.displayedFindFriendsIds.contains($0.id) }
+                .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        }
+        return eligible
     }
     
     /// Primary color from theme or default blue
@@ -81,13 +92,36 @@ struct FindFriendsView: View {
     var body: some View {
         bodyContent
             .onAppear {
+                let eligibleIds = Set(eligibleContacts.map { $0.id })
+                viewModel.initializeFindFriendsDisplayPool(eligibleIds: eligibleIds)
+                viewModel.isFindFriendsVisible = hasVisibleContent
+            }
+            .onChange(of: eligibleContacts.count) { _ in
+                let eligibleIds = Set(eligibleContacts.map { $0.id })
+                viewModel.initializeFindFriendsDisplayPool(eligibleIds: eligibleIds)
                 viewModel.isFindFriendsVisible = hasVisibleContent
             }
             .onChange(of: contacts.count) { _ in
                 viewModel.isFindFriendsVisible = hasVisibleContent
             }
-            .onChange(of: viewModel.isOutgoingInvitationsLoaded) { _ in
+            .onChange(of: viewModel.displayedFindFriendsIds) { _ in
                 viewModel.isFindFriendsVisible = hasVisibleContent
+            }
+            .onChange(of: viewModel.isOutgoingInvitationsLoaded) { _ in
+                if viewModel.isOutgoingInvitationsLoaded {
+                    let eligibleIds = Set(eligibleContacts.map { $0.id })
+                    viewModel.initializeFindFriendsDisplayPool(eligibleIds: eligibleIds, force: true)
+                }
+                viewModel.isFindFriendsVisible = hasVisibleContent
+            }
+            .onChange(of: viewModel.connectedFindFriendsContactIds) { _ in
+                if viewModel.findFriendsConfig?.maxDisplayCount != nil {
+                    let eligibleIds = Set(eligibleContacts.map { $0.id })
+                    let removedIds = viewModel.displayedFindFriendsIds.subtracting(eligibleIds)
+                    for removedId in removedIds {
+                        viewModel.replaceFindFriendsContact(removedId: removedId, eligibleIds: eligibleIds)
+                    }
+                }
             }
     }
     
@@ -99,6 +133,9 @@ struct FindFriendsView: View {
             shimmerView
         } else if !contacts.isEmpty {
             contactsListView
+        } else if viewModel.findFriendsConfig?.maxDisplayCount != nil && !eligibleContacts.isEmpty {
+            // Pool not yet initialized — show shimmer briefly
+            shimmerView
         }
     }
 

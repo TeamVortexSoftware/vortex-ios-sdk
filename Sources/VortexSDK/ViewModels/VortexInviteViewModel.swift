@@ -78,6 +78,8 @@ class VortexInviteViewModel: ObservableObject {
     // Find Friends state
     @Published var findFriendsActionInProgress: String? = nil
     @Published var connectedFindFriendsContactIds: Set<String> = []
+    @Published var displayedFindFriendsIds: Set<String> = []
+    private var findFriendsPoolInitialized = false
     
     // Search Box state
     @Published var searchBoxQuery: String = ""
@@ -90,6 +92,8 @@ class VortexInviteViewModel: ObservableObject {
     @Published var invitationSuggestionsActionInProgress: String? = nil
     @Published var invitedInvitationSuggestionIds: Set<String> = []
     @Published var dismissedInvitationSuggestionIds: Set<String> = []
+    @Published var displayedSuggestionIds: Set<String> = []
+    private var suggestionsPoolInitialized = false
 
     // Dynamic visibility flags (set by components after async loading)
     @Published var isIncomingInvitationsVisible: Bool = false
@@ -2508,6 +2512,66 @@ class VortexInviteViewModel: ObservableObject {
             
         } catch {
             // Invitation creation failed - contact remains in the list
+        }
+    }
+    
+    // MARK: - Find Friends Display Pool
+    
+    /// Initializes the displayed Find Friends contacts pool.
+    /// Selects a random subset of size `maxDisplayCount` from eligible contacts.
+    func initializeFindFriendsDisplayPool(eligibleIds: Set<String>, force: Bool = false) {
+        guard force || !findFriendsPoolInitialized else { return }
+        findFriendsPoolInitialized = true
+        guard let maxDisplayCount = findFriendsConfig?.maxDisplayCount else {
+            // No limit — show all
+            displayedFindFriendsIds = eligibleIds
+            return
+        }
+        if eligibleIds.count <= maxDisplayCount {
+            displayedFindFriendsIds = eligibleIds
+        } else {
+            let selected = Set(eligibleIds.shuffled().prefix(maxDisplayCount))
+            displayedFindFriendsIds = selected
+        }
+    }
+    
+    /// When a Find Friends contact is removed, replace it with one from the pool if available.
+    func replaceFindFriendsContact(removedId: String, eligibleIds: Set<String>) {
+        guard let maxDisplayCount = findFriendsConfig?.maxDisplayCount else { return }
+        displayedFindFriendsIds.remove(removedId)
+        // Find contacts in the eligible pool that are not currently displayed
+        let pool = eligibleIds.subtracting(displayedFindFriendsIds)
+        if displayedFindFriendsIds.count < maxDisplayCount, let replacement = pool.randomElement() {
+            displayedFindFriendsIds.insert(replacement)
+        }
+    }
+    
+    // MARK: - Invitation Suggestions Display Pool
+    
+    /// Initializes the displayed Invitation Suggestions pool.
+    /// Selects a random subset of size `maxDisplayCount` from eligible contacts.
+    func initializeSuggestionsDisplayPool(eligibleIds: Set<String>, force: Bool = false) {
+        guard force || !suggestionsPoolInitialized else { return }
+        suggestionsPoolInitialized = true
+        guard let maxDisplayCount = invitationSuggestionsConfig?.maxDisplayCount else {
+            displayedSuggestionIds = eligibleIds
+            return
+        }
+        if eligibleIds.count <= maxDisplayCount {
+            displayedSuggestionIds = eligibleIds
+        } else {
+            let selected = Set(eligibleIds.shuffled().prefix(maxDisplayCount))
+            displayedSuggestionIds = selected
+        }
+    }
+    
+    /// When a suggestion is removed, replace it with one from the pool if available.
+    func replaceSuggestionContact(removedId: String, eligibleIds: Set<String>) {
+        guard let maxDisplayCount = invitationSuggestionsConfig?.maxDisplayCount else { return }
+        displayedSuggestionIds.remove(removedId)
+        let pool = eligibleIds.subtracting(displayedSuggestionIds)
+        if displayedSuggestionIds.count < maxDisplayCount, let replacement = pool.randomElement() {
+            displayedSuggestionIds.insert(replacement)
         }
     }
     

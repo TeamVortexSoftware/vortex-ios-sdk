@@ -248,9 +248,12 @@ FindFriendsContact(
 ```swift
 FindFriendsConfig(
     contacts: [FindFriendsContact],                        // Required: List of contacts to display
+    maxDisplayCount: Int?,                                  // Optional: Max contacts shown at once (random subset, alphabetical)
     onInvitationCreated: ((FindFriendsContact) -> Void)?   // Optional: Called after successful invitation
 )
 ```
+
+> **Display Limit:** When `maxDisplayCount` is set and the contact list is larger, a random subset of that size is displayed in alphabetical order. As contacts are removed (e.g., after connecting), they are replaced with others from the remaining pool until the pool is exhausted.
 
 ### Invitation Suggestions
 
@@ -319,11 +322,14 @@ InvitationSuggestionContact(
 ```swift
 InvitationSuggestionsConfig(
     contacts: [InvitationSuggestionContact],                      // Required: List of contacts to display
+    maxDisplayCount: Int?,                                         // Optional: Max suggestions shown at once (random subset, alphabetical)
     onDismiss: (InvitationSuggestionContact) -> Void,             // Required: Called when user dismisses a suggestion
     onInvitationCreated: ((InvitationSuggestionContact) -> Void)?,  // Called after successful invitation
     onInvitationFailed: ((InvitationSuggestionContact, Error) -> Void)?  // Called on failure
 )
 ```
+
+> **Display Limit:** When `maxDisplayCount` is set and the suggestions list is larger, a random subset of that size is displayed in alphabetical order. As suggestions are removed (invited or dismissed), they are replaced with others from the remaining pool until the pool is exhausted.
 
 ### Search Box
 

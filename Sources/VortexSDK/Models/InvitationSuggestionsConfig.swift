@@ -44,6 +44,13 @@ public struct InvitationSuggestionsConfig {
     /// Each contact must have a userId that identifies them in the customer's platform.
     public let contacts: [InvitationSuggestionContact]
     
+    /// Optional: Maximum number of suggestions to display at once.
+    /// If the total contacts exceed this number, a random subset of this size is displayed
+    /// in alphabetical order. When a suggestion is removed (invited or dismissed), it is
+    /// replaced with another from the remaining pool until the pool is exhausted.
+    /// If nil, all suggestions are displayed.
+    public let maxDisplayCount: Int?
+    
     /// Called when user taps "X" to dismiss a suggestion.
     /// The customer implements this callback to handle the dismissal (e.g., persist it).
     public let onDismiss: (InvitationSuggestionContact) -> Void
@@ -65,6 +72,7 @@ public struct InvitationSuggestionsConfig {
     
     public init(
         contacts: [InvitationSuggestionContact],
+        maxDisplayCount: Int? = nil,
         onDismiss: @escaping (InvitationSuggestionContact) -> Void,
         onInvitationCreated: ((InvitationSuggestionContact) -> Void)? = nil,
         onInvitationFailed: ((InvitationSuggestionContact, Error) -> Void)? = nil,
@@ -72,6 +80,7 @@ public struct InvitationSuggestionsConfig {
         emptyStateMessage: String = "No suggestions available"
     ) {
         self.contacts = contacts
+        self.maxDisplayCount = maxDisplayCount
         self.onDismiss = onDismiss
         self.onInvitationCreated = onInvitationCreated
         self.onInvitationFailed = onInvitationFailed

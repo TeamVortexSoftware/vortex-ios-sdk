@@ -44,15 +44,24 @@ public struct FindFriendsConfig {
     /// Each contact must have a userId that identifies them in the customer's platform.
     public let contacts: [FindFriendsContact]
     
+    /// Optional: Maximum number of contacts to display at once.
+    /// If the total contacts exceed this number, a random subset of this size is displayed
+    /// in alphabetical order. When a contact is removed, it is replaced with another from
+    /// the remaining pool until the pool is exhausted.
+    /// If nil, all contacts are displayed.
+    public let maxDisplayCount: Int?
+    
     /// Optional: Called after an invitation is successfully created.
     /// Use this to trigger in-app notifications or update your UI.
     public let onInvitationCreated: ((FindFriendsContact) -> Void)?
     
     public init(
         contacts: [FindFriendsContact],
+        maxDisplayCount: Int? = nil,
         onInvitationCreated: ((FindFriendsContact) -> Void)? = nil
     ) {
         self.contacts = contacts
+        self.maxDisplayCount = maxDisplayCount
         self.onInvitationCreated = onInvitationCreated
     }
 }

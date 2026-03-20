@@ -13,14 +13,25 @@ struct InvitationSuggestionsView: View {
         block.attributes?["title"]?.stringValue
     }
     
-    /// Contacts from invitationSuggestionsConfig, excluding already invited/dismissed ones
-    private var contacts: [InvitationSuggestionContact] {
+    /// All eligible contacts (not dismissed, not invited, not already in outgoing)
+    private var eligibleContacts: [InvitationSuggestionContact] {
         let allContacts = viewModel.invitationSuggestionsConfig?.contacts ?? []
         return allContacts.filter {
             !viewModel.dismissedInvitationSuggestionIds.contains($0.id) &&
             !viewModel.invitedInvitationSuggestionIds.contains($0.id) &&
             !viewModel.outgoingInvitationUserIds.contains($0.userId)
         }
+    }
+    
+    /// Contacts to display, respecting maxDisplayCount limit and sorted alphabetically
+    private var contacts: [InvitationSuggestionContact] {
+        let eligible = eligibleContacts
+        if viewModel.invitationSuggestionsConfig?.maxDisplayCount != nil {
+            return eligible
+                .filter { viewModel.displayedSuggestionIds.contains($0.id) }
+                .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
+        }
+        return eligible
     }
     
     /// Primary color from theme or default blue
@@ -82,12 +93,33 @@ struct InvitationSuggestionsView: View {
     var body: some View {
         bodyContent
             .onAppear {
+                let eligibleIds = Set(eligibleContacts.map { $0.id })
+                viewModel.initializeSuggestionsDisplayPool(eligibleIds: eligibleIds)
+                viewModel.isInvitationSuggestionsVisible = hasVisibleContent
+            }
+            .onChange(of: eligibleContacts.count) { _ in
+                let eligibleIds = Set(eligibleContacts.map { $0.id })
+                viewModel.initializeSuggestionsDisplayPool(eligibleIds: eligibleIds)
+                // Replace any displayed IDs that are no longer eligible
+                if viewModel.invitationSuggestionsConfig?.maxDisplayCount != nil {
+                    let removedIds = viewModel.displayedSuggestionIds.subtracting(eligibleIds)
+                    for removedId in removedIds {
+                        viewModel.replaceSuggestionContact(removedId: removedId, eligibleIds: eligibleIds)
+                    }
+                }
                 viewModel.isInvitationSuggestionsVisible = hasVisibleContent
             }
             .onChange(of: contacts.count) { _ in
                 viewModel.isInvitationSuggestionsVisible = hasVisibleContent
             }
+            .onChange(of: viewModel.displayedSuggestionIds) { _ in
+                viewModel.isInvitationSuggestionsVisible = hasVisibleContent
+            }
             .onChange(of: viewModel.isOutgoingInvitationsLoaded) { _ in
+                if viewModel.isOutgoingInvitationsLoaded {
+                    let eligibleIds = Set(eligibleContacts.map { $0.id })
+                    viewModel.initializeSuggestionsDisplayPool(eligibleIds: eligibleIds, force: true)
+                }
                 viewModel.isInvitationSuggestionsVisible = hasVisibleContent
             }
     }
@@ -100,6 +132,9 @@ struct InvitationSuggestionsView: View {
             shimmerView
         } else if !contacts.isEmpty {
             contactsListView
+        } else if viewModel.invitationSuggestionsConfig?.maxDisplayCount != nil && !eligibleContacts.isEmpty {
+            // Pool not yet initialized — show shimmer briefly
+            shimmerView
         }
     }
 
