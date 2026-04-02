@@ -13,6 +13,10 @@ public struct InvitationSuggestionContact: Identifiable, Sendable {
     public let subtitle: String?
     /// Avatar/profile image URL (optional)
     public let avatarUrl: String?
+    /// Optional email address for the contact.
+    /// When provided, the backend creates an additional email target alongside the internal target,
+    /// enabling email-based invitation reminders.
+    public let email: String?
     /// Optional metadata for app-specific data
     public let metadata: [String: Any]?
     
@@ -24,12 +28,14 @@ public struct InvitationSuggestionContact: Identifiable, Sendable {
         name: String,
         subtitle: String? = nil,
         avatarUrl: String? = nil,
+        email: String? = nil,
         metadata: [String: Any]? = nil
     ) {
         self.userId = userId
         self.name = name
         self.subtitle = subtitle
         self.avatarUrl = avatarUrl
+        self.email = email
         self.metadata = metadata
     }
 }

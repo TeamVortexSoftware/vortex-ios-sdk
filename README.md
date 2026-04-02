@@ -239,6 +239,7 @@ FindFriendsContact(
     name: String,                // Required: Display name
     subtitle: String?,           // Optional: Secondary text (e.g., username)
     avatarUrl: String?,          // Optional: Avatar image URL
+    email: String?,              // Optional: Contact's email (enables email-based invitation reminders)
     metadata: [String: Any]?     // Optional: Custom metadata (included in invitation payload)
 )
 ```
@@ -313,6 +314,7 @@ InvitationSuggestionContact(
     name: String,                // Required: Display name
     subtitle: String?,           // Optional: Secondary text (e.g., username)
     avatarUrl: String?,          // Optional: Avatar image URL (rendered instead of initials if provided)
+    email: String?,              // Optional: Contact's email (enables email-based invitation reminders)
     metadata: [String: Any]?     // Optional: Custom metadata (included in invitation payload)
 )
 ```
@@ -375,6 +377,19 @@ VortexInviteView(
 7. Contacts that already have an outstanding outgoing invitation are automatically filtered out (matched by `userId`)
 8. When the user taps "Connect", the SDK creates an invitation via the Vortex API and the contact is removed from the list (identical to Find Friends behavior)
 
+**SearchBoxContact Properties:**
+
+```swift
+SearchBoxContact(
+    userId: String,              // Required: User ID in your platform
+    name: String,                // Required: Display name
+    subtitle: String?,           // Optional: Secondary text (e.g., username)
+    avatarUrl: String?,          // Optional: Avatar image URL
+    email: String?,              // Optional: Contact's email (enables email-based invitation reminders)
+    metadata: [String: Any]?     // Optional: Custom metadata (included in invitation payload)
+)
+```
+
 **SearchBoxConfig Properties:**
 
 ```swift
@@ -385,6 +400,35 @@ SearchBoxConfig(
 ```
 
 > **Note:** The placeholder text, connect button text, no-results message, and title are all configurable from the widget editor.
+
+### Multi-Target Invitations (Email Support)
+
+The Find Friends, Invitation Suggestions, and Search Box components support an optional `email` parameter on each contact. When provided, the backend creates **multiple invitation targets** for a single invitation: an internal target (using the `userId`) and an email target. This enables email-based invitation reminders without changing the core invitation flow.
+
+The `email` parameter is fully **backward compatible** — if omitted, the invitation is created with only the internal target, matching the previous behavior.
+
+**Example:**
+
+```swift
+FindFriendsContact(
+    userId: "user-123",
+    name: "Alice Johnson",
+    subtitle: "@alice",
+    email: "alice@example.com"  // Optional: enables email-based reminders
+)
+
+InvitationSuggestionContact(
+    userId: "user-456",
+    name: "Bob Smith",
+    email: "bob@example.com"
+)
+
+SearchBoxContact(
+    userId: "user-789",
+    name: "Carol Davis",
+    email: "carol@example.com"
+)
+```
 
 ### Incoming Invitations
 

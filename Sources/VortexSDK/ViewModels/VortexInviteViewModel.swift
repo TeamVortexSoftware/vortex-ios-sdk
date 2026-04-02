@@ -2467,11 +2467,15 @@ class VortexInviteViewModel: ObservableObject {
         if let avatarUrl = contact.avatarUrl {
             targetValue["avatarUrl"] = avatarUrl
         }
+        var internalIdField: [String: Any] = [
+            "type": "internal",
+            "value": targetValue
+        ]
+        if let email = contact.email {
+            internalIdField["email"] = email
+        }
         let payload: [String: Any] = [
-            "internalId": [
-                "type": "internal",
-                "value": targetValue
-            ]
+            "internalId": internalIdField
         ]
         
         var groups: [GroupDTO]? = nil
@@ -2666,11 +2670,15 @@ class VortexInviteViewModel: ObservableObject {
         if let avatarUrl = contact.avatarUrl {
             targetValue["avatarUrl"] = avatarUrl
         }
+        var internalIdField: [String: Any] = [
+            "type": "internal",
+            "value": targetValue
+        ]
+        if let email = contact.email {
+            internalIdField["email"] = email
+        }
         let payload: [String: Any] = [
-            "internalId": [
-                "type": "internal",
-                "value": targetValue
-            ]
+            "internalId": internalIdField
         ]
         
         var groups: [GroupDTO]? = nil
@@ -2765,11 +2773,15 @@ class VortexInviteViewModel: ObservableObject {
         if let avatarUrl = contact.avatarUrl {
             targetValue["avatarUrl"] = avatarUrl
         }
+        var internalIdField: [String: Any] = [
+            "type": "internal",
+            "value": targetValue
+        ]
+        if let email = contact.email {
+            internalIdField["email"] = email
+        }
         let payload: [String: Any] = [
-            "internalId": [
-                "type": "internal",
-                "value": targetValue
-            ]
+            "internalId": internalIdField
         ]
         
         var groups: [GroupDTO]? = nil
