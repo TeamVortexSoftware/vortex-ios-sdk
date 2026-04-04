@@ -154,7 +154,8 @@ public class VortexClient {
         targets: [[String: Any]]? = nil,
         templateVariables: [String: String]? = nil,
         metadata: [String: Any]? = nil,
-        subtype: String? = nil
+        subtype: String? = nil,
+        locale: String? = nil
     ) async throws -> CreateInvitationResponse {
         let url = baseURL.appendingPathComponent("/api/v1/invitations")
         
@@ -201,6 +202,10 @@ public class VortexClient {
         
         if let subtype = subtype {
             body["subtype"] = subtype
+        }
+        
+        if let locale = locale {
+            body["locale"] = locale
         }
         
         let bodyData = try JSONSerialization.data(withJSONObject: body)

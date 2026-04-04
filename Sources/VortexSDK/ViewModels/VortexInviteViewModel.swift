@@ -1072,7 +1072,8 @@ class VortexInviteViewModel: ObservableObject {
                 groups: groups,
                 targets: nil,
                 templateVariables: nil,
-                metadata: unfurlConfig?.toMetadata()
+                metadata: unfurlConfig?.toMetadata(),
+                locale: locale
             )
 
             // Fire invitation sent event so outgoing invitations list refreshes
@@ -2159,7 +2160,8 @@ class VortexInviteViewModel: ObservableObject {
                 widgetConfigurationId: config.id,
                 payload: payload,
                 groups: groups,
-                metadata: unfurlConfig?.toMetadata()
+                metadata: unfurlConfig?.toMetadata(),
+                locale: locale
             )
             
             // Mark as invited
@@ -2301,7 +2303,8 @@ class VortexInviteViewModel: ObservableObject {
                 widgetConfigurationId: config.id,
                 payload: payload,
                 groups: groups,
-                metadata: unfurlConfig?.toMetadata()
+                metadata: unfurlConfig?.toMetadata(),
+                locale: locale
             )
             
             // Mark as invited
@@ -2401,7 +2404,8 @@ class VortexInviteViewModel: ObservableObject {
                     widgetConfigurationId: config.id,
                     payload: payload,
                     groups: groups,
-                    metadata: unfurlConfig?.toMetadata()
+                    metadata: unfurlConfig?.toMetadata(),
+                    locale: locale
                 )
             }
             
@@ -2499,7 +2503,8 @@ class VortexInviteViewModel: ObservableObject {
                 source: "internal",
                 groups: groups,
                 metadata: mergedMetadata.isEmpty ? nil : mergedMetadata,
-                subtype: "find-friends"
+                subtype: "find-friends",
+                locale: locale
             )
 
             // Fire the invitation sent event so other components (like Outgoing Invitations) can refresh
@@ -2702,7 +2707,8 @@ class VortexInviteViewModel: ObservableObject {
                 source: "internal",
                 groups: groups,
                 metadata: mergedMetadata.isEmpty ? nil : mergedMetadata,
-                subtype: "suggestions"
+                subtype: "suggestions",
+                locale: locale
             )
 
             // Fire the invitation sent event so other components (like Outgoing Invitations) can refresh
@@ -2805,7 +2811,8 @@ class VortexInviteViewModel: ObservableObject {
                 source: "internal",
                 groups: groups,
                 metadata: mergedMetadata.isEmpty ? nil : mergedMetadata,
-                subtype: "search-box"
+                subtype: "search-box",
+                locale: locale
             )
 
             invitationSentEvent = InvitationSentEvent(
